@@ -1,0 +1,27 @@
+// La roue des gages.
+export default {
+  soft: [
+    'Chante une chanson de Disney en entier', 'Fais 20 squats', 'Imite un animal jusqu\'à ce que quelqu\'un devine', 'Raconte ta blague la plus nulle',
+    'Parle comme un robot pendant 3 minutes', 'Fais un compliment à chaque personne présente', 'Danse la macarena', 'Fais le tour de la pièce à cloche-pied',
+    'Récite l\'alphabet le plus vite possible', 'Fais une imitation de la personne à ta droite', 'Tiens la position de la chaise contre un mur pendant 30 secondes',
+    'Raconte un souvenir d\'enfance', 'Fais un dessin les yeux fermés', 'Parle avec un accent marseillais jusqu\'au prochain tour', 'Fais le service pour tout le monde',
+    'Fais une déclaration d\'amour à ta chaussure', 'Chante tout ce que tu dis jusqu\'au prochain tour', 'Fais 10 pompes', 'Mime ton film préféré',
+    'Garde un sourire figé pendant 1 minute', 'Raconte ta journée à l\'envers', 'Invente un poème sur la personne en face de toi',
+  ],
+  fun: [
+    'Envoie un vocal où tu chantes à ton 5e contact', 'Mets ta photo de profil la plus moche pendant 1 heure', 'Laisse le groupe écrire ta prochaine story',
+    'Mange une cuillère de quelque chose choisi par le groupe', 'Fais un défilé de mode avec des vêtements choisis par les autres', 'Appelle quelqu\'un et parle-lui en verlan',
+    'Laisse quelqu\'un te dessiner une moustache', 'Fais un strip-tease… de chaussettes', 'Parle à la 3e personne jusqu\'à la fin de la partie',
+    'Envoie « Je pense à toi 😘 » à la 7e personne de tes contacts', 'Danse sur la chanson choisie par le groupe', 'Fais une pub pour un objet de la pièce comme au télé-achat',
+    'Garde un glaçon dans ton t-shirt jusqu\'à ce qu\'il fonde', 'Laisse le groupe regarder ta galerie photo pendant 20 secondes', 'Fais un slow avec un balai',
+    'Imite un bébé qui découvre le monde pendant 1 minute', 'Fais la poule jusqu\'à ton prochain tour à chaque fois qu\'on rit', 'Parle en rimes jusqu\'au prochain tour',
+    'Raconte ton pire râteau', 'Like une vieille photo de ton crush', 'Porte tes vêtements à l\'envers jusqu\'à la fin de la partie',
+  ],
+  hot: [
+    'Fais un massage de 1 minute à la personne de ton choix', 'Décris ton fantasme en 3 mots', 'Fais un bisou sur la joue à la personne à ta gauche',
+    'Danse de manière sensuelle pendant 30 secondes', 'Murmure un compliment coquin à quelqu\'un', 'Enlève un vêtement (sauf sous-vêtements)',
+    'Mime ta position préférée', 'Fais un suçon à un fruit', 'Raconte ton rendez-vous le plus chaud', 'Assieds-toi sur les genoux de quelqu\'un jusqu\'au prochain tour',
+    'Envoie un message coquin à la personne de ton choix', 'Laisse quelqu\'un te bander les yeux pour le prochain tour', 'Fais un regard de braise à chaque joueur',
+    'Dis ce qui te plaît physiquement chez la personne en face', 'Mange une banane de la façon la plus sensuelle possible',
+  ],
+};

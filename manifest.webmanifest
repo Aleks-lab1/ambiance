@@ -1,0 +1,23 @@
+{
+  "name": "Ambiance — jeux de soirée",
+  "short_name": "Ambiance",
+  "description": "Plus de 20 jeux de soirée : Je dessine tu devines en multijoueur, Tu préfères, Je n'ai jamais, C'est un 10 mais…, L'Imposteur et bien plus.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#120d26",
+  "theme_color": "#120d26",
+  "categories": ["games", "entertainment", "social"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Jouer en ligne", "short_name": "En ligne", "url": "./#/online", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Je dessine, tu devines", "short_name": "Dessin", "url": "./#/dessin", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

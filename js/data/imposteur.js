@@ -1,0 +1,22 @@
+// L'Imposteur : paires de mots proches.
+export default [
+  ['Chat', 'Chien'], ['Plage', 'Piscine'], ['Pizza', 'Quiche'], ['Café', 'Thé'], ['Vélo', 'Trottinette'], ['Avion', 'Hélicoptère'],
+  ['Mer', 'Lac'], ['Montagne', 'Colline'], ['Soleil', 'Lune'], ['Neige', 'Pluie'], ['Guitare', 'Violon'], ['Piano', 'Orgue'],
+  ['Fourchette', 'Cuillère'], ['Chaise', 'Tabouret'], ['Lit', 'Canapé'], ['Douche', 'Baignoire'], ['Train', 'Métro'], ['Bus', 'Tramway'],
+  ['Pomme', 'Poire'], ['Orange', 'Mandarine'], ['Fraise', 'Framboise'], ['Citron', 'Citron vert'], ['Tomate', 'Poivron'], ['Carotte', 'Navet'],
+  ['Croissant', 'Pain au chocolat'], ['Crêpe', 'Gaufre'], ['Glace', 'Sorbet'], ['Hamburger', 'Sandwich'], ['Sushi', 'Maki'], ['Frites', 'Chips'],
+  ['Vin', 'Bière'], ['Champagne', 'Cidre'], ['Mojito', 'Caïpirinha'], ['Whisky', 'Rhum'], ['Coca', 'Limonade'], ['Lait', 'Yaourt'],
+  ['Football', 'Rugby'], ['Tennis', 'Badminton'], ['Ski', 'Snowboard'], ['Natation', 'Plongée'], ['Boxe', 'Karaté'], ['Basket', 'Handball'],
+  ['Médecin', 'Infirmier'], ['Pompier', 'Policier'], ['Professeur', 'Directeur'], ['Boulanger', 'Pâtissier'], ['Avocat', 'Juge'], ['Acteur', 'Chanteur'],
+  ['Harry Potter', 'Le Seigneur des anneaux'], ['Star Wars', 'Star Trek'], ['Batman', 'Superman'], ['Mickey', 'Donald'], ['Astérix', 'Obélix'], ['Mario', 'Luigi'],
+  ['Facebook', 'Instagram'], ['TikTok', 'YouTube'], ['Netflix', 'Disney+'], ['iPhone', 'Samsung'], ['WhatsApp', 'Messenger'], ['Google', 'Wikipédia'],
+  ['Paris', 'Londres'], ['Espagne', 'Portugal'], ['Italie', 'Grèce'], ['New York', 'Los Angeles'], ['Marseille', 'Nice'], ['Japon', 'Chine'],
+  ['Mariage', 'Fiançailles'], ['Anniversaire', 'Fête'], ['Noël', 'Nouvel An'], ['Halloween', 'Carnaval'], ['Vacances', 'Week-end'], ['Camping', 'Hôtel'],
+  ['Château', 'Palais'], ['Église', 'Cathédrale'], ['Musée', 'Galerie'], ['Cinéma', 'Théâtre'], ['Restaurant', 'Cantine'], ['Bar', 'Boîte de nuit'],
+  ['Lion', 'Tigre'], ['Loup', 'Renard'], ['Dauphin', 'Requin'], ['Abeille', 'Guêpe'], ['Papillon', 'Libellule'], ['Cheval', 'Âne'],
+  ['Vampire', 'Zombie'], ['Sorcière', 'Fée'], ['Pirate', 'Viking'], ['Ninja', 'Samouraï'], ['Robot', 'Cyborg'], ['Dragon', 'Dinosaure'],
+  ['Stylo', 'Crayon'], ['Livre', 'Magazine'], ['Lunettes', 'Lentilles'], ['Montre', 'Réveil'], ['Sac à dos', 'Valise'], ['Parapluie', 'Imperméable'],
+  ['Jean', 'Pantalon'], ['Pull', 'Sweat'], ['Basket', 'Tong'], ['Casquette', 'Bonnet'], ['Robe', 'Jupe'], ['Pyjama', 'Peignoir'],
+  ['Ex', 'Crush'], ['Premier baiser', 'Premier rendez-vous'], ['Gueule de bois', 'Fatigue'], ['Sieste', 'Grasse matinée'], ['Selfie', 'Photo de groupe'], ['Karaoké', 'Concert'],
+  ['Raclette', 'Fondue'], ['Ketchup', 'Mayonnaise'], ['Nutella', 'Confiture'], ['Chocolat', 'Caramel'], ['Barbecue', 'Plancha'], ['Pâtes', 'Riz'],
+];

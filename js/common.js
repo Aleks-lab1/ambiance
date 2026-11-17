@@ -1,0 +1,68 @@
+// Briques partagées par plusieurs jeux.
+import { h, modal, chip, toast } from './ui.js';
+import { settings, saveSettings } from './store.js';
+
+/** Demande la confirmation 18+ une seule fois. */
+export async function ensureAdult() {
+  if (settings.adult) return true;
+  const ok = await modal({
+    title: '🔞 Contenu pour adultes',
+    content: h('div', { class: 'col' },
+      h('p', null, 'Ce niveau contient des questions coquines et du contenu réservé aux adultes.'),
+      h('p', { class: 'muted small' }, 'En continuant, tu confirmes que tous les joueurs ont 18 ans ou plus et sont d\'accord pour jouer à ce niveau.')),
+    actions: [{ label: 'Non', value: false }, { label: "J'ai 18 ans ou +", value: true, primary: true }],
+  });
+  if (ok) { settings.adult = true; saveSettings(); }
+  return !!ok;
+}
+
+/**
+ * Sélecteur de niveaux (multi-sélection).
+ * levels: [{id, name, emoji, desc, adult}]
+ */
+export function levelPicker(levels, selected, onChange) {
+  const wrap = h('div', { class: 'col' });
+  const desc = h('p', { class: 'muted small' });
+  const chips = h('div', { class: 'chips' });
+  function render() {
+    chips.replaceChildren(...levels.map((l) => {
+      const c = chip([l.emoji + ' ' + l.name, l.adult && !settings.adult ? h('span', { class: 'lock' }, '🔒') : null], selected.has(l.id), async () => {
+        if (selected.has(l.id)) {
+          if (selected.size === 1) { toast('Garde au moins un niveau'); return; }
+          selected.delete(l.id);
+        } else {
+          if (l.adult && !(await ensureAdult())) return;
+          selected.add(l.id);
+        }
+        render();
+        onChange(selected);
+      });
+      return c;
+    }));
+    const sel = levels.filter((l) => selected.has(l.id));
+    desc.textContent = sel.map((l) => `${l.emoji} ${l.desc}`).join('  ·  ');
+  }
+  render();
+  wrap.append(chips, desc);
+  return wrap;
+}
+
+/** Couleurs de niveau pour les badges. */
+export function levelBadge(level) {
+  return h('span', { class: 'badge lvl' }, `${level.emoji} ${level.name}`);
+}
+
+export const TEAM_COLORS = ['#ff4d8d', '#2ec5ff', '#ffc93c', '#22d39a', '#b07cff', '#ff7a45'];
+
+/** Podium + classement à partir de [{name, score}] */
+export function podium(list) {
+  const sorted = list.slice().sort((a, b) => b.score - a.score);
+  const top = sorted.slice(0, 3);
+  const heights = [120, 90, 70];
+  const order = top.length >= 3 ? [1, 0, 2] : top.length === 2 ? [1, 0] : [0];
+  const pod = h('div', { class: 'podium' }, order.map((i) => top[i] && h('div', { class: 'st' },
+    h('div', { class: 'nm' }, ['🥇', '🥈', '🥉'][i] + ' ' + top[i].name),
+    h('div', { class: 'blk', style: { height: heights[i] + 'px' } }, String(top[i].score)))));
+  const rest = sorted.slice(3).map((p, i) => h('div', { class: 'score-row' }, h('span', null, `${i + 4}.`), h('span', { class: 'n' }, p.name), h('span', { class: 's' }, String(p.score))));
+  return h('div', { class: 'col' }, pod, rest.length ? h('div', { class: 'scoreboard' }, rest) : null);
+}
