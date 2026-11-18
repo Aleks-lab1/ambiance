@@ -63,6 +63,7 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 
 **En plus :**
 - 👥 Liste de joueurs partagée par tous les jeux (prénoms utilisés dans les cartes, tours, équipes).
+- ⭐ **Favoris** : touche l'étoile d'un jeu pour le retrouver en haut de l'accueil et dans le filtre « Favoris ».
 - 🍻 / 🧃 **Mode avec ou sans alcool** : les pénalités sont des gorgées ou des points de gage.
 - 🔞 Contenu 18+ verrouillé derrière une confirmation d'âge, et niveau 😈 **Hot++** (très explicite) derrière une seconde confirmation.
 - ✍️ **Cartes personnalisées** pour tous les jeux de questions et Le Chapeau.

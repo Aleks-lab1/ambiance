@@ -2,6 +2,7 @@
 
 export const FILTERS = [
   { id: 'all', label: '✨ Tous' },
+  { id: 'fav', label: '⭐ Favoris' },
   { id: 'new', label: '🆕 Nouveaux' },
   { id: 'online', label: '🌐 En ligne' },
   { id: 'cartes', label: '🃏 Questions' },

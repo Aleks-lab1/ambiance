@@ -129,11 +129,14 @@ export function rulesModal(meta) {
 // ---------- Mise en page ----------
 export function topbar(ctx, { title, emoji, right, onBack } = {}) {
   const meta = ctx.meta || {};
+  // L'étoile « favori » n'apparaît que sur l'écran d'accueil du jeu (pas pendant la partie).
+  const fav = !onBack && !right && ctx.favButton ? ctx.favButton() : null;
   return h('div', { class: 'topbar' },
     h('button', { class: 'icon-btn', 'aria-label': 'Retour', onclick: onBack || (() => ctx.exit()) }, '←'),
     h('span', { class: 'emo' }, emoji ?? meta.emoji),
     h('h1', null, title ?? meta.name),
     right,
+    fav,
     meta.rules ? h('button', { class: 'icon-btn', 'aria-label': 'Règles', onclick: () => rulesModal(meta) }, '?') : null,
   );
 }

@@ -4,7 +4,8 @@ import { settings, saveSettings, get, set, resetSeen, getPlayers } from './store
 import { GAMES, FILTERS, gameById } from './games/index.js';
 import { editPlayers } from './players.js';
 import { ensureAdult } from './common.js';
-import { sfx } from './sfx.js';
+import { getFavs, isFav, toggleFav } from './favorites.js';
+import { sfx, buzz } from './sfx.js';
 
 const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
@@ -15,6 +16,29 @@ const ONLINE_META = {
   ],
   load: () => import('./online/room.js'),
 };
+
+// ---------------- Favoris ----------------
+function favLabel(g, on) { return on ? `Retirer ${g.name} des favoris` : `Ajouter ${g.name} aux favoris`; }
+
+/** Bascule le favori d'un jeu et met à jour le bouton étoile. */
+function flipFav(g, btn) {
+  const on = toggleFav(g.id);
+  btn.textContent = on ? '★' : '☆';
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.setAttribute('aria-label', favLabel(g, on));
+  btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+  sfx.pop(); buzz(15);
+  toast(on ? `⭐ ${g.name} ajouté aux favoris` : `${g.name} retiré des favoris`, 1800);
+  return on;
+}
+
+function starButton(g, cls) {
+  const on = isFav(g.id);
+  const btn = h('button', { class: cls + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', 'aria-label': favLabel(g, on), title: 'Favori' }, on ? '★' : '☆');
+  btn.addEventListener('click', (e) => { e.stopPropagation(); flipFav(g, btn); });
+  return btn;
+}
 
 // ---------------- Navigation ----------------
 let current = null;      // { cleanup, guard, state, url }
@@ -58,6 +82,7 @@ async function openScreen(id, opts = {}, push = true) {
     exit: () => { bypassGuard = true; goHome(); },
     setGuard: (msg) => { if (current) current.guard = msg; },
     open: (gid, o) => openScreen(gid, o, true),
+    favButton: id === 'online' ? null : () => starButton(meta, 'icon-btn fav-top'),
   };
   keepAwake(true);
   try {
@@ -117,19 +142,49 @@ function renderHome() {
   function renderFilters() {
     filters.replaceChildren(...FILTERS.map((f) => h('button', {
       class: 'chip' + (filter === f.id ? ' on' : ''), role: 'tab', 'aria-selected': filter === f.id ? 'true' : 'false',
-      onclick: () => { filter = f.id; set('filter', filter); renderFilters(); renderGrid(); },
+      onclick: () => { filter = f.id; set('filter', filter); renderFilters(); renderGrid(); renderFavs(); },
     }, f.label)));
   }
+  const favGames = () => getFavs().map((id) => gameById(id)).filter(Boolean);
+
   function renderGrid() {
-    const list = GAMES.filter((g) => filter === 'all' || (filter === 'new' ? g.new : g.tags.includes(filter)));
-    grid.replaceChildren(...list.map((g) => h('button', {
-      class: 'tile', style: { '--g1': g.colors[0], '--g2': g.colors[1] },
-      onclick: () => { sfx.unlock(); openScreen(g.id); },
-    },
-      h('div', { class: 'badges' }, (g.badges || []).slice(0, 1).map((b) => h('span', { class: 'badge' + (b === 'Nouveau' ? ' new' : '') }, b)), h('span', { class: 'badge' }, '👤 ' + g.players)),
-      h('div', { class: 'emo' }, g.emoji),
-      h('div', { class: 'name' }, g.name),
-      h('div', { class: 'desc' }, g.desc))));
+    const list = filter === 'fav'
+      ? favGames()
+      : GAMES.filter((g) => filter === 'all' || (filter === 'new' ? g.new : g.tags.includes(filter)));
+    if (filter === 'fav' && !list.length) {
+      grid.replaceChildren(h('div', { class: 'panel center col', style: { gridColumn: '1 / -1' } },
+        h('div', { class: 'hero-emo', style: { fontSize: '48px' } }, '⭐'),
+        h('b', null, 'Aucun favori pour l\'instant'),
+        h('p', { class: 'muted small' }, 'Touche l\'étoile ☆ en bas d\'un jeu pour le retrouver ici et en haut de l\'accueil.')));
+      return;
+    }
+    grid.replaceChildren(...list.map((g) => {
+      const star = starButton(g, 'fav-btn');
+      star.addEventListener('click', () => { renderFavs(); if (filter === 'fav') renderGrid(); });
+      return h('div', { class: 'tile-wrap' },
+        h('button', {
+          class: 'tile', style: { '--g1': g.colors[0], '--g2': g.colors[1] },
+          onclick: () => { sfx.unlock(); openScreen(g.id); },
+        },
+          h('div', { class: 'badges' }, (g.badges || []).slice(0, 1).map((b) => h('span', { class: 'badge' + (b === 'Nouveau' ? ' new' : '') }, b)), h('span', { class: 'badge' }, '👤 ' + g.players)),
+          h('div', { class: 'emo' }, g.emoji),
+          h('div', { class: 'name' }, g.name),
+          h('div', { class: 'desc' }, g.desc)),
+        star);
+    }));
+  }
+
+  const favSlot = h('div', { class: 'col', style: { gap: '8px' } });
+  function renderFavs() {
+    const favs = favGames();
+    if (!favs.length || filter === 'fav') { favSlot.replaceChildren(); favSlot.classList.add('hidden'); return; }
+    favSlot.classList.remove('hidden');
+    favSlot.replaceChildren(
+      h('div', { class: 'section-title' }, '⭐ Mes favoris'),
+      h('div', { class: 'scroll-x fav-row' }, favs.map((g) => h('button', {
+        class: 'mini-tile', style: { '--g1': g.colors[0], '--g2': g.colors[1] },
+        onclick: () => { sfx.unlock(); openScreen(g.id); },
+      }, h('span', { class: 'emo' }, g.emoji), h('span', { class: 'nm' }, g.name)))));
   }
 
   const playersBar = h('button', { class: 'players-bar', onclick: async () => { await editPlayers(); renderPlayers(); } });
@@ -167,6 +222,7 @@ function renderHome() {
       h('div', null, h('div', { class: 'logo' }, 'Ambiance'), h('div', { class: 'tagline' }, `${GAMES.length} jeux pour mettre le feu à ta soirée 🎉`)),
       h('button', { class: 'icon-btn', 'aria-label': 'Réglages', onclick: openSettings }, '⚙️')),
     playersBar,
+    favSlot,
     h('div', { class: 'online-banner' },
       h('div', { class: 'deco' }, '📱'),
       h('h2', null, '🌐 Jouer en ligne'),
@@ -182,6 +238,7 @@ function renderHome() {
   );
   renderFilters();
   renderGrid();
+  renderFavs();
   mount(screen);
 }
 let homeInstallRefresh = null;
