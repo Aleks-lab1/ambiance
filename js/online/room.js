@@ -625,7 +625,7 @@ export function start(ctx) {
         h('button', {
           class: 'btn btn-soft', onclick: async () => {
             try {
-              if (navigator.share) await navigator.share({ title: 'Ambiance', text: `Rejoins ma partie sur Ambiance ! Code : ${room.code}`, url: shareUrl });
+              if (navigator.share) await navigator.share({ title: 'Keskonfet', text: `Rejoins ma partie sur Keskonfet ! Code : ${room.code}`, url: shareUrl });
               else { await navigator.clipboard.writeText(shareUrl); toast('Lien copié 📋'); }
             } catch { /* annulé */ }
           },

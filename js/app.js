@@ -67,7 +67,7 @@ async function openScreen(id, opts = {}, push = true) {
   const token = ++navToken;
   const root = h('div', { class: 'screen game-screen', style: { '--g1': meta.colors[0], '--g2': meta.colors[1] } });
   mount(root);
-  document.title = `${meta.name} — Ambiance`;
+  document.title = `${meta.name} — Keskonfet`;
   document.body.classList.add('in-game');
   let mod;
   try { mod = await meta.load(); } catch (e) {
@@ -134,7 +134,7 @@ const isStandalone = () => matchMedia('(display-mode: standalone)').matches || n
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 function renderHome() {
-  document.title = 'Ambiance — jeux de soirée';
+  document.title = 'Keskonfet — jeux de soirée';
   let filter = get('filter', 'all');
   const grid = h('div', { class: 'grid' });
   const filters = h('div', { class: 'scroll-x', role: 'tablist' });
@@ -204,7 +204,7 @@ function renderHome() {
     if (deferredInstall) {
       installSlot.append(h('div', { class: 'panel install-card' },
         h('span', { class: 'emo' }, '📲'),
-        h('div', { class: 'grow' }, h('b', null, 'Installer Ambiance'), h('p', { class: 'muted small' }, 'Sur l\'écran d\'accueil, en plein écran et même hors ligne.')),
+        h('div', { class: 'grow' }, h('b', null, 'Installer Keskonfet'), h('p', { class: 'muted small' }, 'Sur l\'écran d\'accueil, en plein écran et même hors ligne.')),
         h('button', { class: 'btn btn-primary btn-sm', onclick: async () => { deferredInstall.prompt(); await deferredInstall.userChoice.catch(() => {}); deferredInstall = null; renderInstall(); } }, 'Installer'),
         h('button', { class: 'icon-btn', 'aria-label': 'Masquer', onclick: () => { set('installDismissed', true); renderInstall(); } }, '×')));
     } else if (isIOS) {
@@ -219,7 +219,7 @@ function renderHome() {
 
   const screen = h('div', { class: 'screen home' },
     h('div', { class: 'home-head' },
-      h('div', null, h('div', { class: 'logo' }, 'Ambiance'), h('div', { class: 'tagline' }, `${GAMES.length} jeux pour mettre le feu à ta soirée 🎉`)),
+      h('div', null, h('div', { class: 'logo' }, 'Keskonfet'), h('div', { class: 'tagline' }, `${GAMES.length} jeux pour mettre le feu à ta soirée 🎉`)),
       h('button', { class: 'icon-btn', 'aria-label': 'Réglages', onclick: openSettings }, '⚙️')),
     playersBar,
     favSlot,
@@ -254,8 +254,8 @@ async function openSettings() {
     }),
     h('div', { class: 'sep' }),
     h('button', { class: 'btn btn-soft', onclick: () => { resetSeen(); toast('Les cartes déjà vues pourront revenir'); } }, '🔄 Revoir toutes les cartes'),
-    h('p', { class: 'muted tiny' }, 'Ambiance mémorise les cartes déjà tirées pour ne pas les répéter d\'une soirée à l\'autre.'),
-    h('p', { class: 'muted tiny center' }, 'Ambiance · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC).'),
+    h('p', { class: 'muted tiny' }, 'Keskonfet mémorise les cartes déjà tirées pour ne pas les répéter d\'une soirée à l\'autre.'),
+    h('p', { class: 'muted tiny center' }, 'Keskonfet · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC).'),
   );
   await modal({ title: '⚙️ Réglages', content, actions: [{ label: 'Fermer', value: true, primary: true }] });
   if (!current) renderHome();
@@ -267,7 +267,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredInstall = e;
   homeInstallRefresh && !current && homeInstallRefresh();
 });
-window.addEventListener('appinstalled', () => { deferredInstall = null; toast('Ambiance est installée 🎉'); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; toast('Keskonfet est installée 🎉'); });
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
   window.addEventListener('load', async () => {
