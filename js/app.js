@@ -10,7 +10,7 @@ const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
   rules: [
     'Un joueur <b>crée la partie</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre</b> et entrent ce code : chacun joue sur son propre téléphone.',
-    'L\'hôte choisit le jeu : Je dessine tu devines, L\'Imposteur, Tu préfères, C\'est un 10 mais… ou Qui de nous.',
+    'L\'hôte choisit parmi 15 jeux : Je dessine tu devines, L\'Imposteur, Le Quiz, Punchlines, Téléphone dessiné, Dico bluff, Menteur !, Émojis mystères, Anagrammes, À vue de nez, Bingo de soirée, et les votes de Tu préfères, C\'est un 10 mais…, Qui de nous et Opinions impopulaires.',
     'Astuce : l\'hôte doit garder l\'appli ouverte pendant la partie. Tout le monde sur le même Wi-Fi, c\'est l\'idéal.',
   ],
   load: () => import('./online/room.js'),
@@ -121,12 +121,12 @@ function renderHome() {
     }, f.label)));
   }
   function renderGrid() {
-    const list = GAMES.filter((g) => filter === 'all' || g.tags.includes(filter));
+    const list = GAMES.filter((g) => filter === 'all' || (filter === 'new' ? g.new : g.tags.includes(filter)));
     grid.replaceChildren(...list.map((g) => h('button', {
       class: 'tile', style: { '--g1': g.colors[0], '--g2': g.colors[1] },
       onclick: () => { sfx.unlock(); openScreen(g.id); },
     },
-      h('div', { class: 'badges' }, (g.badges || []).slice(0, 1).map((b) => h('span', { class: 'badge' }, b)), h('span', { class: 'badge' }, '👤 ' + g.players)),
+      h('div', { class: 'badges' }, (g.badges || []).slice(0, 1).map((b) => h('span', { class: 'badge' + (b === 'Nouveau' ? ' new' : '') }, b)), h('span', { class: 'badge' }, '👤 ' + g.players)),
       h('div', { class: 'emo' }, g.emoji),
       h('div', { class: 'name' }, g.name),
       h('div', { class: 'desc' }, g.desc))));
@@ -170,7 +170,7 @@ function renderHome() {
     h('div', { class: 'online-banner' },
       h('div', { class: 'deco' }, '📱'),
       h('h2', null, '🌐 Jouer en ligne'),
-      h('p', null, 'Chacun sur son téléphone : dessin, imposteur, votes…'),
+      h('p', null, '15 jeux où chacun joue sur son téléphone : quiz, dessin, bluff…'),
       h('div', { class: 'row' },
         h('button', { class: 'btn grow', onclick: () => openScreen('online', { create: true }) }, 'Créer une partie'),
         h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre'))),

@@ -386,6 +386,7 @@ export function start(ctx) {
   let lobby = null;      // éléments du salon
   let status = 'online';
   const pendingDraw = [];
+  const pendingMsgs = [];
 
   // ---------- Écran d'entrée ----------
   function entry(msg) {
@@ -526,8 +527,12 @@ export function start(ctx) {
       case 'welcome':
         if (m.name && m.name !== me.name) me.name = m.name;
         break;
+      case 'pong':
+        break;
       default:
+        // Message propre à un jeu : livré à la vue, ou mis de côté si elle n'est pas encore montée.
         if (view && view.onMessage) view.onMessage(m);
+        else if (pendingMsgs.length < 50) pendingMsgs.push(m);
     }
   }
 
@@ -584,6 +589,10 @@ export function start(ctx) {
         sfx.go();
         if (view.onDraw) while (pendingDraw.length) view.onDraw(pendingDraw.shift());
         else pendingDraw.length = 0;
+        view.update(r, r.game.v);
+        const msgs = pendingMsgs.splice(0);
+        if (view.onMessage) msgs.forEach((x) => view.onMessage(x));
+        return;
       }
       view.update(r, r.game.v);
     }

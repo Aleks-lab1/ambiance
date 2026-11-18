@@ -1,9 +1,9 @@
 // Mots interdits & Mime express : jeux de mots en équipes.
-import { h, topbar, seg, confirmBox } from '../ui.js';
+import { h, topbar, seg, confirmBox, pick } from '../ui.js';
 import { get, set, makeDeck } from '../store.js';
 import { teamsSetup, readyScreen, playTurn, reviewTurn, scoresScreen, finalScreen } from '../turn.js';
 
-function teamWordGame(cfg) {
+export function teamWordGame(cfg) {
   return {
     start(ctx) {
       const { root, meta } = ctx;
@@ -23,7 +23,7 @@ function teamWordGame(cfg) {
           h('div', { class: 'section-title' }, 'Tours par équipe'),
           seg([2, 3, 4, 5, 6].map((v) => ({ value: v, label: String(v) })), opts.turns, (v) => { opts.turns = v; set('tw:' + meta.id, opts); }),
           h('div', { class: 'grow' }),
-          h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => dataP.then((words) => game(ts.teams, words)) }, '▶ Commencer'));
+          h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => dataP.then((words) => game(ts.teams, cfg.prepare ? cfg.prepare(words) : words)) }, '▶ Commencer'));
       }
 
       async function game(teams, words) {
@@ -86,6 +86,37 @@ export const mime = teamWordGame({
   readySub: 'Le mimeur prend le téléphone. Interdit de parler ou de faire du bruit !',
   render: (w) => h('div', { class: 'word-card' }, h('div', { class: 'hint' }, '🤫 Mime'), h('div', { class: 'w' }, w)),
   labelOf: (it) => it,
+  buttons: [
+    { label: '⏭ Passer', cls: 'btn-soft', r: 'pass' },
+    { label: '✅ Trouvé', cls: 'btn-ok', r: 'ok' },
+  ],
+});
+
+export const fredonne = teamWordGame({
+  duration: 60,
+  data: () => import('../data/chansons.js'),
+  verb: 'fredonne une chanson',
+  readySub: 'Le joueur prend le téléphone et fredonne (lalala, mmm…) sans dire les paroles. Son équipe trouve le titre ou l\'artiste !',
+  render: ([t, a]) => h('div', { class: 'word-card' }, h('div', { class: 'hint' }, '🎵 Fredonne'), h('div', { class: 'w' }, t), h('div', { class: 'hint' }, a)),
+  labelOf: (it) => `${it[0]} — ${it[1]}`,
+  buttons: [
+    { label: '⏭ Passer', cls: 'btn-soft', r: 'pass' },
+    { label: '✅ Trouvé', cls: 'btn-ok', r: 'ok' },
+  ],
+});
+
+export const disle = teamWordGame({
+  duration: 60,
+  data: () => import('../data/disle.js'),
+  prepare: (d) => d.manieres.map((m) => ({ m, p: pick(d.phrases) })),
+  verb: 'joue la comédie',
+  readySub: 'Le joueur dit la phrase affichée de la manière indiquée. Son équipe doit deviner la manière !',
+  render: (it) => h('div', { class: 'word-card' },
+    h('div', { class: 'hint' }, 'Dis cette phrase…'),
+    h('div', { class: 'w', style: { fontSize: 'clamp(22px,6.5vw,32px)' } }, `« ${it.p} »`),
+    h('div', { class: 'hint', style: { color: '#c21d3b' } }, '…de cette manière (secret !)'),
+    h('div', { class: 'forbid' }, h('span', null, it.m))),
+  labelOf: (it) => it.m,
   buttons: [
     { label: '⏭ Passer', cls: 'btn-soft', r: 'pass' },
     { label: '✅ Trouvé', cls: 'btn-ok', r: 'ok' },

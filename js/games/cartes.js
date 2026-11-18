@@ -11,7 +11,7 @@ export { LEVELS };
 const HOTPP_STYLE = { '--g1': '#b0123f', '--g2': '#1c0614' };
 const PERSO = { id: 'perso', name: 'Mes cartes', emoji: '✍️', desc: 'Tes cartes personnalisées.' };
 
-function cardGame(cfg) {
+export function cardGame(cfg) {
   return {
     start(ctx) {
       const { root, meta } = ctx;
@@ -216,4 +216,65 @@ export const qui = cardGame({
     }, '3, 2, 1… Pointez !');
     return h('div', { class: 'col', style: { alignItems: 'center' } }, big, btn, out);
   },
+});
+
+// ---------------- Opinions impopulaires ----------------
+export const opinions = cardGame({
+  levels: LEVELS.opinions,
+  data: () => import('../data/opinions.js'),
+  online: 'vote-op',
+  kicker: 'Opinion impopulaire…',
+  customHelp: 'Une opinion par ligne. Exemple : Le lundi est le meilleur jour de la semaine.',
+  customHint: 'Le lundi est le meilleur jour de la semaine.',
+  render: (it) => h('div', { class: 'big' }, `« ${it} »`),
+  footer: () => `À 3 : pouce en l'air (d'accord) ou en bas (pas d'accord) ! La minorité se justifie et ${drinkPl(1)}.`,
+});
+
+// ---------------- Et si… ? ----------------
+export const etsi = cardGame({
+  levels: [
+    { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Des situations complètement folles.' },
+    { id: 'deep', name: 'Réflexion', emoji: '🧠', desc: 'Pour refaire le monde.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
+  ],
+  data: () => import('../data/etsi.js'),
+  perPlayer: true,
+  kicker: 'Et si…',
+  customHelp: 'Une situation par ligne, sans « Et si ». Exemple : tu devenais un chat pendant une journée ?',
+  customHint: 'tu devenais un chat pendant une journée ?',
+  parseCustom: (s) => s.replace(/^et si\s*/i, ''),
+  render: (it) => h('div', { class: 'big' }, it),
+  footer: () => 'Chacun répond à tour de rôle. La réponse la plus folle gagne !',
+});
+
+// ---------------- Confidences ----------------
+export const confidences = cardGame({
+  levels: [
+    { id: 'fun', name: 'Pour rire', emoji: '😂', desc: 'Hontes et anecdotes.' },
+    { id: 'deep', name: 'Profond', emoji: '🌙', desc: 'Pour se livrer vraiment.' },
+    { id: 'love', name: 'Amour', emoji: '💕', desc: 'Cœur, couple et rendez-vous.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Intime, réservé aux adultes.', adult: true },
+  ],
+  data: () => import('../data/confidences.js'),
+  perPlayer: true,
+  kicker: '💬 Confidence',
+  customHelp: 'Une question par ligne.',
+  customHint: 'Quel est ton plus beau souvenir de vacances ?',
+  render: (it) => h('div', { class: 'big' }, it),
+  footer: () => 'Réponds honnêtement… puis les autres peuvent répondre à leur tour.',
+});
+
+// ---------------- Deux vérités, un mensonge ----------------
+export const deuxverites = cardGame({
+  levels: [
+    { id: 'soft', name: 'Classique', emoji: '🙂', desc: 'Des thèmes pour tout le monde.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Vie amoureuse et coquine, réservé aux adultes.', adult: true },
+  ],
+  data: () => import('../data/deuxverites.js'),
+  perPlayer: true,
+  kicker: 'Deux vérités, un mensonge…',
+  customHelp: 'Un thème par ligne. Exemple : sur ton premier appartement',
+  customHint: 'sur ton premier appartement',
+  render: (it) => h('div', { class: 'big' }, `Raconte trois anecdotes ${it}`),
+  footer: () => `Deux vraies, une inventée. À 3, tout le monde désigne le mensonge ! Ceux qui se trompent ${drinkPl(1)}.`,
 });

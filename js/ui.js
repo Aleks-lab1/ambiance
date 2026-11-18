@@ -1,5 +1,17 @@
 // Petits utilitaires d'interface, sans framework.
 
+// Garde-fou : append()/replaceChildren() natifs affichent « null », « false » ou « [object …] » en texte
+// quand on leur passe une valeur vide ou un tableau. Dans toute l'appli, une valeur vide veut dire
+// « rien à afficher » et un tableau est déplié, exactement comme avec h().
+if (typeof Element !== 'undefined' && !Element.prototype.__ambianceSafe) {
+  const keep = (k) => k !== null && k !== undefined && k !== false && k !== true;
+  for (const name of ['append', 'replaceChildren', 'prepend']) {
+    const native = Element.prototype[name];
+    Element.prototype[name] = function (...kids) { return native.apply(this, kids.flat(Infinity).filter(keep)); };
+  }
+  Element.prototype.__ambianceSafe = true;
+}
+
 /** Crée un élément DOM : h('div', {class:'x', onclick}, enfants...) */
 export function h(tag, props, ...kids) {
   const el = document.createElement(tag);
@@ -217,7 +229,7 @@ export async function keepAwake(on = true) {
     }
   } catch { /* non supporté */ }
 }
-document.addEventListener('visibilitychange', () => { if (wantWake && document.visibilityState === 'visible') keepAwake(true); });
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (wantWake && document.visibilityState === 'visible') keepAwake(true); });
 
 /** Swipe gauche/droite simple sur un élément. */
 export function onSwipe(el, { left, right }) {

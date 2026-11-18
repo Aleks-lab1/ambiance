@@ -1,0 +1,31 @@
+// Histoire folle : débuts d'histoires et mots imposés.
+export default {
+  starters: [
+    'Il était une fois un dragon qui avait peur des souris…', 'Ce matin-là, en ouvrant mon frigo, j\'ai découvert…', 'Le jour où ma grand-mère a gagné au loto…',
+    'Personne ne s\'attendait à ce que le prof arrive en pyjama…', 'Dans un petit village où il était interdit de rire…', 'Le jour de mon mariage, le gâteau s\'est mis à parler…',
+    'Tout a commencé quand le Wi-Fi a coupé dans le monde entier…', 'Il était minuit pile quand quelqu\'un a sonné à la porte…', 'Mon chat a fait ses valises et m\'a laissé un mot…',
+    'Sur une île déserte, j\'ai trouvé une bouteille avec un message…', 'Le pilote a annoncé : « Mesdames et messieurs, nous avons un petit problème »…', 'En rentrant de soirée, je me suis trompé(e) d\'appartement…',
+    'Ce jour-là, la tour Eiffel avait disparu…', 'Le Père Noël a démissionné le 23 décembre…', 'J\'ai reçu une lettre de moi-même, venue du futur…',
+    'Au fond du jardin, il y avait une porte qui n\'existait pas la veille…', 'Le livreur de pizza m\'a regardé droit dans les yeux et m\'a dit…', 'J\'ai découvert hier que mon voisin est un super-héros…',
+    'Le jour où les animaux ont appris à parler…', 'Au milieu du concert, le chanteur a perdu sa voix…', 'J\'ai acheté un vieux miroir dans une brocante…',
+    'Le premier rendez-vous avait très bien commencé, jusqu\'à ce que…', 'Tout le monde dormait dans l\'avion, sauf moi…', 'Un matin, je me suis réveillé(e) dans la peau de mon chien…',
+    'La machine à café du bureau s\'est mise à exaucer des vœux…', 'Le jour où j\'ai été élu(e) président(e) par erreur…', 'Dans la forêt, un écureuil m\'a demandé de l\'aide…',
+    'Le GPS a dit « tournez à gauche »… et je me suis retrouvé(e) en 1789…', 'Ma mamie a ouvert une boîte de nuit…', 'Ce soir-là, la Lune est tombée dans mon jardin…',
+    'Pendant l\'entretien d\'embauche, j\'ai éternué si fort que…', 'Une licorne s\'est garée devant chez moi…', 'Le jour où la gravité a disparu pendant une heure…',
+    'Le robot aspirateur a pris le contrôle de la maison…', 'Au supermarché, tous les produits se sont mis à chanter…',
+  ],
+  words: [
+    'banane', 'parapluie', 'dinosaure', 'moustache', 'téléphone', 'fromage', 'astronaute', 'chaussette', 'volcan', 'licorne', 'pyjama', 'trompette',
+    'crocodile', 'spaghetti', 'fusée', 'grand-mère', 'château', 'ninja', 'brocoli', 'karaoké', 'pingouin', 'trottinette', 'baguette', 'requin',
+    'mariage', 'pirate', 'cactus', 'aspirateur', 'fantôme', 'cornichon', 'tutu', 'hélicoptère', 'sorcière', 'gâteau', 'escargot', 'selfie',
+    'trampoline', 'vampire', 'pizza', 'pompier', 'boule à facettes', 'camping-car', 'raclette', 'kangourou', 'perruque', 'ascenseur', 'magicien', 'poule',
+    'chewing-gum', 'toboggan', 'facteur', 'télécommande', 'boomerang', 'momie', 'girafe', 'frigo', 'piscine', 'tracteur', 'pistolet à eau', 'biscotte',
+    'robot', 'flamant rose', 'barbe', 'patins à roulettes', 'cerf-volant', 'bigoudis', 'poubelle', 'baleine', 'accordéon', 'boulangère', 'dentier', 'saucisson',
+    'papillon', 'mouchoir', 'tortue', 'carrosse', 'lasagnes', 'zombie', 'maillot de bain', 'éléphant', 'valise', 'épouvantail', 'hamster', 'confettis',
+    'clown', 'igloo', 'bouée', 'crêpe', 'taupe', 'fondue', 'ventilateur', 'tatouage', 'squelette', 'sirène', 'brosse à dents', 'coccinelle',
+    'moto', 'paillettes', 'grenouille', 'patate', 'cowboy', 'souris', 'cocotte-minute', 'chameau', 'jacuzzi', 'tondeuse', 'cravate', 'taxi',
+    'nain de jardin', 'oreiller', 'sous-marin', 'panda', 'kebab', 'harmonica', 'trou noir', 'chouette', 'yoga', 'lampadaire', 'abeille', 'dragon',
+    'glaçon', 'jumelles', 'tapis volant', 'machine à laver', 'hippopotame', 'fourchette', 'ex', 'belle-mère', 'Wi-Fi', 'pétanque', 'barbecue', 'bisou',
+    'slip', 'cocktail', 'sandale', 'doudou', 'réveil', 'moustique', 'gendarme', 'radiateur', 'salsa', 'tuba', 'bouchon', 'raquette',
+  ],
+};

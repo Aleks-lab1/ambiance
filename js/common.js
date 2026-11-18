@@ -81,3 +81,22 @@ export function podium(list) {
   const rest = sorted.slice(3).map((p, i) => h('div', { class: 'score-row' }, h('span', null, `${i + 4}.`), h('span', { class: 'n' }, p.name), h('span', { class: 's' }, String(p.score))));
   return h('div', { class: 'col' }, pod, rest.length ? h('div', { class: 'scoreboard' }, rest) : null);
 }
+
+// Points d'un dé (grille 3×3) pour chaque face.
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+/** Un dé dessiné en CSS. cls : 'sm', 'xs', 'hl', 'dim', 'roll'… */
+export function dieFace(v, cls = '') {
+  return h('div', { class: 'die ' + cls, 'aria-label': 'Dé : ' + v }, Array.from({ length: 9 }, (_, i) => h('i', { class: PIPS[v] && PIPS[v].includes(i) ? 'on' : '' })));
+}
+
+/** Bandeau « Jouer en ligne » pour les jeux qui ont aussi une version multijoueur. */
+export function onlineBanner(ctx, onlineId, { title = '🌐 En ligne (recommandé)', text = 'Chacun joue sur son propre téléphone, avec les points comptés automatiquement.', colors } = {}) {
+  const c = colors || (ctx.meta && ctx.meta.colors) || ['#2a7bff', '#ff4d8d'];
+  return h('div', { class: 'online-banner', style: { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` } },
+    h('div', { class: 'deco' }, '📱'),
+    h('h2', null, title),
+    h('p', null, text),
+    h('div', { class: 'row' },
+      h('button', { class: 'btn grow', onclick: () => ctx.open('online', { create: true, game: onlineId }) }, 'Créer une partie'),
+      h('button', { class: 'btn btn-ghost grow', onclick: () => ctx.open('online', { joinPrompt: true }) }, 'Rejoindre')));
+}

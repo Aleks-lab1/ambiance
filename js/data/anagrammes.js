@@ -1,0 +1,21 @@
+// Anagrammes : mots à retrouver (choisis pour éviter les anagrammes ambiguës).
+export default [
+  'banane', 'girafe', 'fromage', 'chocolat', 'montagne', 'voiture', 'cerise', 'vampire', 'sorcière', 'château',
+  'guitare', 'tortue', 'papillon', 'éléphant', 'crocodile', 'pingouin', 'kangourou', 'citrouille', 'princesse', 'chevalier',
+  'fantôme', 'squelette', 'licorne', 'dinosaure', 'baleine', 'requin', 'dauphin', 'grenouille', 'escargot', 'araignée',
+  'coccinelle', 'hérisson', 'écureuil', 'renard', 'panthère', 'chameau', 'parapluie', 'lunettes', 'téléphone', 'ordinateur',
+  'bougie', 'horloge', 'ciseaux', 'crayon', 'valise', 'chaussure', 'chapeau', 'écharpe', 'pantalon', 'tabouret',
+  'canapé', 'fauteuil', 'armoire', 'bouteille', 'fourchette', 'cuillère', 'assiette', 'casserole', 'poubelle', 'aspirateur',
+  'ventilateur', 'trottinette', 'montgolfière', 'hélicoptère', 'tracteur', 'camion', 'ambulance', 'hamburger', 'croissant', 'baguette',
+  'raclette', 'fondue', 'gaufre', 'carotte', 'poivron', 'courgette', 'aubergine', 'ananas', 'framboise', 'myrtille',
+  'pastèque', 'mandarine', 'abricot', 'noisette', 'cacahuète', 'spaghetti', 'lasagnes', 'sandwich', 'omelette', 'yaourt',
+  'biscuit', 'sucette', 'cannelle', 'moutarde', 'mayonnaise', 'piscine', 'cinéma', 'théâtre', 'hôpital', 'boulangerie',
+  'pharmacie', 'aéroport', 'jardin', 'volcan', 'cascade', 'tonnerre', 'planète', 'astronaute', 'pompier', 'docteur',
+  'magicien', 'cuisinier', 'boulanger', 'facteur', 'coiffeur', 'musicien', 'champion', 'vacances', 'anniversaire', 'cadeau',
+  'mariage', 'carnaval', 'karaoké', 'discothèque', 'champagne', 'mojito', 'tomate', 'salade', 'citron', 'étoile',
+  'soleil', 'nuage', 'galaxie', 'rivière', 'plage', 'bonbon', 'caramel', 'vanille', 'trésor', 'cactus',
+  'boussole', 'lanterne', 'marteau', 'tournevis', 'pinceau', 'trompette', 'violon', 'batterie', 'accordéon', 'saxophone',
+  'harmonica', 'tambour', 'parachute', 'toboggan', 'balançoire', 'trampoline', 'manège', 'ballon', 'raquette', 'pyjama',
+  'chaussette', 'pantoufle', 'moustache', 'perruque', 'maquillage', 'parfum', 'collier', 'bracelet', 'diamant', 'couronne',
+  'dentiste', 'infirmier', 'journaliste', 'architecte', 'électricien', 'plombier', 'jardinier', 'agriculteur',
+];

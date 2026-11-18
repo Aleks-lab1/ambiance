@@ -7,15 +7,19 @@ import { sfx, buzz } from '../sfx.js';
 import TP from '../data/tupreferes.js';
 import DIX from '../data/dix.js';
 import QUI from '../data/qui.js';
+import OP from '../data/opinions.js';
 
 const MODES = {
   tp: { name: 'Tu préfères', emoji: '🤔', short: 'Votez pour un camp', data: TP, levels: LEVELS.tupreferes, kicker: 'Tu préfères…', min: 2, colors: ['#7c5cff', '#2ec5ff'] },
   dix: { name: "C'est un 10 mais…", emoji: '💯', short: 'Notez sur 10', data: DIX, levels: LEVELS.dix, kicker: "C'est un 10 mais…", min: 2, colors: ['#ff3d6e', '#ffc93c'] },
+  op: { name: 'Opinions impopulaires', emoji: '🗣️', short: 'D\'accord ou pas ?', data: OP, levels: LEVELS.opinions, kicker: 'Opinion impopulaire…', min: 2, colors: ['#ee0979', '#ff6a00'] },
   qui: { name: 'Qui de nous…', emoji: '👉', short: 'Désignez quelqu\'un', data: QUI, levels: LEVELS.qui, kicker: 'Qui de nous est le plus susceptible de…', min: 3, colors: ['#00b39b', '#5a6cff'] },
 };
 
 function makeVote(mode) {
   const M = MODES[mode];
+  const binary = mode === 'tp' || mode === 'op';
+  const optLabel = (it, i) => (mode === 'tp' ? it[i] : (i === 0 ? '👍 D\'accord' : '👎 Pas d\'accord'));
   const validLevels = (ls) => (Array.isArray(ls) ? ls.filter((l) => M.levels.some((x) => x.id === l)) : []);
 
   function next(s) {
@@ -54,7 +58,7 @@ function makeVote(mode) {
     action(room, s, pid, a) {
       if (a.type === 'vote' && s.phase === 'vote') {
         let v = a.v;
-        if (mode === 'tp' && v !== 0 && v !== 1) return false;
+        if (binary && v !== 0 && v !== 1) return false;
         if (mode === 'dix' && !(Number.isInteger(v) && v >= 0 && v <= 10)) return false;
         if (mode === 'qui' && !room.players.some((p) => p.pid === v)) return false;
         s.votes[pid] = v;
@@ -93,19 +97,19 @@ function makeVote(mode) {
           h('span', { class: 'badge lvl' }, `${lvl.emoji} ${lvl.name}`),
           h('span', { class: 'count' }, `#${v.n}`),
           h('div', { class: 'kicker', style: { marginTop: '14px' } }, mode === 'dix' && typeof v.q.it === 'object' ? `C'est un ${v.q.it.n} mais…` : M.kicker),
-          mode === 'tp' ? null : h('div', { class: 'big' }, typeof v.q.it === 'object' ? v.q.it.t : v.q.it),
-          mode === 'tp' ? h('div', { class: 'tp', 'data-slot': 'tp' }) : null);
+          mode === 'tp' ? null : h('div', { class: 'big' }, typeof v.q.it === 'object' ? v.q.it.t : (mode === 'op' ? `« ${v.q.it} »` : v.q.it)),
+          binary ? h('div', { class: 'tp', 'data-slot': 'tp' }) : null);
         cardSlot.replaceChildren(card);
       }
 
       function voteUI(room, v) {
         const sendVote = (val) => { g.send({ type: 'vote', v: val }); sfx.pop(); buzz(15); };
-        if (mode === 'tp') {
+        if (binary) {
           const slot = cardSlot.querySelector('[data-slot=tp]');
           const opt = (i) => h('button', {
             class: 'tp-opt' + (v.mine === i ? ' sel' : (v.mine != null ? ' dim' : '')),
             onclick: v.phase === 'vote' ? () => sendVote(i) : null,
-          }, v.q.it[i]);
+          }, optLabel(v.q.it, i));
           if (v.phase === 'vote') slot.replaceChildren(opt(0), h('div', { class: 'tp-or' }, 'OU'), opt(1));
           else {
             const votes = Object.entries(v.votes);
@@ -113,7 +117,7 @@ function makeVote(mode) {
             const side = (i) => votes.filter(([, x]) => x === i).map(([pid]) => g.nameOf(pid));
             const a = side(0), b = side(1);
             const bar = (i, names) => h('div', { class: 'bar-res' },
-              h('div', { class: 'lbl' }, h('span', null, v.q.it[i]), h('span', null, Math.round(names.length / total * 100) + '%')),
+              h('div', { class: 'lbl' }, h('span', null, optLabel(v.q.it, i)), h('span', null, Math.round(names.length / total * 100) + '%')),
               h('div', { class: 'bar' }, h('i', { style: { width: (names.length / total * 100) + '%' } })),
               h('div', { class: 'names' }, names.join(', ') || '—'));
             let verdict;
@@ -188,3 +192,4 @@ function makeVote(mode) {
 export const voteTP = makeVote('tp');
 export const voteDix = makeVote('dix');
 export const voteQui = makeVote('qui');
+export const voteOp = makeVote('op');

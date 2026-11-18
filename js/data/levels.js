@@ -26,4 +26,9 @@ export const LEVELS = {
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
     { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
   ],
+  opinions: [
+    { id: 'fun', name: 'Débats', emoji: '🍕', desc: 'Des sujets légers qui divisent quand même.' },
+    { id: 'epice', name: 'Ça divise', emoji: '🌶️', desc: 'Amour, amitié, argent : ça va débattre.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Sexe et couple, réservé aux adultes.', adult: true },
+  ],
 };

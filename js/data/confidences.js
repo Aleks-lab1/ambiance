@@ -1,0 +1,42 @@
+// Confidences : questions pour vraiment se connaître.
+export default {
+  fun: [
+    'Quelle est la chose la plus bizarre que tu fais quand tu es seul(e) ?', 'Quelle est ta pire honte au collège ?', 'Quel est le surnom le plus nul qu\'on t\'ait donné ?',
+    'Quelle chanson connais-tu par cœur sans l\'avoir jamais voulu ?', 'Quel est ton plaisir coupable le plus inavouable ?', 'Quelle est la chose la plus chère que tu aies cassée ?',
+    'À quelle célébrité les gens disent que tu ressembles ?', 'Quel est le pire cadeau que tu aies offert ?', 'Quel est ton talent le plus inutile ?',
+    'Quelle est la pire excuse que tu aies donnée pour annuler un plan ?', 'Quel est ton pire achat compulsif ?', 'Quelle est la phrase que tu répètes tout le temps ?',
+    'De quoi as-tu peur alors que c\'est complètement ridicule ?', 'Quel plat cuisines-tu le mieux… et le pire ?', 'Qu\'est-ce que tu recherches le plus souvent sur Internet ?',
+    'Quel est ton record de sommeil ?', 'Quelle émission regardes-tu en cachette ?', 'Quel est le petit mensonge que tu racontes le plus souvent ?',
+    'Quelle mode as-tu suivie et que tu regrettes amèrement ?', 'Si ta vie était une série, quel en serait le titre ?', 'Quel est le message le plus gênant que tu aies envoyé ?',
+    'À quel personnage de dessin animé ressembles-tu ?', 'Quelle est ta manie la plus étrange ?', 'Quel est le pire petit boulot que tu aies fait ?', 'Qu\'est-ce qui te fait rire à tous les coups ?',
+  ],
+  deep: [
+    'De quoi es-tu le plus fier ou la plus fière dans ta vie ?', 'Quel conseil donnerais-tu à toi-même il y a 10 ans ?', 'Quelle est la plus grande leçon que la vie t\'ait apprise ?',
+    'Qu\'est-ce qui te fait le plus peur dans l\'avenir ?', 'Quel moment de ta vie aimerais-tu revivre ?', 'Qui a le plus influencé la personne que tu es aujourd\'hui ?',
+    'Quel rêve n\'as-tu pas encore réalisé ?', 'Quand t\'es-tu senti(e) vraiment libre pour la dernière fois ?', 'Qu\'est-ce que les gens ne savent pas sur toi ?',
+    'Quelle décision a changé ta vie ?', 'De quoi as-tu vraiment besoin pour être heureux(se) ?', 'Qu\'aimerais-tu que les gens retiennent de toi ?',
+    'Quel est ton plus grand regret ?', 'Qu\'est-ce qui te rend nostalgique ?', 'Quelle est la chose la plus courageuse que tu aies faite ?',
+    'Qu\'est-ce qui t\'a le plus fait grandir ?', 'Quelle qualité admires-tu le plus chez quelqu\'un dans cette pièce ?', 'Si tu pouvais changer une chose en toi, ce serait laquelle ?',
+    'Quelle est ta définition d\'une vie réussie ?', 'Qu\'est-ce que tu n\'as jamais osé dire à quelqu\'un ?', 'Quel est le plus beau compliment qu\'on t\'ait fait ?',
+    'Quand as-tu pleuré pour la dernière fois, et pourquoi ?', 'Qu\'est-ce qui te redonne de l\'énergie quand tout va mal ?', 'Quel est ton souvenir d\'enfance le plus heureux ?',
+  ],
+  love: [
+    'Comment s\'est passé ton premier baiser ?', 'Quel est ton pire rendez-vous amoureux ?', 'Quelle est la chose la plus romantique qu\'on ait faite pour toi ?',
+    'Qu\'est-ce qui te fait craquer chez quelqu\'un ?', 'Quel est ton plus gros red flag en amour ?', 'As-tu déjà eu un coup de foudre ? Raconte.',
+    'Quelle est la plus grosse folie que tu aies faite par amour ?', 'Comment sais-tu que c\'est la bonne personne ?', 'Quelle est la plus belle déclaration que tu aies faite ou reçue ?',
+    'Qu\'est-ce qui te fait fuir dès le premier rendez-vous ?', 'Quel est ton langage de l\'amour : mots doux, cadeaux, câlins, temps passé ensemble ou petits services ?', 'Quelle chanson te fait penser à quelqu\'un ?',
+    'As-tu déjà aimé quelqu\'un sans qu\'il ou elle le sache ?', 'C\'est quoi, ton rendez-vous idéal ?', 'Quelle rupture t\'a le plus marqué(e) ?',
+    'Peut-on rester ami avec un ex ?', 'Quel défaut acceptes-tu le plus facilement chez un(e) partenaire ?', 'As-tu déjà été jaloux(se) d\'une façon dont tu n\'es pas fier(ère) ?',
+    'Quelle est la chose la plus mignonne que tu fais en couple ?', 'Qu\'as-tu appris de ta dernière relation ?', 'Crois-tu à l\'âme sœur ?',
+    'Plutôt passion ou tendresse ?', 'Au bout de combien de temps peut-on dire « je t\'aime » ?', 'Quelle est ta plus grosse erreur en amour ?',
+  ],
+  hot: [
+    'Quel est ton fantasme le plus récurrent ?', 'Quelle partie du corps t\'attire le plus chez les autres ?', 'Quelle est ta meilleure expérience au lit ?',
+    'Quel est l\'endroit le plus fou où tu as fait l\'amour ?', 'Qu\'est-ce qui t\'excite le plus chez un(e) partenaire ?', 'Quel est ton plus gros flop au lit ?',
+    'Quelle aventure d\'un soir n\'oublieras-tu jamais ?', 'Qu\'est-ce que tu n\'as jamais osé demander au lit ?', 'Lumière allumée ou éteinte ?',
+    'Quelle tenue te fait le plus d\'effet ?', 'As-tu déjà fantasmé sur quelqu\'un d\'inaccessible ? Qui ?', 'Quel mot doux ou coquin te fait fondre ?',
+    'Plutôt matin, midi ou soir ?', 'Quelle musique pour une nuit parfaite ?', 'Quel sextoy as-tu, ou aimerais-tu essayer ?',
+    'Dominer ou être dominé(e) ?', 'Quel est le message le plus coquin que tu aies envoyé ?', 'As-tu déjà été surpris(e) en pleine action ? Raconte.',
+    'Quelle est la chose la plus sexy qu\'on t\'ait dite ?', 'Qu\'est-ce qui te met immédiatement dans l\'ambiance ?',
+  ],
+};

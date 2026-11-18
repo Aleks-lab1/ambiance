@@ -1,0 +1,21 @@
+// Bingo de soirée : situations qui risquent d'arriver.
+export default [
+  'Quelqu\'un renverse son verre', 'Quelqu\'un parle de son ex', 'Quelqu\'un dit « je ne bois plus jamais »', 'Quelqu\'un s\'endort sur le canapé',
+  'Quelqu\'un fait un selfie avec le groupe', 'On parle du boulot', 'Quelqu\'un chante faux à pleins poumons', 'Quelqu\'un cherche son téléphone… qu\'il a dans la main',
+  'Quelqu\'un mange le dernier morceau sans demander', 'Quelqu\'un danse tout seul', 'Quelqu\'un arrive en retard', 'Un voisin vient se plaindre du bruit',
+  'Quelqu\'un pleure (de rire, ça compte)', 'On commande à manger', 'On parle de politique', 'Quelqu\'un raconte deux fois la même histoire',
+  'Quelqu\'un fait une imitation', 'Quelque chose se casse', 'Quelqu\'un dit « allez, c\'est la dernière »', 'Une chanson des années 2000 passe',
+  'Quelqu\'un porte un toast', 'Quelqu\'un propose « un resto un de ces jours »', 'Quelqu\'un montre une photo de son animal', 'Quelqu\'un parle de son régime',
+  'Quelqu\'un dit « on est les meilleurs »', 'Un câlin collectif a lieu', 'Quelqu\'un part sans dire au revoir', 'Quelqu\'un dit « c\'est pas moi ! »',
+  'Quelqu\'un parle de crypto ou de bourse', 'Quelqu\'un fait tomber de la nourriture par terre', 'Quelqu\'un dit « je vais rentrer tôt ce soir »', 'Quelqu\'un fait un bisou à quelqu\'un',
+  'Quelqu\'un hurle « J\'ADORE CETTE CHANSON »', 'Quelqu\'un fait un discours que personne n\'a demandé', 'Quelqu\'un se trompe de prénom', 'Quelqu\'un parle de son signe astrologique',
+  'Quelqu\'un pique la place de quelqu\'un d\'autre', 'Quelqu\'un fait une story Instagram', 'Quelqu\'un dit « on se fait un week-end tous ensemble ! »', 'Une dispute pour la musique',
+  'Quelqu\'un a le hoquet', 'Quelqu\'un fait un compliment à la cuisine', 'Quelqu\'un perd à un jeu et crie à la triche', 'Quelqu\'un appelle sa mère',
+  'Quelqu\'un parle d\'une série que personne n\'a vue', 'Quelqu\'un éternue trois fois de suite', 'Quelqu\'un tombe ou trébuche', 'Quelqu\'un se ressert un verre en cachette',
+  'Quelqu\'un dit « c\'est mon anniversaire bientôt »', 'Quelqu\'un fait un cœur avec ses doigts', 'Quelqu\'un parle d\'un vieux souvenir de lycée', 'Quelqu\'un fait la vaisselle sans qu\'on lui demande',
+  'Quelqu\'un dit « on aurait dû faire ça plus souvent »', 'Quelqu\'un met ses lunettes de soleil à l\'intérieur', 'Quelqu\'un fait un pari stupide', 'Quelqu\'un raconte une anecdote gênante sur un autre',
+  'Quelqu\'un demande le code du Wi-Fi', 'Quelqu\'un charge son téléphone à 1 %', 'Quelqu\'un se plaint d\'avoir froid', 'Quelqu\'un enlève ses chaussures',
+  'Quelqu\'un fait un check compliqué', 'Quelqu\'un dit « je vous aime tous »', 'Un jeu de cette appli est lancé', 'Quelqu\'un rit tellement qu\'il n\'arrive plus à parler',
+  'Quelqu\'un mange directement dans le plat', 'Quelqu\'un fait le DJ sans qu\'on lui demande', 'Quelqu\'un parle de son voyage au bout du monde', 'Quelqu\'un donne un surnom à quelqu\'un',
+  'Quelqu\'un s\'excuse pour rien', 'Quelqu\'un dit « vous êtes sérieux là ? »',
+];

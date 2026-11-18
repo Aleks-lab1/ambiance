@@ -2,6 +2,7 @@
 
 export const FILTERS = [
   { id: 'all', label: '✨ Tous' },
+  { id: 'new', label: '🆕 Nouveaux' },
   { id: 'online', label: '🌐 En ligne' },
   { id: 'cartes', label: '🃏 Questions' },
   { id: 'equipes', label: '👥 Équipes' },
@@ -33,6 +34,97 @@ export const GAMES = [
       'Ensuite, tout le monde vote pour éliminer celui qu\'il soupçonne. Si l\'imposteur est démasqué, les autres gagnent. Sinon, c\'est lui qui gagne !',
     ],
     load: () => import('./imposteur.js'),
+  },
+  {
+    id: 'quiz', name: 'Le Quiz', emoji: '🧠', colors: ['#5f2c82', '#49a09d'], new: true,
+    desc: '170 questions dans 9 thèmes. Le plus rapide marque le plus de points.',
+    tags: ['online', 'rapide'], players: '2-16', badges: ['Nouveau'],
+    rules: [
+      '<b>En ligne :</b> la question s\'affiche sur tous les téléphones avec 4 réponses. Plus tu réponds vite (et juste), plus tu gagnes de points. Choisis les thèmes : culture G, géo, histoire, sciences, cinéma, musique, sport, gastronomie, insolite.',
+      '<b>Sur un seul téléphone :</b> lis la question à voix haute, chacun répond, puis révèle la réponse et donne le point à ceux qui ont trouvé.',
+    ],
+    load: () => import('./race.js').then((m) => m.quiz),
+  },
+  {
+    id: 'punchlines', name: 'Punchlines', emoji: '✍️', colors: ['#ff0844', '#ffb199'], new: true,
+    desc: 'Complète la phrase de la façon la plus drôle. Votes anonymes !',
+    tags: ['online', 'hot'], players: '3-16', badges: ['Nouveau'],
+    rules: [
+      'Une phrase à trous s\'affiche, par exemple « Le pire cadeau pour un premier rendez-vous : ___ ». Chacun écrit sa réponse la plus drôle sur son téléphone.',
+      'Les réponses sont affichées anonymement et tout le monde vote pour sa préférée (pas la sienne !). Chaque vote reçu rapporte 100 points.',
+      'Trois niveaux : Fun, Trash (18+) et Hot++.',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('write-punch')),
+  },
+  {
+    id: 'telephone', name: 'Téléphone dessiné', emoji: '📞', colors: ['#00b09b', '#96c93d'], new: true,
+    desc: 'Écris, dessine, devine… et regarde le message se déformer.',
+    tags: ['online'], players: '3-12', badges: ['Nouveau'],
+    rules: [
+      'Chacun écrit une phrase. Elle passe au joueur suivant qui doit la <b>dessiner</b>. Le suivant voit seulement le dessin et écrit ce qu\'il croit voir. Le suivant le redessine… et ainsi de suite.',
+      'À la fin, on révèle chaque chaîne étape par étape : fous rires garantis quand « un chat qui fait du ski » devient « une banane au volant ».',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('telephone')),
+  },
+  {
+    id: 'dico', name: 'Dico bluff', emoji: '📖', colors: ['#3d2c8d', '#c3aed6'], new: true,
+    desc: 'Invente une fausse définition pour un mot rare et piège les autres.',
+    tags: ['online', 'bluff'], players: '3-16', badges: ['Nouveau'],
+    rules: [
+      'Un mot rare s\'affiche (« callipyge », « billevesée »…). Chacun invente une définition crédible sur son téléphone.',
+      'Toutes les définitions, plus la vraie, sont mélangées. Vote pour celle que tu crois vraie : +200 points si tu trouves, et +100 points pour chaque joueur piégé par ta fausse définition.',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('write-dico')),
+  },
+  {
+    id: 'menteur', name: 'Menteur !', emoji: '🎲', colors: ['#870000', '#190a05'], new: true,
+    desc: 'Dés secrets sur ton téléphone, enchères et bluff. Ose dire « Menteur ! »',
+    tags: ['online', 'bluff'], players: '2-10', badges: ['Nouveau'],
+    rules: [
+      'Chacun voit ses dés en secret sur son téléphone. À tour de rôle, on annonce combien de dés d\'une valeur il y a <b>en tout sur la table</b> (ex. « cinq 4 »). Chaque annonce doit être plus haute que la précédente.',
+      'Si tu penses que le joueur précédent exagère, dis « Menteur ! ». On révèle tous les dés : si l\'annonce est fausse, il perd un dé, sinon c\'est toi. Les 1 sont des jokers (désactivable). Le dernier à avoir des dés gagne.',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('menteur')),
+  },
+  {
+    id: 'emojis', name: 'Émojis mystères', emoji: '🧩', colors: ['#f7971e', '#ffd200'], new: true,
+    desc: 'Films, séries et expressions cachés derrière des émojis.',
+    tags: ['online', 'rapide'], players: '2-16', badges: ['Nouveau'],
+    rules: [
+      '<b>En ligne :</b> une suite d\'émojis s\'affiche (🦁👑…). Tape ta réponse : le premier qui trouve gagne un bonus. Les fautes de frappe et les accents sont tolérés.',
+      '<b>Sur un seul téléphone :</b> montre les émojis, le premier qui crie la bonne réponse gagne le point.',
+    ],
+    load: () => import('./race.js').then((m) => m.emojis),
+  },
+  {
+    id: 'anagrammes', name: 'Anagrammes', emoji: '🔀', colors: ['#1d976c', '#3fd47f'], new: true,
+    desc: 'Les lettres sont mélangées : retrouve le mot le plus vite possible.',
+    tags: ['online', 'rapide'], players: '2-16', badges: ['Nouveau'],
+    rules: [
+      '<b>En ligne :</b> les lettres d\'un mot sont mélangées. Tape le mot dès que tu l\'as trouvé : plus tu es rapide, plus tu marques. Un indice (la première lettre) apparaît à mi-temps.',
+      '<b>Sur un seul téléphone :</b> le premier qui trouve le mot à voix haute gagne le point.',
+    ],
+    load: () => import('./race.js').then((m) => m.anagrammes),
+  },
+  {
+    id: 'estimations', name: 'À vue de nez', emoji: '📏', colors: ['#e65c00', '#f9d423'], new: true,
+    desc: 'Hauteur de la tour Eiffel, os du corps… Le plus proche gagne.',
+    tags: ['online', 'rapide'], players: '2-16', badges: ['Nouveau'],
+    rules: [
+      '<b>En ligne :</b> chacun propose un nombre. Le plus proche de la vraie réponse gagne 300 points (+200 s\'il tombe pile), le deuxième 150, le troisième 75.',
+      '<b>Sur un seul téléphone :</b> chacun annonce son estimation à voix haute, puis on révèle. Le plus proche gagne le point.',
+    ],
+    load: () => import('./race.js').then((m) => m.estimations),
+  },
+  {
+    id: 'bingo', name: 'Bingo de soirée', emoji: '🎱', colors: ['#fc466b', '#3f5efb'], new: true,
+    desc: 'Coche les situations de la soirée : « quelqu\'un parle de son ex »…',
+    tags: ['online'], players: '1-16', badges: ['Nouveau'],
+    rules: [
+      'Chacun reçoit une grille de 25 situations qui risquent d\'arriver pendant la soirée (« quelqu\'un renverse son verre », « on parle de son ex »…). Coche-les quand elles arrivent pour de vrai !',
+      'Une ligne, une colonne ou une diagonale complète = BINGO ! <b>En ligne</b>, tout le monde est prévenu et voit les cases cochées pour vérifier.',
+    ],
+    load: () => import('./bingo.js'),
   },
   {
     id: 'tupreferes', name: 'Tu préfères', emoji: '🤔', colors: ['#7c5cff', '#2ec5ff'],
@@ -75,6 +167,37 @@ export const GAMES = [
       '<b>En ligne :</b> le vote se fait sur les téléphones, de façon anonyme jusqu\'aux résultats.',
     ],
     load: () => import('./cartes.js').then((m) => m.qui),
+  },
+  {
+    id: 'opinions', name: 'Opinions impopulaires', emoji: '🗣️', colors: ['#ee0979', '#ff6a00'], new: true,
+    desc: 'D\'accord ou pas d\'accord ? La minorité doit se justifier.',
+    tags: ['cartes', 'online', 'hot'], players: '3+', badges: ['Nouveau'],
+    rules: [
+      'Une opinion qui divise s\'affiche (« Les chaussettes dans les sandales, c\'est stylé »). À 3, chacun lève le pouce (d\'accord) ou le baisse (pas d\'accord).',
+      'La minorité doit défendre son avis… puis prend une pénalité. <b>En ligne :</b> le vote se fait sur les téléphones avec les noms.',
+    ],
+    load: () => import('./cartes.js').then((m) => m.opinions),
+  },
+  {
+    id: 'etsi', name: 'Et si… ?', emoji: '🌀', colors: ['#4568dc', '#b06ab3'], new: true,
+    desc: 'Des situations folles : qu\'est-ce que tu ferais ?',
+    tags: ['cartes', 'hot'], players: '2+', badges: ['Nouveau'],
+    rules: ['Une situation imaginaire s\'affiche (« Et si tu te réveillais dans le corps de la personne à ta gauche ? »). Chacun raconte ce qu\'il ferait. La réponse la plus folle gagne !'],
+    load: () => import('./cartes.js').then((m) => m.etsi),
+  },
+  {
+    id: 'confidences', name: 'Confidences', emoji: '💬', colors: ['#c94b4b', '#4b134f'], new: true,
+    desc: 'Des questions pour vraiment se connaître : drôles, profondes, amoureuses…',
+    tags: ['cartes', 'hot'], players: '2+', badges: ['Nouveau'],
+    rules: ['Le joueur désigné répond à la question, honnêtement. Les autres peuvent ensuite donner leur propre réponse. Parfait pour une fin de soirée ou en couple.'],
+    load: () => import('./cartes.js').then((m) => m.confidences),
+  },
+  {
+    id: 'deuxverites', name: 'Deux vérités, un mensonge', emoji: '🤥', colors: ['#283c86', '#45a247'], new: true,
+    desc: 'Raconte trois anecdotes dont une fausse. Démasquez le mensonge !',
+    tags: ['cartes', 'bluff', 'hot'], players: '3+', badges: ['Nouveau'],
+    rules: ['Le joueur désigné raconte trois anecdotes sur le thème de la carte : deux vraies et une inventée. Les autres votent pour le mensonge. Ceux qui se trompent prennent une pénalité ; si personne ne trouve, c\'est le conteur qui gagne.'],
+    load: () => import('./cartes.js').then((m) => m.deuxverites),
   },
   {
     id: 'action', name: 'Action ou vérité', emoji: '🎯', colors: ['#e94057', '#8a2387'],
@@ -138,6 +261,20 @@ export const GAMES = [
     load: () => import('./chapeau.js'),
   },
   {
+    id: 'fredonne', name: 'Fredonne !', emoji: '🎵', colors: ['#da22ff', '#9733ee'], new: true,
+    desc: 'Fais deviner des chansons en les fredonnant, sans paroles.',
+    tags: ['equipes', 'rapide'], players: '4+', badges: ['Nouveau'],
+    rules: ['Par équipes. Le joueur fredonne (« lalala », « mmm ») la chanson affichée, <b>sans prononcer les paroles</b>. Son équipe doit trouver le titre ou l\'artiste. Trouvé : +1 point.'],
+    load: () => import('./teamwords.js').then((m) => m.fredonne),
+  },
+  {
+    id: 'disle', name: 'Dis-le comme…', emoji: '🎭', colors: ['#f953c6', '#b91d73'], new: true,
+    desc: 'Dis une phrase banale avec une émotion ou un personnage secret.',
+    tags: ['equipes', 'rapide'], players: '4+', badges: ['Nouveau'],
+    rules: ['Par équipes. Le joueur doit dire la phrase affichée (« Passe-moi le sel ») à la manière indiquée en secret (« comme un pirate », « en pleine rupture »…). Son équipe doit deviner la manière. Trouvé : +1 point.'],
+    load: () => import('./teamwords.js').then((m) => m.disle),
+  },
+  {
     id: 'front', name: 'Sur le front', emoji: '🤳', colors: ['#fc4a1a', '#f7b733'],
     desc: 'Téléphone sur le front, les autres te font deviner le mot.',
     tags: ['rapide', 'equipes'], players: '2+',
@@ -176,6 +313,34 @@ export const GAMES = [
       'Le premier qui a fini crie « STOP » (ou le chrono s\'arrête). 2 points pour une réponse unique, 1 point si quelqu\'un a la même.',
     ],
     load: () => import('./petitbac.js'),
+  },
+  {
+    id: 'nioui', name: 'Ni oui ni non', emoji: '🙅', colors: ['#ff416c', '#ff4b2b'], new: true,
+    desc: 'Réponds aux questions pièges sans jamais dire « oui » ni « non ».',
+    tags: ['rapide'], players: '2+', badges: ['Nouveau'],
+    rules: ['Un joueur pose les questions pièges affichées, très vite. Celui qui répond doit tenir 60 secondes sans dire « oui », « non », « ouais », « nan »… ni hocher la tête ! S\'il craque, il prend une pénalité.'],
+    load: () => import('./nioui.js'),
+  },
+  {
+    id: 'histoire', name: 'Histoire folle', emoji: '📚', colors: ['#8360c3', '#2ebf91'], new: true,
+    desc: 'Inventez une histoire à tour de rôle en casant des mots imposés.',
+    tags: ['rapide'], players: '3+', badges: ['Nouveau'],
+    rules: ['L\'histoire commence par une phrase. À tour de rôle, chaque joueur a 30 secondes pour la continuer en plaçant le mot imposé qui s\'affiche. Mot non placé ou blanc : pénalité !'],
+    load: () => import('./histoire.js'),
+  },
+  {
+    id: 'duel', name: 'Duel de réflexes', emoji: '⚡', colors: ['#f7ff00', '#db36a4'], new: true,
+    desc: 'Deux joueurs face à face sur le même téléphone. Le plus rapide gagne.',
+    tags: ['rapide'], players: '2', badges: ['Nouveau'],
+    rules: ['Posez le téléphone à plat entre vous deux, chacun de son côté. <b>Réflexe :</b> touchez votre moitié dès que l\'écran devient vert (trop tôt = point perdu). <b>Mitraillette :</b> tapez le plus de fois possible en 5 secondes. Premier à 3 points !'],
+    load: () => import('./duel.js'),
+  },
+  {
+    id: 'sequence', name: 'La Séquence', emoji: '🔴', colors: ['#00c9ff', '#92fe9d'], new: true,
+    desc: 'Retiens la suite de couleurs. Elle s\'allonge à chaque tour…',
+    tags: ['rapide'], players: '1+', badges: ['Nouveau'],
+    rules: ['Le téléphone joue une suite de couleurs et de sons. Le joueur doit la reproduire. Réussi : on passe le téléphone au suivant et la suite s\'allonge d\'une couleur. Celui qui se trompe prend une pénalité et la suite repart de zéro.'],
+    load: () => import('./sequence.js'),
   },
   {
     id: 'roi', name: 'Le Roi', emoji: '👑', colors: ['#c79a2a', '#7a1f3d'],

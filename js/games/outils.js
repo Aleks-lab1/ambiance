@@ -2,12 +2,10 @@
 import { h, topbar, seg, shuffle, randInt, countdown, timerView, stepper, toast } from '../ui.js';
 import { get, set, getPlayers } from '../store.js';
 import { editPlayers } from '../players.js';
-import { TEAM_COLORS } from '../common.js';
+import { TEAM_COLORS, dieFace } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 
-// Position des points (grille 3×3) pour chaque face.
-const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-const die = (v) => h('div', { class: 'die roll', 'aria-label': String(v) }, Array.from({ length: 9 }, (_, i) => h('i', { class: PIPS[v].includes(i) ? 'on' : '' })));
+const die = (v) => dieFace(v, 'roll');
 
 export function start(ctx) {
   const { root } = ctx;

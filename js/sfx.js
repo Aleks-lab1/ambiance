@@ -57,6 +57,7 @@ export const sfx = {
   swoosh() { tone(300, 0.18, 'sine', 0.08, 0, 1200); },
   boom() { noise(1.3, 0.9); tone(110, 0.7, 'sine', 0.5, 0, 35); },
   end() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, 'triangle', 0.2, i * 0.12)); },
+  note(freq, dur = 0.32) { tone(freq, dur, 'triangle', 0.28); },
   fanfare() { [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, 'square', 0.08, i * 0.13)); },
 };
 
