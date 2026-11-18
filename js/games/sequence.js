@@ -45,22 +45,50 @@ export function start(ctx) {
     });
     const grid = h('div', { class: 'seq-grid' }, pads);
     const startBtn = h('button', { class: 'btn btn-primary btn-big btn-block' });
-    root.replaceChildren(top, status, sub, grid, h('div', { class: 'grow' }), startBtn);
+    const count = h('div', { class: 'seq-count', 'aria-live': 'assertive' });
+    root.replaceChildren(top, status, sub, h('div', { class: 'seq-wrap' }, grid, count), h('div', { class: 'grow' }), startBtn);
 
     const who = () => (players.length ? players[turn % players.length] : 'Toi');
+    const len = () => `${seq.length} couleur${seq.length > 1 ? 's' : ''}`;
     const light = (i, ms = 320) => {
       pads[i].classList.add('lit');
       sfx.note(PADS[i].f, ms / 1000);
       later(() => pads[i].classList.remove('lit'), ms);
     };
 
+    // Un seul « Je suis prêt » au tout début de la partie…
     function intro() {
       input = false;
-      status.textContent = `Au tour de ${who()}`;
-      sub.textContent = `Suite de ${seq.length} couleur${seq.length > 1 ? 's' : ''}. Regarde bien…`;
+      status.textContent = players.length ? `Au tour de ${who()}` : 'Prêt(e) ?';
+      sub.textContent = `Suite de ${len()}. Regarde bien…`;
       startBtn.textContent = '👀 Je suis prêt(e)';
       startBtn.classList.remove('hidden');
       startBtn.onclick = showSeq;
+    }
+
+    // … puis un compte à rebours de 3 secondes avant chaque nouvelle suite.
+    function countdownThen(fn) {
+      input = false;
+      startBtn.classList.add('hidden');
+      status.textContent = players.length ? `Au tour de ${who()} !` : 'Prépare-toi…';
+      sub.textContent = `Suite de ${len()}`;
+      pads.forEach((b) => b.classList.remove('lit'));
+      grid.classList.add('dim');
+      let n = 3;
+      const step = () => {
+        if (n === 0) {
+          count.textContent = '';
+          grid.classList.remove('dim');
+          fn();
+          return;
+        }
+        count.textContent = String(n);
+        count.classList.remove('pop'); void count.offsetWidth; count.classList.add('pop');
+        sfx.beep(); buzz(15);
+        n--;
+        later(step, 1000);
+      };
+      step();
     }
 
     function showSeq() {
@@ -69,8 +97,8 @@ export function start(ctx) {
       status.textContent = 'Regarde bien…';
       sub.textContent = '';
       const step = Math.max(260, 620 - seq.length * 22);
-      seq.forEach((c, k) => later(() => light(c, step * 0.7), 500 + k * step));
-      later(() => { input = true; pos = 0; status.textContent = 'À toi !'; sub.textContent = `Reproduis la suite (${seq.length})`; sfx.go(); }, 500 + seq.length * step + 150);
+      seq.forEach((c, k) => later(() => light(c, step * 0.7), 450 + k * step));
+      later(() => { input = true; pos = 0; status.textContent = 'À toi !'; sub.textContent = `Reproduis la suite (${seq.length})`; sfx.go(); }, 450 + seq.length * step + 150);
     }
 
     function press(i) {
@@ -88,7 +116,7 @@ export function start(ctx) {
         sub.textContent = `Suite de ${seq.length} réussie${seq.length > rec ? ' — nouveau record ! 🏅' : ''}`;
         seq.push(randInt(0, 3));
         turn++;
-        later(intro, 1100);
+        later(() => countdownThen(showSeq), 1100);
       }
     }
 
@@ -98,12 +126,12 @@ export function start(ctx) {
       grid.classList.add('shake');
       later(() => grid.classList.remove('shake'), 500);
       status.textContent = '❌ Raté !';
-      sub.textContent = `La suite faisait ${seq.length} couleur${seq.length > 1 ? 's' : ''}. ${players.length ? who() + ' prend ' + sip(1) + '.' : ''}`;
+      sub.textContent = `La suite faisait ${len()}. ${players.length ? who() + ' prend ' + sip(1) + '.' : ''}`;
       // Montre la bonne réponse
       seq.forEach((c, k) => later(() => light(c, 200), 700 + k * 260));
-      startBtn.textContent = 'On repart de zéro →';
+      startBtn.textContent = '🔁 On repart de zéro';
       startBtn.classList.remove('hidden');
-      startBtn.onclick = () => { clear(); seq = [randInt(0, 3)]; turn++; intro(); };
+      startBtn.onclick = () => { clear(); seq = [randInt(0, 3)]; turn++; countdownThen(showSeq); };
     }
 
     intro();

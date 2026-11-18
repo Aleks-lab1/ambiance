@@ -1,0 +1,357 @@
+// Le Bon Mot : tape vite un mot avec les lettres imposées, ou enchaîne les mots sur la dernière lettre.
+import { h, topbar, seg, toggleRow, countdown, timerView, confirmBox } from '../ui.js';
+import { get, set, getPlayers, sip } from '../store.js';
+import { playersPanel } from '../players.js';
+import { podium } from '../common.js';
+import { sfx, buzz } from '../sfx.js';
+import { makeDico, normWord, fits, minLength } from '../bonmot-core.js';
+
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const RARE_START = new Set(['K', 'W', 'X', 'Y', 'Z']);
+const GAP = 3; // secondes de compte à rebours entre deux joueurs
+
+// Le dictionnaire est décodé une seule fois, même si on relance le jeu.
+let dicoP = null;
+const loadDico = () => (dicoP ||= import('../data/mots.js').then(makeDico).catch((e) => { dicoP = null; throw e; }));
+
+const up = (s) => s.toUpperCase();
+const tiles = (letters) => h('div', { class: 'tiles bm-tiles' }, up(letters).split('').map((c, i) => h('span', { style: { animationDelay: i * 70 + 'ms' } }, c)));
+
+export function start(ctx) {
+  const { root, meta } = ctx;
+  const opts = Object.assign({ mode: 'lettres', len: 'mix', pos: 'start', chain: 1, time: 15, dico: true }, get('bonmot', {}));
+  const save = () => set('bonmot', opts);
+  let dico = null;
+  let timers = [];
+  let timer = null;
+  const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+  const clear = () => { timers.forEach(clearTimeout); timers = []; if (timer) { timer.stop(); timer = null; } };
+  // Empêche un bouton de voler le focus du champ de saisie (le clavier reste ouvert).
+  const keep = (e) => e.preventDefault();
+
+  // ---------------- Réglages ----------------
+  function setup() {
+    clear();
+    ctx.setGuard(null);
+    const modeDesc = h('p', { class: 'muted small' });
+    const optsBox = h('div', { class: 'col' });
+    const startBtn = h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => dico && play() });
+
+    function render() {
+      modeDesc.textContent = opts.mode === 'chaine'
+        ? 'Chaque mot doit commencer par la fin du mot précédent : « dernier » → « rose » → « escargot »… Le premier joueur choisit la lettre de départ.'
+        : 'L\'appli tire 1, 2 ou 3 lettres au hasard (par exemple « DE ») : tape vite un mot qui va avec (« dernier »).';
+      optsBox.replaceChildren(
+        opts.mode === 'chaine'
+          ? h('label', { class: 'field' }, 'Lettres à reprendre à la fin du mot précédent', seg([
+            { value: 1, label: 'La dernière' }, { value: 2, label: 'Les 2 dernières' }, { value: 3, label: 'Les 3 dernières' },
+          ], opts.chain, (v) => { opts.chain = v; save(); }))
+          : [
+            h('label', { class: 'field' }, 'Nombre de lettres imposées', seg([
+              { value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 'mix', label: '🎲 Mélange' },
+            ], opts.len, (v) => { opts.len = v; save(); })),
+            h('label', { class: 'field' }, 'Les lettres doivent être…', seg([
+              { value: 'start', label: 'Au début du mot' }, { value: 'in', label: 'N\'importe où' },
+            ], opts.pos, (v) => { opts.pos = v; save(); })),
+          ],
+        h('label', { class: 'field' }, 'Temps par joueur', seg([10, 15, 20, 30].map((v) => ({ value: v, label: v + ' s' })), opts.time, (v) => { opts.time = v; save(); })),
+        toggleRow('Vérifier avec le dictionnaire', 'Refuse les mots inconnus (le groupe peut quand même les accepter)', opts.dico, (v) => { opts.dico = v; save(); }));
+      if (dico) { startBtn.disabled = false; startBtn.textContent = opts.mode === 'chaine' ? '🔗 Lancer la chaîne' : '🔠 C\'est parti !'; }
+    }
+
+    startBtn.disabled = true;
+    startBtn.textContent = '⏳ Chargement du dictionnaire…';
+    loadDico().then((d) => { dico = d; if (startBtn.isConnected) render(); }).catch(() => {
+      if (startBtn.isConnected) startBtn.textContent = '😵 Dictionnaire introuvable. Réessaie plus tard.';
+    });
+
+    root.replaceChildren(
+      topbar(ctx),
+      h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
+      playersPanel(0),
+      h('label', { class: 'field' }, 'Mode de jeu', seg([
+        { value: 'lettres', label: '🔤 Lettres imposées' }, { value: 'chaine', label: '🔗 Mots en chaîne' },
+      ], opts.mode, (v) => { opts.mode = v; save(); render(); })),
+      modeDesc,
+      optsBox,
+      h('div', { class: 'grow' }),
+      startBtn);
+    render();
+  }
+
+  // ---------------- Partie ----------------
+  function play() {
+    clear();
+    const list = getPlayers();
+    const solo = !list.length;
+    const players = solo ? ['Toi'] : list;
+    const stats = new Map(players.map((p) => [p, { pts: 0, fails: 0, best: '' }]));
+    const chainMode = opts.mode === 'chaine';
+    const pos = chainMode ? 'start' : opts.pos;
+    const used = new Set();   // mots déjà joués (forme normalisée)
+    const played = [];        // mots joués, pour l'affichage
+    const recent = [];        // derniers tirages, pour éviter les répétitions
+    let chain = [];           // chaîne en cours
+    let bestChain = 0;
+    let turn = 0;
+    let letters = '';         // lettres imposées (normalisées)
+    let state = 'idle';       // pick | count | play | result
+
+    const who = () => players[turn % players.length];
+    const quit = async () => { if (await confirmBox('Quitter la partie en cours ?', { ok: 'Quitter' })) setup(); };
+    ctx.setGuard('Quitter la partie en cours ?');
+
+    const whoPill = h('span', { class: 'pill' });
+    const scorePill = h('span', { class: 'pill' });
+    const tv = timerView(opts.time);
+    const card = h('div', { class: 'bm-card' });
+    const input = h('input', {
+      class: 'input bm-input', type: 'text', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'none', spellcheck: 'false',
+      enterkeyhint: 'send', maxlength: '32', placeholder: 'Tape ton mot…', 'aria-label': 'Ton mot',
+      oninput: () => input.classList.toggle('ok', state === 'play' && !!letters && fits(normWord(input.value), letters, pos)),
+    });
+    const form = h('form', { class: 'row bm-form', onsubmit: (e) => { e.preventDefault(); submit(); } },
+      input, h('button', { class: 'btn btn-primary', type: 'submit', onmousedown: keep }, 'Valider'));
+    const msg = h('div', { class: 'bm-msg', 'aria-live': 'polite' });
+    const passBtn = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onmousedown: keep, onclick: () => state === 'play' && fail('pass') }, '🏳️ Je sèche');
+    const usedBox = h('div', { class: 'bm-used' });
+    const playZone = h('div', { class: 'col' }, tv.el, form, msg, h('div', { class: 'row' }, passBtn, h('div', { class: 'grow' })));
+
+    root.replaceChildren(
+      topbar(ctx, { onBack: quit, right: h('button', { class: 'btn btn-ghost btn-sm', onmousedown: keep, onclick: summary }, '🏁 Fin') }),
+      h('div', { class: 'row' }, whoPill, h('div', { class: 'grow' }), scorePill),
+      card, playZone, usedBox);
+
+    function updatePills() {
+      const p = who();
+      whoPill.textContent = solo ? '✍️ À toi !' : `✍️ ${p}`;
+      scorePill.textContent = chainMode
+        ? `🔗 ${chain.length} mot${chain.length > 1 ? 's' : ''} · record ${Math.max(get('bonmot-record', 0), bestChain)}`
+        : `⭐ ${stats.get(p).pts} pt${stats.get(p).pts > 1 ? 's' : ''}`;
+    }
+
+    function renderUsed() {
+      if (chainMode) {
+        usedBox.replaceChildren(chain.length ? h('div', { class: 'bm-chain' }, chain.map((w, i) => [i ? h('span', { class: 'arr' }, '→') : null, h('span', { class: 'chip' }, w)])) : null);
+      } else {
+        usedBox.replaceChildren(played.length ? [h('p', { class: 'muted small' }, 'Déjà joués :'), h('div', { class: 'chips' }, played.slice(-24).reverse().map((w) => h('span', { class: 'chip' }, w)))] : null);
+      }
+    }
+
+    function setMsg(text, cls = '', extra = null) {
+      msg.className = 'bm-msg' + (cls ? ' ' + cls : '');
+      msg.replaceChildren(text ? h('span', null, text) : null, extra);
+    }
+
+    function needText() {
+      return pos === 'in' ? 'Un mot qui contient' : 'Un mot qui commence par';
+    }
+
+    // Lettres imposées du prochain tour (mode Lettres imposées).
+    function drawLetters() {
+      const len = opts.len === 'mix' ? (pos === 'in' ? 2 + Math.floor(Math.random() * 2) : 1 + Math.floor(Math.random() * 3)) : opts.len;
+      const s = dico.draw(pos, len, recent);
+      recent.push(s);
+      if (recent.length > 20) recent.shift();
+      return s;
+    }
+
+    // ----- Compte à rebours de 3 s entre deux joueurs -----
+    function countdownThen(head) {
+      state = 'count';
+      if (timer) { timer.stop(); timer = null; }
+      updatePills();
+      tv.set(opts.time * 1000, opts.time * 1000);
+      const num = h('div', { class: 'bm-count' });
+      const p = who();
+      card.replaceChildren(
+        head,
+        h('div', { class: 'kicker' }, solo ? 'Prépare-toi…' : `Au tour de ${p} !`),
+        num,
+        chainMode ? h('div', { class: 'sub' }, `Prochain mot : commence par `, h('b', null, up(letters))) : null);
+      let n = GAP;
+      const step = () => {
+        if (state !== 'count') return;
+        if (n === 0) { go(); return; }
+        num.textContent = String(n);
+        num.classList.remove('pop'); void num.offsetWidth; num.classList.add('pop');
+        sfx.beep(); buzz(15);
+        n--;
+        later(step, 1000);
+      };
+      step();
+    }
+
+    // ----- Choix de la première lettre (mode chaîne) -----
+    function pickScreen(head = null) {
+      state = 'pick';
+      if (timer) { timer.stop(); timer = null; }
+      letters = '';
+      chain = [];
+      updatePills();
+      renderUsed();
+      setMsg('');
+      playZone.classList.add('hidden');
+      input.blur();
+      const choose = (c) => {
+        letters = c.toLowerCase();
+        playZone.classList.remove('hidden');
+        input.value = '';
+        input.focus(); // dans le geste de l'utilisateur : ouvre le clavier
+        go();
+      };
+      card.replaceChildren(
+        head,
+        h('div', { class: 'kicker' }, solo ? 'Choisis la première lettre' : `${who()}, choisis la première lettre`),
+        h('div', { class: 'bm-pick' },
+          ALPHABET.map((c) => h('button', { class: RARE_START.has(c) ? 'rare' : '', onclick: () => choose(c) }, c)),
+          h('button', { class: 'rnd', onclick: () => choose(dico.randomStart()), 'aria-label': 'Lettre au hasard' }, '🎲')));
+    }
+
+    // ----- Tour de jeu -----
+    function go() {
+      state = 'play';
+      if (!chainMode) { letters = drawLetters(); input.value = ''; }
+      input.classList.toggle('ok', fits(normWord(input.value), letters, pos));
+      updatePills();
+      setMsg('');
+      const last = chain[chain.length - 1];
+      card.replaceChildren(
+        h('div', { class: 'kicker' }, needText()),
+        tiles(letters),
+        h('div', { class: 'sub' }, last ? `après « ${last} »` : (letters.length > 1 ? 'Les accents ne comptent pas' : `Au moins ${minLength(letters)} lettres`)));
+      sfx.go();
+      timer = countdown({
+        seconds: opts.time,
+        onTick: (l, s, ch) => {
+          if (!root.isConnected) { clear(); return; }
+          tv.set(l, opts.time * 1000);
+          if (ch && s <= 3 && s > 0) sfx.tick();
+        },
+        onEnd: () => { if (state === 'play') fail('time'); },
+      });
+    }
+
+    function reject(text, word = null) {
+      sfx.bad(); buzz([60, 40, 60]);
+      form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+      const acceptBtn = word && h('button', {
+        class: 'btn btn-soft btn-sm', type: 'button', onmousedown: keep,
+        onclick: () => { if (state === 'play') { input.focus(); accept(word); } },
+      }, '👍 Le groupe l\'accepte');
+      setMsg(text, 'bad', acceptBtn);
+    }
+
+    function submit() {
+      if (state === 'count') { setMsg('Attends le top départ !'); return; }
+      if (state !== 'play') return;
+      const raw = input.value.trim().replace(/\s+/g, ' ');
+      const n = normWord(raw);
+      if (!n) return;
+      const L = up(letters);
+      if (!fits(n, letters, pos)) return reject(`« ${raw} » ${pos === 'in' ? 'ne contient pas' : 'ne commence pas par'} ${L}`);
+      if (n.length < minLength(letters)) return reject(`Trop court ! Au moins ${minLength(letters)} lettres.`);
+      if (used.has(n)) return reject(`« ${raw} » a déjà été joué !`);
+      if (opts.dico && !dico.has(n)) return reject(`« ${raw} » n'est pas dans le dictionnaire.`, raw);
+      accept(raw);
+    }
+
+    function accept(raw) {
+      const n = normWord(raw);
+      const p = who();
+      const st = stats.get(p);
+      if (timer) { timer.stop(); timer = null; }
+      used.add(n);
+      played.push(raw);
+      st.pts++;
+      if (n.length > normWord(st.best).length) st.best = raw;
+      input.value = '';
+      input.classList.remove('ok');
+      setMsg('');
+      sfx.ok(); buzz(30);
+      const head = h('div', { class: 'res' }, `✅ « ${raw} »`, solo ? null : h('span', { class: 'by' }, ` · ${p} +1`));
+      if (chainMode) {
+        chain.push(raw);
+        bestChain = Math.max(bestChain, chain.length);
+        const next = dico.chainLetters(n, opts.chain, used);
+        letters = next.letters;
+        if (next.reduced) setMsg(`Aucun mot ne commence par ${up(n.slice(-opts.chain))} : on garde ${up(letters)}.`);
+      }
+      renderUsed();
+      turn++;
+      countdownThen(head);
+    }
+
+    function fail(kind) {
+      state = 'result';
+      if (timer) { timer.stop(); timer = null; }
+      const p = who();
+      stats.get(p).fails++;
+      sfx.bad(); buzz([200, 80, 200]);
+      card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+      const ex = dico.examples(letters, pos, used);
+      let chainInfo = null;
+      if (chainMode && chain.length) {
+        const rec = get('bonmot-record', 0);
+        const isRec = chain.length > rec;
+        if (isRec) set('bonmot-record', chain.length);
+        chainInfo = h('div', { class: 'sub' }, `🔗 Chaîne de ${chain.length} mot${chain.length > 1 ? 's' : ''}${isRec ? ' — nouveau record ! 🏅' : ''}`);
+      }
+      const head = [
+        h('div', { class: 'res' }, kind === 'time' ? '⏰ Temps écoulé !' : solo ? '🏳️ Tu sèches !' : `🏳️ ${p} sèche !`),
+        solo ? null : h('div', { class: 'sub' }, `${p} prend ${sip(1)}.`),
+        ex.length ? h('div', { class: 'bm-ex' }, `Avec ${up(letters)}, il y avait : `, ex.map((w, i) => [i ? ', ' : '', h('b', null, w)])) : null,
+        chainInfo,
+      ];
+      input.value = '';
+      input.classList.remove('ok');
+      setMsg('');
+      turn++;
+      if (chainMode) {
+        // La chaîne est cassée : le joueur suivant choisit une nouvelle lettre.
+        pickScreen(h('div', { class: 'bm-fail' }, head));
+        return;
+      }
+      card.replaceChildren(...head, h('button', {
+        class: 'btn btn-primary', onmousedown: keep,
+        onclick: () => { input.focus(); countdownThen(null); },
+      }, solo ? 'Continuer →' : `Au tour de ${who()} →`));
+    }
+
+    // ----- Fin de partie -----
+    function summary() {
+      clear();
+      state = 'idle';
+      ctx.setGuard(null);
+      if (chainMode && chain.length) {
+        if (chain.length > get('bonmot-record', 0)) set('bonmot-record', chain.length);
+      }
+      sfx.fanfare();
+      const rows = players.map((p) => ({ name: p, score: stats.get(p).pts, ...stats.get(p) }));
+      const longest = rows.filter((r) => r.best).sort((a, b) => normWord(b.best).length - normWord(a.best).length)[0];
+      root.replaceChildren(
+        topbar(ctx, { onBack: setup }),
+        h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏁'), h('h2', null, 'Fin de la partie !')),
+        solo
+          ? h('p', { class: 'center' }, 'Tu as trouvé ', h('b', null, `${rows[0].pts} mot${rows[0].pts > 1 ? 's' : ''}`), '.')
+          : podium(rows),
+        h('div', { class: 'scoreboard' },
+          solo ? null : rows.slice().sort((a, b) => b.pts - a.pts || a.fails - b.fails).map((r) => h('div', { class: 'score-row' },
+            h('span', { class: 'n' }, r.name), h('span', { class: 'muted small' }, `${r.fails} raté${r.fails > 1 ? 's' : ''}`), h('span', { class: 's' }, String(r.pts)))),
+          longest ? h('div', { class: 'score-row' }, h('span', { class: 'n' }, '📏 Mot le plus long'), h('b', null, `${longest.best}${solo ? '' : ' · ' + longest.name}`)) : null,
+          chainMode ? h('div', { class: 'score-row' }, h('span', { class: 'n' }, '🔗 Plus longue chaîne'), h('b', null, `${bestChain} mot${bestChain > 1 ? 's' : ''} (record : ${get('bonmot-record', 0)})`)) : null),
+        h('div', { class: 'grow' }),
+        h('div', { class: 'row' },
+          h('button', { class: 'btn btn-ghost grow', onclick: setup }, '⚙️ Réglages'),
+          h('button', { class: 'btn btn-primary grow', onclick: play }, '🔁 Rejouer')));
+    }
+
+    // ----- Démarrage -----
+    renderUsed();
+    if (chainMode) pickScreen();
+    else { input.focus(); countdownThen(null); }
+  }
+
+  setup();
+  return clear;
+}

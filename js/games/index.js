@@ -316,6 +316,17 @@ export const GAMES = [
     load: () => import('./petitbac.js'),
   },
   {
+    id: 'bonmot', name: 'Le Bon Mot', emoji: '🔠', colors: ['#4776e6', '#8e54e9'], new: true,
+    desc: 'Des lettres au hasard (« DE »…) : tape vite un mot qui va avec. Ou enchaîne les mots !',
+    tags: ['rapide'], players: '1+', badges: ['Nouveau'],
+    rules: [
+      '<b>Lettres imposées :</b> l\'appli tire 1, 2 ou 3 lettres au hasard, par exemple « DE ». Le joueur doit vite taper un mot qui commence par ces lettres (« dernier ») — ou qui les contient, selon le réglage.',
+      '<b>Mots en chaîne :</b> chaque mot doit commencer par la dernière lettre du mot précédent (« dernier » → « rose » → « escargot »…). Le premier joueur choisit la lettre de départ. Variante : reprendre les 2 ou 3 dernières lettres.',
+      'Les mots sont vérifiés dans un dictionnaire de 320 000 mots (accents facultatifs, pas de mot déjà joué). Mot trouvé : +1 point, puis compte à rebours de 3 secondes pour passer le téléphone. Temps écoulé ou « Je sèche » : pénalité !',
+    ],
+    load: () => import('./bonmot.js'),
+  },
+  {
     id: 'nioui', name: 'Ni oui ni non', emoji: '🙅', colors: ['#ff416c', '#ff4b2b'], new: true,
     desc: 'Réponds aux questions pièges sans jamais dire « oui » ni « non ».',
     tags: ['rapide'], players: '2+', badges: ['Nouveau'],
@@ -340,7 +351,10 @@ export const GAMES = [
     id: 'sequence', name: 'La Séquence', emoji: '🔴', colors: ['#00c9ff', '#92fe9d'], new: true,
     desc: 'Retiens la suite de couleurs. Elle s\'allonge à chaque tour…',
     tags: ['rapide'], players: '1+', badges: ['Nouveau'],
-    rules: ['Le téléphone joue une suite de couleurs et de sons. Le joueur doit la reproduire. Réussi : on passe le téléphone au suivant et la suite s\'allonge d\'une couleur. Celui qui se trompe prend une pénalité et la suite repart de zéro.'],
+    rules: [
+      'Le téléphone joue une suite de couleurs et de sons. Le joueur doit la reproduire. Réussi : on passe le téléphone au suivant et la suite s\'allonge d\'une couleur. Celui qui se trompe prend une pénalité et la suite repart de zéro.',
+      'On touche « Je suis prêt » une seule fois au début : ensuite, un compte à rebours de 3 secondes laisse le temps de passer le téléphone avant chaque nouvelle suite.',
+    ],
     load: () => import('./sequence.js'),
   },
   {

@@ -1,6 +1,6 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **40 jeux de soirée** en français, dont 15 jouables **en ligne, chacun sur son téléphone**.
+Une application web installable (PWA) avec **41 jeux de soirée** en français, dont 15 jouables **en ligne, chacun sur son téléphone**.
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## Les jeux
@@ -51,10 +51,11 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 💣 | **Patate chaude** | Bombe à retardement aléatoire |
 | ⏱️ | **3 en 5 secondes** | Citer 3 choses en 5 secondes |
 | 🔤 | **Petit bac** | Lettre + catégories + chrono |
+| 🔠 | **Le Bon Mot** | 1 à 3 lettres tirées au hasard (« DE » → « dernier »), ou mots en chaîne sur la dernière lettre ; mots vérifiés dans un dictionnaire de 320 000 mots |
 | 🙅 | **Ni oui ni non** | Tenir sans dire oui ni non face aux questions pièges |
 | 📚 | **Histoire folle** | Histoire à tour de rôle avec des mots imposés |
 | ⚡ | **Duel de réflexes** | Deux joueurs face à face sur le même écran |
-| 🔴 | **La Séquence** | Mémoire : suite de couleurs et de sons qui s'allonge |
+| 🔴 | **La Séquence** | Mémoire : suite de couleurs et de sons qui s'allonge, compte à rebours de 3 s entre chaque joueur |
 | 👑 | **Le Roi** | Jeu de cartes, une règle par carte |
 | 🐺 | **Loup-garou** | Distribution des rôles + script du meneur |
 | 🎡 | **La roue des gages** | Roue animée, niveaux jusqu'au Hot++ |
@@ -128,6 +129,7 @@ Tout le contenu est dans `js/data/` (un fichier par jeu, simples listes JavaScri
 - `tupreferes.js`, `jamais.js`, `dix.js`, `qui.js`, `paranoia.js`, `action.js`, `gages.js` : cartes par niveau
 - `dessin.js` : mots à dessiner (facile / moyen / difficile)
 - `motsinterdits.js`, `mime.js`, `chapeau.js`, `front.js`, `imposteur.js`, `patate.js`, `petitbac.js`, `cinq.js`, `debats.js`
+- `mots.js` : dictionnaire du Bon Mot, **généré** par `scripts/gen-mots.mjs` (voir l'en-tête du script). Sources : [an-array-of-french-words](https://github.com/words/an-array-of-french-words) (MIT) pour les 320 000 mots, et [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0) pour la liste des mots courants.
 
 Les niveaux d'intensité sont définis dans `js/data/levels.js`.
 
@@ -144,6 +146,7 @@ js/online/*.js       jeux en ligne (dessin, imposteur, votes, quiz/rapidité, é
                      téléphone dessiné, bingo, menteur)
 js/race-core.js      logique partagée des jeux de rapidité (local + en ligne)
 js/bingo-core.js     grilles et lignes du bingo
+js/bonmot-core.js    dictionnaire et tirage des lettres du Bon Mot
 js/canvas.js         planche à dessin synchronisable
 js/turn.js           moteur des jeux en équipes
 js/data/*.js         tout le contenu
