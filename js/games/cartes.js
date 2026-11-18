@@ -79,41 +79,57 @@ function cardGame(cfg) {
         let turn = Math.floor(Math.random() * Math.max(1, players.length));
         const hist = [];
         let idx = -1;
-        const area = h('div', { class: 'play-area' });
+        const stack = h('div', { class: 'card-stack' });
+        const hint = h('p', { class: 'tap-hint' }, '👆 Touche la carte pour passer à la suivante');
+        const prevBtn = h('button', { class: 'btn btn-ghost btn-sm', 'aria-label': 'Carte précédente', disabled: true, onclick: () => prev() }, '↩️ Précédente');
+        const area = h('div', { class: 'play-area' }, stack, h('div', { class: 'card-foot' }, prevBtn, hint));
+        let current = null;
 
-        function show(entry, anim) {
+        function show(entry, dir) {
           const level = lvlById[entry.e.l] || PERSO;
-          const card = h('div', { class: 'qcard' + (anim ? ' anim' : ''), style: level.extreme ? HOTPP_STYLE : (cfg.cardStyle ? cfg.cardStyle(level) : null) },
+          const it = entry.e.it;
+          const kicker = typeof cfg.kicker === 'function' ? cfg.kicker(it) : cfg.kicker;
+          const card = h('div', {
+            class: 'qcard in-' + dir, role: 'button', tabindex: '0', 'aria-label': 'Carte suivante',
+            style: level.extreme ? HOTPP_STYLE : (cfg.cardStyle ? cfg.cardStyle(level, it) : null),
+          },
             h('span', { class: 'badge lvl' }, `${level.emoji} ${level.name}`),
             h('span', { class: 'count' }, `#${idx + 1}`),
             entry.player ? h('div', { class: 'who' }, `🎯 ${entry.player}`) : null,
-            cfg.kicker ? h('div', { class: 'kicker' }, cfg.kicker) : null,
-            cfg.render(entry.e.it, { level }),
-            cfg.footer ? h('div', { class: 'foot' }, cfg.footer(entry.e.it, { level })) : null,
+            kicker ? h('div', { class: 'kicker' }, kicker) : null,
+            cfg.render(it, { level }),
+            cfg.footer ? h('div', { class: 'foot' }, cfg.footer(it, { level })) : null,
           );
-          if (cfg.tapToNext !== false) {
-            card.addEventListener('click', (ev) => { if (card.dataset.swiped || ev.target.closest('button')) return; next(); });
-          }
+          card.addEventListener('click', (ev) => { if (card.dataset.swiped || ev.target.closest('button')) return; next(); });
+          card.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); next(); } });
           onSwipe(card, { left: next, right: prev });
-          area.replaceChildren(card, nav);
+          if (current) {
+            const old = current;
+            old.className = 'qcard out-' + (dir === 'prev' ? 'prev' : 'next');
+            old.removeAttribute('tabindex');
+            setTimeout(() => old.remove(), 420);
+          }
+          stack.append(card);
+          current = card;
+          if (idx >= 1) hint.classList.add('gone');
+          prevBtn.disabled = idx <= 0;
         }
         function next() {
-          if (idx < hist.length - 1) { idx++; show(hist[idx], true); sfx.swoosh(); return; }
+          if (idx < hist.length - 1) { idx++; show(hist[idx], 'next'); sfx.swoosh(); buzz(10); return; }
           const e = deck.next();
           const entry = { e, player: players.length ? players[turn++ % players.length] : null };
           hist.push(entry);
           idx = hist.length - 1;
-          show(entry, true);
-          sfx.swoosh();
+          show(entry, hist.length === 1 ? 'first' : 'next');
+          if (hist.length > 1) { sfx.swoosh(); buzz(10); }
         }
-        function prev() { if (idx > 0) { idx--; show(hist[idx], true); } }
-
-        const nav = h('div', { class: 'card-nav' },
-          h('button', { class: 'btn btn-soft', 'aria-label': 'Carte précédente', onclick: prev }, '←'),
-          h('button', { class: 'btn btn-primary', onclick: next }, 'Carte suivante →'));
+        function prev() { if (idx > 0) { idx--; show(hist[idx], 'prev'); sfx.swoosh(); } }
 
         root.replaceChildren(
-          topbar(ctx, { onBack: setup, right: h('button', { class: 'icon-btn', 'aria-label': 'Niveaux', onclick: setup }, '🎚️') }),
+          topbar(ctx, {
+            onBack: setup,
+            right: h('button', { class: 'icon-btn', 'aria-label': 'Niveaux', onclick: setup }, '🎚️'),
+          }),
           area);
         next();
       }
@@ -130,7 +146,6 @@ export const tupreferes = cardGame({
   data: () => import('../data/tupreferes.js'),
   online: 'vote-tp',
   perPlayer: true,
-  tapToNext: false,
   kicker: 'Tu préfères…',
   customHelp: 'Une carte par ligne, avec les deux choix séparés par « / ». Exemple : Vivre sans musique / Vivre sans fromage',
   customHint: 'Avoir des bras de T-rex / Avoir des jambes de flamant rose',
@@ -138,14 +153,7 @@ export const tupreferes = cardGame({
     const parts = s.split(/\s*\/\s*|\s+ou\s+/i).filter(Boolean);
     return parts.length >= 2 ? [parts[0], parts.slice(1).join(' / ')] : null;
   },
-  render: (it) => {
-    const a = h('button', { class: 'tp-opt' }, it[0]);
-    const b = h('button', { class: 'tp-opt' }, it[1]);
-    const sel = (x, y) => { x.classList.add('sel'); x.classList.remove('dim'); y.classList.add('dim'); y.classList.remove('sel'); sfx.pop(); buzz(15); };
-    a.onclick = () => sel(a, b);
-    b.onclick = () => sel(b, a);
-    return h('div', { class: 'tp' }, a, h('div', { class: 'tp-or' }, 'OU'), b);
-  },
+  render: (it) => h('div', { class: 'tp' }, h('div', { class: 'tp-opt' }, it[0]), h('div', { class: 'tp-or' }, 'OU'), h('div', { class: 'tp-opt' }, it[1])),
   footer: () => `Votez tous en même temps ! La minorité ${drinks(1)}.`,
 });
 
@@ -166,12 +174,20 @@ export const dix = cardGame({
   levels: LEVELS.dix,
   data: () => import('../data/dix.js'),
   online: 'vote-dix',
-  kicker: 'C\'est un 10 mais…',
-  customHelp: 'Une carte par ligne, sans « C\'est un 10 mais ». Exemple : ronfle comme un tracteur',
-  customHint: 'ronfle comme un tracteur',
-  parseCustom: (s) => s.replace(/^c.?est un 10 mais\s*/i, ''),
-  render: (it) => h('div', { class: 'big' }, it),
-  footer: () => 'Chacun annonce sa nouvelle note sur 10… et se justifie !',
+  // Une carte est soit un texte (« C'est un 10 mais… » + défaut),
+  // soit { n, t } (« C'est un 4 mais… » + qualité qui peut faire remonter la note).
+  kicker: (it) => `C'est un ${typeof it === 'object' ? it.n : 10} mais…`,
+  cardStyle: (level, it) => (typeof it === 'object' ? { '--g1': '#11998e', '--g2': '#2ec5ff' } : null),
+  customHelp: 'Une carte par ligne. « C\'est un 10 mais ronfle » pour un défaut, ou « C\'est un 3 mais a un jet privé » pour une qualité qui fait remonter la note.',
+  customHint: 'ronfle comme un tracteur\nC\'est un 3 mais a un jet privé',
+  parseCustom: (s) => {
+    const m = s.match(/^c.?est un (\d{1,2}) mais\s*(.+)$/i);
+    if (!m) return s;
+    const n = Math.max(0, Math.min(10, Number(m[1])));
+    return n === 10 ? m[2] : { n, t: m[2] };
+  },
+  render: (it) => h('div', { class: 'big' }, typeof it === 'object' ? it.t : it),
+  footer: (it) => (typeof it === 'object' ? 'Ça fait remonter la note ? Chacun annonce sa nouvelle note sur 10 !' : 'Chacun annonce sa nouvelle note sur 10… et se justifie !'),
 });
 
 // ---------------- Qui de nous ----------------

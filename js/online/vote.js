@@ -92,8 +92,8 @@ function makeVote(mode) {
         const card = h('div', { class: 'qcard anim', style: { '--g1': M.colors[0], '--g2': M.colors[1], minHeight: '0', padding: '22px 18px' } },
           h('span', { class: 'badge lvl' }, `${lvl.emoji} ${lvl.name}`),
           h('span', { class: 'count' }, `#${v.n}`),
-          h('div', { class: 'kicker', style: { marginTop: '14px' } }, M.kicker),
-          mode === 'tp' ? null : h('div', { class: 'big' }, v.q.it),
+          h('div', { class: 'kicker', style: { marginTop: '14px' } }, mode === 'dix' && typeof v.q.it === 'object' ? `C'est un ${v.q.it.n} mais…` : M.kicker),
+          mode === 'tp' ? null : h('div', { class: 'big' }, typeof v.q.it === 'object' ? v.q.it.t : v.q.it),
           mode === 'tp' ? h('div', { class: 'tp', 'data-slot': 'tp' }) : null);
         cardSlot.replaceChildren(card);
       }
