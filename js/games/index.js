@@ -37,7 +37,7 @@ export const GAMES = [
   {
     id: 'tupreferes', name: 'Tu préfères', emoji: '🤔', colors: ['#7c5cff', '#2ec5ff'],
     desc: 'Des dilemmes impossibles, du plus sage au plus hot.',
-    tags: ['cartes', 'online', 'hot'], players: '2+', badges: ['En ligne', '4 niveaux'],
+    tags: ['cartes', 'online', 'hot'], players: '2+', badges: ['En ligne', '5 niveaux'],
     rules: [
       'Lis le dilemme à voix haute. Chacun choisit son camp et doit se justifier !',
       'Variante : la minorité ' + 'boit (ou prend un gage).',
@@ -47,8 +47,8 @@ export const GAMES = [
   },
   {
     id: 'jamais', name: "Je n'ai jamais", emoji: '🙊', colors: ['#ff4d8d', '#ff9a5a'],
-    desc: 'Ceux qui l\'ont déjà fait se dénoncent. 4 niveaux d\'intensité.',
-    tags: ['cartes', 'hot'], players: '3+', badges: ['4 niveaux'],
+    desc: 'Ceux qui l\'ont déjà fait se dénoncent. 5 niveaux, jusqu\'au Hot++.',
+    tags: ['cartes', 'hot'], players: '3+', badges: ['5 niveaux'],
     rules: [
       'Une phrase « Je n\'ai jamais… » s\'affiche. Tous ceux qui l\'ont <b>déjà fait</b> boivent une gorgée (ou marquent un point en mode sans alcool).',
       'Le plus drôle : raconter l\'histoire derrière ! Personne n\'est obligé de répondre aux questions qui le mettent mal à l\'aise.',
@@ -79,7 +79,7 @@ export const GAMES = [
   {
     id: 'action', name: 'Action ou vérité', emoji: '🎯', colors: ['#e94057', '#8a2387'],
     desc: 'Le classique, avec des centaines de défis et questions.',
-    tags: ['cartes', 'hot'], players: '2+', badges: ['3 niveaux'],
+    tags: ['cartes', 'hot'], players: '2+', badges: ['4 niveaux'],
     rules: [
       'À tour de rôle, chaque joueur choisit <b>Action</b> ou <b>Vérité</b>. Une carte est tirée : il faut réaliser le défi ou répondre honnêtement.',
       'Si tu refuses, tu prends une pénalité. L\'appli fait tourner les joueurs automatiquement.',

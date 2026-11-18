@@ -9,6 +9,7 @@ const LEVELS = [
   { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des questions drôles et gentilles.' },
   { id: 'epice', name: 'Épicé', emoji: '🌶️', desc: 'Ça risque de vexer…' },
   { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
+  { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
 ];
 
 export function start(ctx) {

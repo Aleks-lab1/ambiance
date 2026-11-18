@@ -173,4 +173,166 @@ export default {
     ['Faire l\'amour sous la douche', 'Dans un jacuzzi'],
     ['Que ta playlist coquine soit diffusée en soirée', 'Que ton historique de navigation privée soit révélé'],
   ],
+  hotpp: [
+    [
+      "Ne plus jamais recevoir de sexe oral",
+      "Ne plus jamais en faire"
+    ],
+    [
+      "Un plan à trois avec deux personnes de cette pièce",
+      "Une partouze avec des inconnus masqués"
+    ],
+    [
+      "Faire l'amour devant un couple d'amis",
+      "Regarder un couple d'amis le faire"
+    ],
+    [
+      "Porter un sextoy télécommandé pendant tout un dîner (ton/ta partenaire a la télécommande)",
+      "Venir à ce dîner sans aucun sous-vêtement"
+    ],
+    [
+      "Jouir en 30 secondes à chaque fois",
+      "Ne jamais réussir à jouir avant 2 heures"
+    ],
+    [
+      "Attacher ton/ta partenaire au lit toute une nuit",
+      "Être attaché(e) toute une nuit"
+    ],
+    [
+      "Échanger de partenaire avec un couple d'amis pour une nuit",
+      "Regarder ton/ta partenaire coucher avec quelqu'un d'autre"
+    ],
+    [
+      "Faire un strip-tease intégral ici, maintenant",
+      "Raconter ta nuit la plus trash dans les moindres détails"
+    ],
+    [
+      "Un mois de préliminaires sans jamais passer à l'acte",
+      "Un mois de quickies sans aucun préliminaire"
+    ],
+    [
+      "Une session tantrique de 5 heures",
+      "5 quickies dans la même journée"
+    ],
+    [
+      "Montrer ton historique porno à tout le monde ici",
+      "Lire à voix haute tes 10 derniers sextos"
+    ],
+    [
+      "Coucher avec quelqu'un de très moche mais divin au lit",
+      "Avec quelqu'un de sublime mais nul au lit"
+    ],
+    [
+      "Uniquement la levrette pour le reste de ta vie",
+      "Uniquement le missionnaire pour le reste de ta vie"
+    ],
+    [
+      "Plus jamais de pénétration",
+      "Plus jamais de sexe oral"
+    ],
+    [
+      "Un club libertin avec ton/ta partenaire",
+      "Un week-end dans un camp naturiste très coquin"
+    ],
+    [
+      "Coucher avec ton boss",
+      "Recoucher avec ton pire ex"
+    ],
+    [
+      "Dire le prénom de ton ex au moment de jouir",
+      "Fondre en larmes au moment de jouir"
+    ],
+    [
+      "Un partenaire qui parle très cru pendant l'acte",
+      "Un partenaire qui ne dit absolument rien"
+    ],
+    [
+      "Envoyer une photo intime à ton crush, là maintenant",
+      "Recevoir celle de quelqu'un dans cette pièce"
+    ],
+    [
+      "Jouir discrètement en public sans que personne ne le remarque",
+      "Faire jouir quelqu'un discrètement sous la table d'un restaurant"
+    ],
+    [
+      "10 partenaires différents cette année",
+      "Un seul partenaire mais 10 plans à trois"
+    ],
+    [
+      "Ne plus jamais pouvoir te masturber",
+      "Ne plus jamais pouvoir coucher avec quelqu'un"
+    ],
+    [
+      "Faire l'amour dans le lit de tes parents",
+      "Dans les toilettes d'un avion"
+    ],
+    [
+      "Une fessée qui laisse des traces pendant 3 jours",
+      "Un suçon géant dans le cou pour un entretien d'embauche"
+    ],
+    [
+      "Être dominé(e) par quelqu'un ici",
+      "Dominer quelqu'un ici"
+    ],
+    [
+      "Faire une sextape et la regarder avec ton/ta partenaire",
+      "La regarder avec un autre couple"
+    ],
+    [
+      "Que ton/ta partenaire t'avoue un fantasme très trash",
+      "Qu'il/elle te le fasse vivre sans prévenir (avec ton accord, évidemment)"
+    ],
+    [
+      "Coucher avec ta star X préférée",
+      "Coucher avec la personne la plus sexy de cette pièce"
+    ],
+    [
+      "Faire l'amour bruyamment chez tes beaux-parents",
+      "Dans un hôtel aux murs en papier à côté de ton boss"
+    ],
+    [
+      "Lécher de la chantilly sur tout le corps de ton/ta partenaire",
+      "Te faire recouvrir de chocolat fondu et lécher"
+    ],
+    [
+      "Une nuit avec deux personnes qui ne s'occupent que de toi",
+      "Une nuit où tu t'occupes de deux personnes"
+    ],
+    [
+      "Te masturber devant ton/ta partenaire",
+      "Le/la regarder se masturber devant toi"
+    ],
+    [
+      "Faire l'amour dans une cabine d'essayage",
+      "Dans une voiture garée en plein centre-ville"
+    ],
+    [
+      "Que tout le monde ici sache combien de partenaires tu as eus",
+      "Que tout le monde ici sache ta position préférée et ton record d'orgasmes"
+    ],
+    [
+      "Un partenaire avec un fétichisme des pieds très prononcé",
+      "Un partenaire qui veut toujours être fessé"
+    ],
+    [
+      "Un gang bang dont tu es le centre d'attention",
+      "Une soirée échangiste à 4 couples"
+    ],
+    [
+      "Ne coucher qu'avec des inconnus pour le reste de ta vie",
+      "Ne coucher qu'avec des personnes de cette pièce"
+    ],
+    [
+      "Faire l'amour avec un bandeau sur les yeux sans savoir qui est avec toi (personne consentante de la pièce)",
+      "Regarder sans avoir le droit de toucher"
+    ],
+    [
+      "Que tes voisins t'entendent jouir tous les soirs",
+      "Que tes collègues trouvent ton sextoy dans ton sac"
+    ],
+    [
+      "Faire un 69 sur une plage bondée de nuit",
+      "Faire l'amour dans un jacuzzi d'hôtel avec des inconnus autour"
+    ]
+  ],
 };

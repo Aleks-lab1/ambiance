@@ -24,4 +24,22 @@ export default {
     'Envoie un message coquin à la personne de ton choix', 'Laisse quelqu\'un te bander les yeux pour le prochain tour', 'Fais un regard de braise à chaque joueur',
     'Dis ce qui te plaît physiquement chez la personne en face', 'Mange une banane de la façon la plus sensuelle possible',
   ],
+  hotpp: [
+    "Fais un lap dance de 1 minute à la personne de ton choix (si elle accepte)",
+    "Enlève deux vêtements",
+    "Mime un orgasme bien bruyant",
+    "Laisse la personne à ta droite te donner une fessée",
+    "Embrasse la personne de ton choix (avec son accord)",
+    "Envoie un sexto très cru à quelqu'un de tes contacts et montre la réponse",
+    "Fais un body shot (ou body-chantilly) sur la personne de ton choix, avec son accord",
+    "Fais un strip-tease jusqu'aux sous-vêtements",
+    "Raconte ta nuit la plus trash en détail",
+    "Fais un suçon à la personne de ton choix (avec son accord)",
+    "Retire ton sous-vêtement aux toilettes et confie-le à quelqu'un jusqu'à la fin de la partie",
+    "Mime ta position préférée avec un(e) volontaire (habillés)",
+    "Murmure ton fantasme le plus inavouable à l'oreille de quelqu'un",
+    "Les yeux bandés, laisse quelqu'un t'embrasser dans le cou (volontaires uniquement)",
+    "Montre ta dernière recherche porno",
+    "Reste en sous-vêtements jusqu'au prochain tour de roue"
+  ],
 };

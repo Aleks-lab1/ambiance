@@ -8,6 +8,7 @@ import { sfx, buzz } from '../sfx.js';
 
 export { LEVELS };
 
+const HOTPP_STYLE = { '--g1': '#b0123f', '--g2': '#1c0614' };
 const PERSO = { id: 'perso', name: 'Mes cartes', emoji: '✍️', desc: 'Tes cartes personnalisées.' };
 
 function cardGame(cfg) {
@@ -82,7 +83,7 @@ function cardGame(cfg) {
 
         function show(entry, anim) {
           const level = lvlById[entry.e.l] || PERSO;
-          const card = h('div', { class: 'qcard' + (anim ? ' anim' : ''), style: cfg.cardStyle ? cfg.cardStyle(level) : null },
+          const card = h('div', { class: 'qcard' + (anim ? ' anim' : ''), style: level.extreme ? HOTPP_STYLE : (cfg.cardStyle ? cfg.cardStyle(level) : null) },
             h('span', { class: 'badge lvl' }, `${level.emoji} ${level.name}`),
             h('span', { class: 'count' }, `#${idx + 1}`),
             entry.player ? h('div', { class: 'who' }, `🎯 ${entry.player}`) : null,

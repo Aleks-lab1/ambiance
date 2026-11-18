@@ -16,6 +16,21 @@ export async function ensureAdult() {
   return !!ok;
 }
 
+/** Confirmation supplémentaire pour le niveau Hot++ (très explicite). */
+export async function ensureExplicit() {
+  if (!(await ensureAdult())) return false;
+  if (settings.explicit) return true;
+  const ok = await modal({
+    title: '😈 Niveau Hot++',
+    content: h('div', { class: 'col' },
+      h('p', null, 'Questions et défis très explicites, sans filtre : sexe, fantasmes, plans à plusieurs, défis physiques…'),
+      h('p', null, h('b', null, 'Règle d\'or : '), 'tout le monde doit être d\'accord pour jouer à ce niveau, et chacun peut refuser une question ou un défi sans se justifier. Les défis à deux se font uniquement avec l\'accord de l\'autre.')),
+    actions: [{ label: 'Annuler', value: false }, { label: 'On est tous partants', value: true, primary: true }],
+  });
+  if (ok) { settings.explicit = true; saveSettings(); }
+  return !!ok;
+}
+
 /**
  * Sélecteur de niveaux (multi-sélection).
  * levels: [{id, name, emoji, desc, adult}]
@@ -26,12 +41,12 @@ export function levelPicker(levels, selected, onChange) {
   const chips = h('div', { class: 'chips' });
   function render() {
     chips.replaceChildren(...levels.map((l) => {
-      const c = chip([l.emoji + ' ' + l.name, l.adult && !settings.adult ? h('span', { class: 'lock' }, '🔒') : null], selected.has(l.id), async () => {
+      const c = chip([l.emoji + ' ' + l.name, (l.extreme ? !settings.explicit : l.adult && !settings.adult) ? h('span', { class: 'lock' }, '🔒') : null], selected.has(l.id), async () => {
         if (selected.has(l.id)) {
           if (selected.size === 1) { toast('Garde au moins un niveau'); return; }
           selected.delete(l.id);
         } else {
-          if (l.adult && !(await ensureAdult())) return;
+          if (l.extreme ? !(await ensureExplicit()) : (l.adult && !(await ensureAdult()))) return;
           selected.add(l.id);
         }
         render();

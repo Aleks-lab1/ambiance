@@ -9,6 +9,7 @@ const LEVELS = [
   { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Gentil, pour tous.' },
   { id: 'fun', name: 'Fun', emoji: '🤪', desc: 'Gênant et drôle.' },
   { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
+  { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
 ];
 
 export function start(ctx) {
@@ -53,7 +54,7 @@ export function start(ctx) {
       const lvl = LEVELS.find((l) => l.id === e.l);
       sfx.swoosh();
       root.replaceChildren(top,
-        h('div', { class: 'qcard anim', style: kind === 'action' ? { '--g1': '#ff512f', '--g2': '#dd2476' } : { '--g1': '#2ec5ff', '--g2': '#7c5cff' } },
+        h('div', { class: 'qcard anim', style: lvl.extreme ? { '--g1': '#b0123f', '--g2': '#1c0614' } : kind === 'action' ? { '--g1': '#ff512f', '--g2': '#dd2476' } : { '--g1': '#2ec5ff', '--g2': '#7c5cff' } },
           h('span', { class: 'badge lvl' }, `${lvl.emoji} ${lvl.name}`),
           h('div', { class: 'who' }, p),
           h('div', { class: 'kicker' }, kind === 'action' ? '🎯 Action' : '💬 Vérité'),

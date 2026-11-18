@@ -191,9 +191,9 @@ async function openSettings() {
     toggleRow('🍻 Pénalités en gorgées', 'Désactivé : mode sans alcool, les pénalités deviennent des points de gage.', settings.drink, (v) => { settings.drink = v; saveSettings(); }),
     toggleRow('🔊 Sons', null, settings.sound, (v) => { settings.sound = v; saveSettings(); }),
     toggleRow('📳 Vibrations', null, settings.vibrate, (v) => { settings.vibrate = v; saveSettings(); }),
-    toggleRow('🔞 Contenu 18+', 'Débloque les niveaux « Hot » des jeux de questions.', settings.adult, async (v, input) => {
+    toggleRow('🔞 Contenu 18+', 'Débloque les niveaux « Hot » et « Hot++ » des jeux de questions.', settings.adult, async (v, input) => {
       if (v) { const ok = await ensureAdult(); if (!ok) input.checked = false; }
-      else { settings.adult = false; saveSettings(); }
+      else { settings.adult = false; settings.explicit = false; saveSettings(); }
     }),
     h('div', { class: 'sep' }),
     h('button', { class: 'btn btn-soft', onclick: () => { resetSeen(); toast('Les cartes déjà vues pourront revenir'); } }, '🔄 Revoir toutes les cartes'),

@@ -9,12 +9,12 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 |---|---|---|---|
 | 🎨 | **Je dessine, tu devines** | 🌐 En ligne (chat de réponses, points, indices) + un seul écran | Facile / Moyen / Difficile |
 | 🕵️ | **L'Imposteur** | 🌐 En ligne + téléphone qu'on se passe | Mode « Sans mot » |
-| 🤔 | **Tu préfères** | Cartes + 🌐 vote en ligne | Tranquille, Délire, Épicé, Hot 18+ |
-| 🙊 | **Je n'ai jamais** | Cartes | Tranquille, Soirée, Épicé, Hot 18+ |
-| 💯 | **C'est un 10 mais…** | Cartes + 🌐 notes en ligne (moyenne) | Classique, Absurde, Hot 18+ |
-| 👉 | **Qui de nous…** | Cartes (3-2-1 pointez !) + 🌐 vote secret en ligne | Tranquille, Épicé, Hot 18+ |
-| 🎯 | **Action ou vérité** | Tour par tour avec les prénoms | Tranquille, Fun, Hot 18+ |
-| 🤫 | **Paranoïa** | Question secrète + pile ou face | Tranquille, Épicé, Hot 18+ |
+| 🤔 | **Tu préfères** | Cartes + 🌐 vote en ligne | Tranquille, Délire, Épicé, Hot, Hot++ |
+| 🙊 | **Je n'ai jamais** | Cartes | Tranquille, Soirée, Épicé, Hot, Hot++ |
+| 💯 | **C'est un 10 mais…** | Cartes + 🌐 notes en ligne (moyenne) | Classique, Absurde, Hot, Hot++ |
+| 👉 | **Qui de nous…** | Cartes (3-2-1 pointez !) + 🌐 vote secret en ligne | Tranquille, Épicé, Hot, Hot++ |
+| 🎯 | **Action ou vérité** | Tour par tour avec les prénoms | Tranquille, Fun, Hot, Hot++ |
+| 🤫 | **Paranoïa** | Question secrète + pile ou face | Tranquille, Épicé, Hot, Hot++ |
 | 🎤 | **Pour ou contre** | Débats absurdes chronométrés + vote | |
 | 🚫 | **Mots interdits** | Équipes, chrono, correction | |
 | 🤸 | **Mime express** | Équipes, chrono | |
@@ -25,14 +25,14 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 🔤 | **Petit bac** | Lettre + catégories + chrono | |
 | 👑 | **Le Roi** | Jeu de cartes, une règle par carte | |
 | 🐺 | **Loup-garou** | Distribution des rôles + script du meneur | Voyante, Docteur, Chasseur |
-| 🎡 | **La roue des gages** | Roue animée (joker, double, tous…) | Tranquille, Ridicule, Hot 18+ |
+| 🎡 | **La roue des gages** | Roue animée (joker, double, tous…) | Tranquille, Ridicule, Hot, Hot++ |
 | ☝️ | **Qui commence ?** | Multi-touch : chacun pose un doigt | 1 gagnant, 2 équipes, ordre |
 | 🧰 | **Boîte à outils** | Dés, pile ou face, équipes, chrono, compteur de points | |
 
 **En plus :**
 - 👥 Liste de joueurs partagée par tous les jeux (prénoms utilisés dans les cartes, tours, équipes).
 - 🍻 / 🧃 **Mode avec ou sans alcool** : les pénalités sont des gorgées ou des points de gage.
-- 🔞 Contenu 18+ verrouillé derrière une confirmation d'âge.
+- 🔞 Contenu 18+ verrouillé derrière une confirmation d'âge, et niveau 😈 **Hot++** (très explicite) derrière une seconde confirmation.
 - ✍️ **Cartes personnalisées** pour Tu préfères, Je n'ai jamais, C'est un 10 mais…, Qui de nous et Le Chapeau.
 - 🔁 Les cartes déjà vues ne reviennent pas d'une soirée à l'autre (réinitialisable dans les réglages).
 - 📴 Fonctionne **hors ligne** une fois chargé (sauf le mode en ligne, évidemment).

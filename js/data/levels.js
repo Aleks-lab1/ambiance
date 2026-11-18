@@ -5,21 +5,25 @@ export const LEVELS = {
     { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Absurde et dégoûtant, fous rires garantis.' },
     { id: 'epice', name: 'Épicé', emoji: '🌶️', desc: 'Gênant, personnel, ça pique un peu.' },
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
+    { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
   ],
   jamais: [
     { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des petites bêtises du quotidien.' },
     { id: 'soiree', name: 'Soirée', emoji: '🍻', desc: 'Fêtes, voyages, bêtises et galères.' },
     { id: 'epice', name: 'Épicé', emoji: '🌶️', desc: 'Secrets, amours et grosses hontes.' },
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Très coquin, réservé aux adultes.', adult: true },
+    { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
   ],
   dix: [
     { id: 'classique', name: 'Classique', emoji: '😄', desc: 'Des défauts du quotidien, des manies et des red flags.' },
     { id: 'absurde', name: 'Absurde', emoji: '🤡', desc: 'Des situations complètement folles.' },
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Défauts intimes, réservé aux adultes.', adult: true },
+    { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
   ],
   qui: [
     { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Gentil et drôle.' },
     { id: 'epice', name: 'Épicé', emoji: '🌶️', desc: 'Ça balance, ça règle des comptes.' },
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
+    { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
   ],
 };
