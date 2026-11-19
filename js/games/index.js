@@ -323,6 +323,7 @@ export const GAMES = [
       '<b>Lettres imposées :</b> l\'appli tire 1, 2 ou 3 lettres au hasard, par exemple « DE ». Le joueur doit vite taper un mot qui commence par ces lettres (« dernier ») — ou qui les contient, selon le réglage.',
       '<b>Mots en chaîne :</b> chaque mot doit commencer par la dernière lettre du mot précédent (« dernier » → « rose » → « escargot »…). Le premier joueur choisit la lettre de départ. Variante : reprendre les 2 ou 3 dernières lettres.',
       'Les mots sont vérifiés dans un dictionnaire de 320 000 mots (accents facultatifs, pas de mot déjà joué). Mot trouvé : +1 point, puis compte à rebours de 3 secondes pour passer le téléphone. Temps écoulé ou « Je sèche » : pénalité !',
+      '<b>Chaque joueur a 3 vies ❤️❤️❤️.</b> Un échec fait perdre une vie ; à zéro, on est éliminé. Le dernier joueur en vie gagne la partie.',
     ],
     load: () => import('./bonmot.js'),
   },

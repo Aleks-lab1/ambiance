@@ -612,6 +612,11 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .bm-pick button.rare { background: rgba(255, 255, 255, .7); }
 .bm-pick button.rnd { background: #ffd23f; }
 .bm-used { display: flex; flex-direction: column; gap: 6px; }
+.bm-lives { display: flex; flex-wrap: wrap; gap: 6px; }
+.bm-lives:empty { display: none; }
+.bm-life { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+.bm-life.cur { border-color: #fff; background: var(--card2); }
+.bm-life.dead { opacity: .45; text-decoration: line-through; }
 .bm-chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .bm-chain .arr { color: var(--muted); font-weight: 900; }
 

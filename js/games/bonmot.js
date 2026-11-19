@@ -2,13 +2,14 @@
 import { h, topbar, seg, toggleRow, countdown, timerView, confirmBox } from '../ui.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
-import { podium } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 import { makeDico, normWord, fits, minLength } from '../bonmot-core.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const RARE_START = new Set(['K', 'W', 'X', 'Y', 'Z']);
 const GAP = 3; // secondes de compte à rebours entre deux joueurs
+const LIVES = 3; // vies par joueur
+const hearts = (n) => '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, LIVES - n));
 
 // Le dictionnaire est décodé une seule fois, même si on relance le jeu.
 let dicoP = null;
@@ -85,7 +86,8 @@ export function start(ctx) {
     const list = getPlayers();
     const solo = !list.length;
     const players = solo ? ['Toi'] : list;
-    const stats = new Map(players.map((p) => [p, { pts: 0, fails: 0, best: '' }]));
+    const stats = new Map(players.map((p) => [p, { pts: 0, fails: 0, best: '', lives: LIVES }]));
+    const out = [];           // joueurs éliminés, dans l'ordre
     const chainMode = opts.mode === 'chaine';
     const pos = chainMode ? 'start' : opts.pos;
     const used = new Set();   // mots déjà joués (forme normalisée)
@@ -98,6 +100,10 @@ export function start(ctx) {
     let state = 'idle';       // pick | count | play | result
 
     const who = () => players[turn % players.length];
+    const alive = () => players.filter((p) => stats.get(p).lives > 0);
+    // Passe au joueur suivant encore en vie.
+    const nextTurn = () => { for (let i = 0; i < players.length; i++) { turn++; if (stats.get(who()).lives > 0) return; } };
+    const isOver = () => (solo ? alive().length === 0 : alive().length <= 1);
     const quit = async () => { if (await confirmBox('Quitter la partie en cours ?', { ok: 'Quitter' })) setup(); };
     ctx.setGuard('Quitter la partie en cours ?');
 
@@ -115,16 +121,21 @@ export function start(ctx) {
     const msg = h('div', { class: 'bm-msg', 'aria-live': 'polite' });
     const passBtn = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onmousedown: keep, onclick: () => state === 'play' && fail('pass') }, '🏳️ Je sèche');
     const usedBox = h('div', { class: 'bm-used' });
+    const livesBar = h('div', { class: 'bm-lives' });
     const playZone = h('div', { class: 'col' }, tv.el, form, msg, h('div', { class: 'row' }, passBtn, h('div', { class: 'grow' })));
 
     root.replaceChildren(
       topbar(ctx, { onBack: quit, right: h('button', { class: 'btn btn-ghost btn-sm', onmousedown: keep, onclick: summary }, '🏁 Fin') }),
       h('div', { class: 'row' }, whoPill, h('div', { class: 'grow' }), scorePill),
-      card, playZone, usedBox);
+      livesBar, card, playZone, usedBox);
 
     function updatePills() {
       const p = who();
-      whoPill.textContent = solo ? '✍️ À toi !' : `✍️ ${p}`;
+      whoPill.textContent = `${solo ? '✍️ À toi !' : '✍️ ' + p} ${hearts(stats.get(p).lives)}`;
+      livesBar.replaceChildren(solo ? null : players.map((x) => {
+        const l = stats.get(x).lives;
+        return h('span', { class: 'bm-life' + (x === p && state !== 'over' ? ' cur' : '') + (l ? '' : ' dead') }, h('b', null, x), ' ', l ? '❤️'.repeat(l) : '💀');
+      }));
       scorePill.textContent = chainMode
         ? `🔗 ${chain.length} mot${chain.length > 1 ? 's' : ''} · record ${Math.max(get('bonmot-record', 0), bestChain)}`
         : `⭐ ${stats.get(p).pts} pt${stats.get(p).pts > 1 ? 's' : ''}`;
@@ -278,7 +289,7 @@ export function start(ctx) {
         if (next.reduced) setMsg(`Aucun mot ne commence par ${up(n.slice(-opts.chain))} : on garde ${up(letters)}.`);
       }
       renderUsed();
-      turn++;
+      nextTurn();
       countdownThen(head);
     }
 
@@ -286,8 +297,13 @@ export function start(ctx) {
       state = 'result';
       if (timer) { timer.stop(); timer = null; }
       const p = who();
-      stats.get(p).fails++;
-      sfx.bad(); buzz([200, 80, 200]);
+      const st = stats.get(p);
+      st.fails++;
+      st.lives--;
+      const dead = st.lives <= 0;
+      if (dead) out.push(p);
+      updatePills();
+      sfx.bad(); buzz(dead ? [300, 100, 300, 100, 500] : [200, 80, 200]);
       card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
       const ex = dico.examples(letters, pos, used);
       let chainInfo = null;
@@ -299,14 +315,27 @@ export function start(ctx) {
       }
       const head = [
         h('div', { class: 'res' }, kind === 'time' ? '⏰ Temps écoulé !' : solo ? '🏳️ Tu sèches !' : `🏳️ ${p} sèche !`),
-        solo ? null : h('div', { class: 'sub' }, `${p} prend ${sip(1)}.`),
+        h('div', { class: 'sub' }, dead
+          ? (solo ? '💀 Plus de vies !' : `💀 ${p} est éliminé(e) et prend ${sip(2)} !`)
+          : `${solo ? 'Tu perds' : p + ' perd'} une vie (${hearts(st.lives)})${solo ? '' : ' et prend ' + sip(1)}.`),
         ex.length ? h('div', { class: 'bm-ex' }, `Avec ${up(letters)}, il y avait : `, ex.map((w, i) => [i ? ', ' : '', h('b', null, w)])) : null,
         chainInfo,
       ];
       input.value = '';
       input.classList.remove('ok');
       setMsg('');
-      turn++;
+      if (isOver()) {
+        // Partie terminée : il ne reste qu'un joueur (ou plus aucune vie en solo).
+        state = 'over';
+        updatePills();
+        playZone.classList.add('hidden');
+        input.blur();
+        const winner = alive()[0];
+        card.replaceChildren(...head, winner && !solo ? h('div', { class: 'res' }, `🏆 ${winner} gagne la partie !`) : null,
+          h('button', { class: 'btn btn-primary', onclick: summary }, '🏁 Voir le classement'));
+        return;
+      }
+      nextTurn();
       if (chainMode) {
         // La chaîne est cassée : le joueur suivant choisit une nouvelle lettre.
         pickScreen(h('div', { class: 'bm-fail' }, head));
@@ -328,16 +357,23 @@ export function start(ctx) {
       }
       sfx.fanfare();
       const rows = players.map((p) => ({ name: p, score: stats.get(p).pts, ...stats.get(p) }));
+      // Classement : les survivants (plus de vies, puis plus de mots), puis les éliminés du dernier au premier.
+      const rank = (r) => (r.lives > 0 ? 1000 + r.lives * 100 + r.pts : out.indexOf(r.name) * 100 + r.pts);
+      const ranked = rows.slice().sort((a, b) => rank(b) - rank(a));
+      const winner = !solo && ranked[0];
       const longest = rows.filter((r) => r.best).sort((a, b) => normWord(b.best).length - normWord(a.best).length)[0];
       root.replaceChildren(
         topbar(ctx, { onBack: setup }),
-        h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏁'), h('h2', null, 'Fin de la partie !')),
+        h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, winner ? '🏆' : '🏁'), h('h2', null, winner ? `${winner.name} gagne !` : 'Fin de la partie !')),
         solo
           ? h('p', { class: 'center' }, 'Tu as trouvé ', h('b', null, `${rows[0].pts} mot${rows[0].pts > 1 ? 's' : ''}`), '.')
-          : podium(rows),
+          : null,
         h('div', { class: 'scoreboard' },
-          solo ? null : rows.slice().sort((a, b) => b.pts - a.pts || a.fails - b.fails).map((r) => h('div', { class: 'score-row' },
-            h('span', { class: 'n' }, r.name), h('span', { class: 'muted small' }, `${r.fails} raté${r.fails > 1 ? 's' : ''}`), h('span', { class: 's' }, String(r.pts)))),
+          solo ? null : ranked.map((r, i) => h('div', { class: 'score-row' + (i === 0 ? ' lead' : '') },
+            h('span', null, ['🥇', '🥈', '🥉'][i] || `${i + 1}.`),
+            h('span', { class: 'n' }, r.name),
+            h('span', { class: 'small' }, r.lives > 0 ? '❤️'.repeat(r.lives) : '💀'),
+            h('span', { class: 's' }, `${r.pts} mot${r.pts > 1 ? 's' : ''}`))),
           longest ? h('div', { class: 'score-row' }, h('span', { class: 'n' }, '📏 Mot le plus long'), h('b', null, `${longest.best}${solo ? '' : ' · ' + longest.name}`)) : null,
           chainMode ? h('div', { class: 'score-row' }, h('span', { class: 'n' }, '🔗 Plus longue chaîne'), h('b', null, `${bestChain} mot${bestChain > 1 ? 's' : ''} (record : ${get('bonmot-record', 0)})`)) : null),
         h('div', { class: 'grow' }),
