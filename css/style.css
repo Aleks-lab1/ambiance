@@ -57,8 +57,8 @@ html[data-anim="pulse"] body::before { inset: -20%; animation: bglava 16s ease-i
 #theme-fx span { position: absolute; left: var(--x); top: 0; font-size: var(--s); line-height: 1; opacity: var(--o); white-space: pre; will-change: transform; }
 .fx-fall span { animation: fxfall var(--d) linear var(--delay) infinite; }
 .fx-rise span { animation: fxrise var(--d) linear var(--delay) infinite; }
-.fx-drift span { animation: fxdrift var(--d) ease-in-out var(--delay) infinite alternate; top: var(--y); }
-.fx-twinkle span { top: var(--y); animation: fxtwinkle var(--d) ease-in-out var(--delay) infinite alternate; }
+#theme-fx.fx-drift span { animation: fxdrift var(--d) ease-in-out var(--delay) infinite alternate; top: var(--y); }
+#theme-fx.fx-twinkle span { top: var(--y); animation: fxtwinkle var(--d) ease-in-out var(--delay) infinite alternate; }
 .fx-code span { color: #22ff88; font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; text-shadow: 0 0 6px #22ff88; animation: fxfall var(--d) linear var(--delay) infinite; }
 @keyframes fxfall { from { transform: translate(0, -20vh) rotate(0); } to { transform: translate(var(--sway), 115vh) rotate(var(--r)); } }
 @keyframes fxrise { from { transform: translate(0, 115vh) rotate(0); } to { transform: translate(var(--sway), -20vh) rotate(var(--r)); } }
