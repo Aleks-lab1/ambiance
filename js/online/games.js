@@ -7,6 +7,7 @@ import { writePunch, writeDico } from './write.js';
 import telephone from './telephone.js';
 import bingo from './bingo.js';
 import menteur from './menteur.js';
+import bonmot from './bonmot.js';
 
-export const ONLINE_GAMES = [dessin, imposteur, raceQuiz, writePunch, telephone, writeDico, menteur, raceEmoji, raceAnag, raceEstim, bingo, voteTP, voteDix, voteQui, voteOp];
+export const ONLINE_GAMES = [dessin, imposteur, raceQuiz, writePunch, telephone, writeDico, menteur, raceEmoji, raceAnag, raceEstim, bonmot, bingo, voteTP, voteDix, voteQui, voteOp];
 export const onlineGame = (id) => ONLINE_GAMES.find((g) => g.id === id);

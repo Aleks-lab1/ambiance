@@ -143,3 +143,7 @@ export function makeDico({ DICO, COMMUNS }) {
 
   return { size: words.length, has, withPrefix, candidates, draw, examples, chainLetters, randomStart };
 }
+
+// Le dictionnaire (1,7 Mo) n'est chargé et décodé qu'une fois, en local comme en ligne.
+let dicoP = null;
+export const loadDico = () => (dicoP ||= import('./data/mots.js').then(makeDico).catch((e) => { dicoP = null; throw e; }));

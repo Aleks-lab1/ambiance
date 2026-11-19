@@ -3,7 +3,8 @@ import { h, topbar, seg, toggleRow, countdown, timerView, confirmBox } from '../
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
-import { makeDico, normWord, fits, minLength } from '../bonmot-core.js';
+import { onlineBanner } from '../common.js';
+import { loadDico, normWord, fits, minLength } from '../bonmot-core.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const RARE_START = new Set(['K', 'W', 'X', 'Y', 'Z']);
@@ -11,9 +12,7 @@ const GAP = 3; // secondes de compte à rebours entre deux joueurs
 const LIVES = 3; // vies par joueur
 const hearts = (n) => '❤️'.repeat(Math.max(0, n)) + '🤍'.repeat(Math.max(0, LIVES - n));
 
-// Le dictionnaire est décodé une seule fois, même si on relance le jeu.
-let dicoP = null;
-const loadDico = () => (dicoP ||= import('../data/mots.js').then(makeDico).catch((e) => { dicoP = null; throw e; }));
+
 
 const up = (s) => s.toUpperCase();
 const tiles = (letters) => h('div', { class: 'tiles bm-tiles' }, up(letters).split('').map((c, i) => h('span', { style: { animationDelay: i * 70 + 'ms' } }, c)));
@@ -69,6 +68,8 @@ export function start(ctx) {
 
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'bonmot', { text: 'Chacun tape ses mots sur son téléphone, à tour de rôle, et tout le monde voit le mot s\'écrire en direct.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(0),
       h('label', { class: 'field' }, 'Mode de jeu', seg([

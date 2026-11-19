@@ -1,6 +1,6 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **41 jeux de soirée** en français, dont 15 jouables **en ligne, chacun sur son téléphone**.
+Une application web installable (PWA) avec **41 jeux de soirée** en français, dont 16 jouables **en ligne, chacun sur son téléphone**.
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## Les jeux
@@ -19,6 +19,7 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 🧩 | **Émojis mystères** | Films, séries et expressions cachés derrière des émojis (réponses libres tolérantes). |
 | 🔀 | **Anagrammes** | Remets les lettres dans l'ordre le plus vite possible. |
 | 📏 | **À vue de nez** | Estimations : le plus proche gagne. |
+| 🔠 | **Le Bon Mot** | Chacun son tour, tout le monde voit le mot s'écrire en direct ; l'hôte vérifie les mots. |
 | 🎱 | **Bingo de soirée** | Chacun sa grille de situations ; tout le monde est prévenu à chaque BINGO. |
 | 🤔 💯 👉 🗣️ | **Votes** | Tu préfères, C'est un 10 mais… (moyenne des notes), Qui de nous (vote secret), Opinions impopulaires. |
 
