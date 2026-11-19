@@ -1,6 +1,7 @@
 // Briques partagées par plusieurs jeux.
 import { h, modal, chip, toast } from './ui.js';
 import { settings, saveSettings } from './store.js';
+import { gameColors } from './themes.js';
 
 /** Demande la confirmation 18+ une seule fois. */
 export async function ensureAdult() {
@@ -91,7 +92,7 @@ export function dieFace(v, cls = '') {
 
 /** Bandeau « Jouer en ligne » pour les jeux qui ont aussi une version multijoueur. */
 export function onlineBanner(ctx, onlineId, { title = '🌐 En ligne (recommandé)', text = 'Chacun joue sur son propre téléphone, avec les points comptés automatiquement.', colors } = {}) {
-  const c = colors || (ctx.meta && ctx.meta.colors) || ['#2a7bff', '#ff4d8d'];
+  const c = colors || (ctx.meta && ctx.meta.colors ? gameColors(ctx.meta.id, ctx.meta.colors) : null) || ['#2a7bff', '#ff4d8d'];
   return h('div', { class: 'online-banner', style: { background: `linear-gradient(135deg, ${c[0]}, ${c[1]})` } },
     h('div', { class: 'deco' }, '📱'),
     h('h2', null, title),

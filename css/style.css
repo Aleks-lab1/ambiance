@@ -192,7 +192,7 @@ details.panel[open] summary { margin-bottom: 10px; }
 .players-bar b { color: var(--text); }
 .online-banner {
   position: relative; overflow: hidden; border-radius: 24px; padding: 18px;
-  background: linear-gradient(135deg, #2a7bff, #7c5cff 55%, #ff4d8d);
+  background: linear-gradient(135deg, var(--ob1, #2a7bff), var(--ob2, #7c5cff) 55%, var(--ob3, #ff4d8d));
   box-shadow: var(--shadow);
 }
 .online-banner h2 { font-size: 22px; }

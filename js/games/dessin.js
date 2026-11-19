@@ -1,5 +1,6 @@
 // Je dessine, tu devines : version un seul écran (+ accès au mode en ligne).
 import { h, topbar, seg, confirmBox, shuffle, countdown, timerView } from '../ui.js';
+import { gameColors } from '../themes.js';
 import { get, set } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { createBoard, createTools } from '../canvas.js';
@@ -20,7 +21,7 @@ export function start(ctx) {
     timer && timer.stop();
     root.replaceChildren(
       topbar(ctx),
-      h('div', { class: 'online-banner', style: { background: 'linear-gradient(135deg,#ff6b6b,#f7a531)' } },
+      h('div', { class: 'online-banner', style: { background: `linear-gradient(135deg, ${gameColors('dessin', ['#ff6b6b', '#f7a531']).join(', ')})` } },
         h('div', { class: 'deco' }, '📱'),
         h('h2', null, '🌐 En ligne (recommandé)'),
         h('p', null, 'Chacun devine sur son propre téléphone, avec points et indices.'),

@@ -203,6 +203,14 @@ export function applyTheme(id = settings.theme) {
   root.dataset.extra = t.extra || '';
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', t.base);
+  // Bandeau « Jouer en ligne » de l'accueil.
+  if (t.id === DEFAULT_THEME) ['--ob1', '--ob2', '--ob3'].forEach((v) => root.style.removeProperty(v));
+  else {
+    const pal = paletteOf(t);
+    root.style.setProperty('--ob1', pal[0][0]);
+    root.style.setProperty('--ob2', pal[1 % pal.length][1]);
+    root.style.setProperty('--ob3', pal[2 % pal.length][0]);
+  }
   buildFx(t);
   document.dispatchEvent(new CustomEvent('theme-changed'));
 }
