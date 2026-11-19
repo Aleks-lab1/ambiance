@@ -51,7 +51,7 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 💣 | **Patate chaude** | Bombe à retardement aléatoire |
 | ⏱️ | **3 en 5 secondes** | Citer 3 choses en 5 secondes |
 | 🔤 | **Petit bac** | Lettre + catégories + chrono |
-| 🔠 | **Le Bon Mot** | 1 à 3 lettres tirées au hasard (« DE » → « dernier »), ou mots en chaîne sur la dernière lettre ; 3 vies par joueur, le dernier en vie gagne ; mots vérifiés dans un dictionnaire de 320 000 mots |
+| 🔠 | **Le Bon Mot** | 1 à 3 lettres tirées au hasard (« DE » → « dernier »), ou mots en chaîne sur la dernière lettre ; 3 vies par joueur, le dernier en vie gagne ; mots vérifiés dans un dictionnaire de 500 000 mots (argot, verlan et prénoms compris) |
 | 🙅 | **Ni oui ni non** | Tenir sans dire oui ni non face aux questions pièges |
 | 📚 | **Histoire folle** | Histoire à tour de rôle avec des mots imposés |
 | ⚡ | **Duel de réflexes** | Deux joueurs face à face sur le même écran |
@@ -130,7 +130,7 @@ Tout le contenu est dans `js/data/` (un fichier par jeu, simples listes JavaScri
 - `tupreferes.js`, `jamais.js`, `dix.js`, `qui.js`, `paranoia.js`, `action.js`, `gages.js` : cartes par niveau
 - `dessin.js` : mots à dessiner (facile / moyen / difficile)
 - `motsinterdits.js`, `mime.js`, `chapeau.js`, `front.js`, `imposteur.js`, `patate.js`, `petitbac.js`, `cinq.js`, `debats.js`
-- `mots.js` : dictionnaire du Bon Mot, **généré** par `scripts/gen-mots.mjs` (voir l'en-tête du script). Sources : [an-array-of-french-words](https://github.com/words/an-array-of-french-words) (MIT) pour les 320 000 mots, [Liste de prénoms et patronymes](https://www.data.gouv.fr/fr/datasets/liste-de-prenoms-et-patronymes/) (Licence Ouverte) pour les ~5 800 prénoms, et [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0) pour la liste des mots courants.
+- `mots.js` : dictionnaire du Bon Mot, **généré** par `scripts/gen-mots.mjs` (voir l'en-tête du script). Sources : [an-array-of-french-words](https://github.com/words/an-array-of-french-words) (MIT) pour les 320 000 mots, [Liste de prénoms et patronymes](https://www.data.gouv.fr/fr/datasets/liste-de-prenoms-et-patronymes/) (Licence Ouverte) pour les ~5 800 prénoms, `scripts/argot.txt` (argot et verlan, **à compléter si un mot manque**), et [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0) pour les mots courants et tous les mots vus au moins 3 fois dans les sous-titres français.
 
 Les niveaux d'intensité sont définis dans `js/data/levels.js`.
 

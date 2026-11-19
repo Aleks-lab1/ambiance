@@ -1,0 +1,94 @@
+# Argot, verlan, mots des jeunes et mots récents ajoutés au dictionnaire du Bon Mot.
+# Un ou plusieurs mots par ligne. Les accents, majuscules et tirets ne comptent pas.
+# Ajoute ici les mots qui manquent, puis relance scripts/gen-mots.mjs.
+
+# Verlan
+meuf meufs keum keums reuf reufs reum reums rebeu rebeus beur beurs renoi renois noich zarbi chelou chelous relou relous
+vénère vénèr ouf ouff teubé teubés tebé tebés chanmé chanmés céfran céfrans auch zonmé zonzon téma tèma tèje tej
+tèj vèsquer pécho pécho péchon cainri cainris ripou ripous laisse-béton béton tromé ripa rabzouz reubeu reubeus
+reusta reustas tarpé ziva zyva iench iencli iench ienb kéblo kéblos ouam teuf teufs teufeur teufeuse teufeurs
+chéper chépa ap'ss guedin guedins narvalo narvalos zgeg zgegs zeub zeubs beuteu beuteus bzez bzezs chneck chnek
+schneck schnek tarba tarbas tiékar tiekar tiekars cheum cheums meskin meskine miskine miskina miskines lascar lascars
+gova govas caillera cailleras racaille racailles yeuve tèse tèsé reup reups reus reuss reusse cimer cimerci
+chanmax vrèbe zermi oim toi-oim relou-max ziva zarma wesh wsh wallah wallahi wallay starfoullah starfoulah starfallah
+inchallah inshallah hamdoulah hamdoullah habibi habiba khey kheys khoya khouya sahbi sahby sah sahh srab srabs
+frère frérot frérots frelot frelots poto potos poté potes gadjo gadji gadjos gadjis gova bolos boloss bolosse bolosses
+kayakoubeme kayakoubémé kayakou
+
+# Mots des jeunes et des réseaux
+askip asap osef jpp jsp jpense ptdr mdr mdrr lol lool xptdr tkt tqt stp svp cc slt bjr bsr dsl msg vrm bcp jtm jtd jtdr
+pk pq pcq pck ptn wtf omg bg bgs bv gg ez rip fdp ntm nrv tg tmtc tmr oklm okali oklm calme
+bbl bbls frr frero fréro kiffer kiffe kiffes kiffent kiffé kiffée kiffés kiffait kiffais kiffant kif kiff kiffeur
+crush crushs crusher crushé ghoster ghosté ghosting ghoste ghostes date dater daté matcher match matché swiper swipé
+swipe liker liké like likes follow follower followers unfollow unfollower story stories storys reel reels live lives
+vlog vlogs vlogueur vlogueuse youtubeur youtubeuse youtubeurs tiktokeur tiktokeuse tiktokeurs streamer streameuse streameur
+influenceur influenceuse influenceurs instagrameur instagrammeur instagrammeuse snapper snappé snap snaps insta tiktok
+selfie selfies emoji emojis émoticône gif gifs meme memes mème mèmes troll trolls troller trollé spam spammer spammé
+hashtag hashtags podcast podcasts streaming stream streamer binge binger binge-watcher spoiler spoilé spoiler spoilers
+tchoin tchoins tchoin tchoine zbeul zbeulé zbeuler zbeul gênance gênant gênante malaisant malaisante malaise cringe cringy
+cramé cramée cramés grillé grillée déter déters déterminé chaud chaude chauds tranquille tranquillou tranquilos tranquilou
+bail bails bails dar darr dard darons daron daronne daronnes darone daronne mifa mif famille fam fams frangin frangine
+seum seumer seumé avoir-le-seum vénère rageux rageuse rageux rager ragé haineux haineuse hater haters
+boloss bolosser bolossé bouffon bouffonne bouffons tebé teubé gogol golmon cassos cas-soc kassos kassoss
+flex flexer flexé flexeur drip swag swaggy stylé stylée stylés frais fraîche fraiche frais-frais
+sah sahha sahtek wesh-wesh ziak zehef zahef hagra hagar hess hassa hassoul chouf choufer choufeur
+miskine mskn mesquin wallah-wallah bader badé badant badante bad trip délire délires délirer
+hlel hlal halal haram harami chakal chakals chacal chacals poucave poucaves poukave poucaver
+sheitan chaitan charo charos charclo bicrave bicraver bicraveur charbonner charbonneur charbon
+ken kenné kenner choper chopé chopée pécho pécho rodave rodaver rodav bédave bédaver
+bédo bédos beuh beuher beuz shit teush teuch tarpé oinj joint pétard pétards spliff sky skyz skeud skeuds
+bendo bendos bendo tieks tiek quartier tess tesse téss hall halls zonard zonarde zonards
+go gos go-sûre tasspé tass tasse cagole cagoles bimbo kekette kéké kékés beauf beaufs
+vrai vrais vraie grave gravos trop tropp tellement tro trp jamais-de-la-vie
+chiller chill chillé chillax chillos posé posey posée posés posey tranquille-émile
+bonnasse bombasse canon canons charo charos crari crarie crari bogoss bogosse bogoss
+oufissime ouffissime incroyable dinguerie dingueries dingo dinguo masterclass goat légendaire
+check checker checké tchek tcheck tchekez taffer taf taff taffs boulot boulots job jobs
+nul nulle nullos nase naze nazes nase relou lourdingue lourd lourde
+truc trucs machin bidule bidules zbeul schmilblick
+trop-bien trop-stylé bg bgsse belle-gosse beau-gosse
+tise tiser tisé picole picoler picolé bourré bourrée bourrés pété pétée pétés défoncé défoncée arraché arrachée
+caisse caisses gova gov tire tires bagnole bagnoles chiotte chiottes
+thune thunes tune tunes oseille oseilles fric pognon blé moula mula moulaga lovés lové biff biffs bif bifton biftons
+keuf keufs schmit schmitt schmits flic flics condé condés bleus 22
+taule taulard taularde placard zonzon mitard
+gamos gamo gamos boloss
+apéro apéros apero aperos resto restos ciné cinés télé télés frigo frigos ado ados prof profs manif manifs perso persos
+info infos expo expos coloc colocs coloc covoit covoiturage dispo dispos rdv rendez-vous
+mytho mythos mytho mythomane mythoner mythonné
+crari crare crarie
+zinzin zinzins ouin-ouin ouinouin pleurnichard
+smartphone smartphones tél tels phone appli applis app apps wifi wi-fi bluetooth tablette tablettes ordi ordis
+kebab kebabs grec grecs tacos taco tacos burger burgers cheeseburger nuggets wrap wraps bagel bagels brownie brownies
+cookie cookies cupcake cupcakes donut donuts pancake pancakes smoothie smoothies milkshake milkshakes mojito mojitos
+spritz guacamole burrito burritos fajita fajitas tiramisu ramen ramens panini paninis tartiflette poké pokés bubble-tea
+sushi sushis maki makis sashimi naan cheese-naan
+covid covids confinement déconfinement visio visios zoom télétravail
+écoanxiété wokisme woke wokes wokiste iel iels toustes celleux mansplaining féminicide
+uberiser ubérisation ubériser startup startups startupeur crypto cryptos bitcoin nft nfts metaverse métavers
+trottinette trottinettes trott trot vélib vélibs uber ubers
+gameur gameuse gamer gamers geek geeks nerd nerds otaku otakus manga mangas anime animes cosplay cosplays
+fortnite tryhard tryharder noob noobs nouveau rageux lag lagger laggé bug bugs bugger buggé spawn spawner respawn
+gg wp ez carry carrier op nerf nerfer buff buffer craft crafter farm farmer loot looter
+ratio ratioter ratioté flop floper floppé
+pov fyp viral virale buzz buzzer
+ouesh ouech wech wesh-alors
+tchip tchiper tchipé tchiip
+bae babe babes baby chéri chérie chou choupette choupinou doudou
+mignon mignonne cute kawaii
+chanmé chanmax mortel mortelle trop-mortel
+woaw waouh wouah woah wow ouah ouahou
+ahah haha hahaha hihi hehe mdr ptdr xd
+ouais ouaip ouép ouaiche ouep nan nope yes yep yeah okay ok oké okk ok-ok dacc dac d'acc dak
+bah ben beh bé bin euh heu hein hum mouais bof boff pff pfff tsss zut flûte mince mince-alors
+grave-stylé carrément carrément-bien
+
+# Mots d'ailleurs (Belgique, Suisse, Québec, Afrique, régions)
+septante nonante huitante octante dîner souper déjeuner une-fois savoir sacoche pistolet
+chicon chicons kot koter koteur guindaille drache dracher baraki barakis
+cheni chenit bobet panosse panosser natel natels
+char chars chum chums blonde blondes magasiner magasinage fin-de-semaine courriel courriels clavarder clavardage
+tabarnak tabarnac câlisse calisse ostie crisse tiguidou icitte niaiser niaiseux pantoute
+go goo gos ndem enjailler enjaillement brouteur brouteurs gâter
+chocolatine chocolatines poche poches gavé gavée dégun peuchère fada fadas cagole minot minots pitchoun
+quiche wassingue drache tantôt chouille chouiner chouineur

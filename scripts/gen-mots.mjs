@@ -12,14 +12,20 @@
 //        npm pack @socialgouv/match-entities@1.1.18 && tar xzf socialgouv-match-entities-1.1.18.tgz
 //        grep -o 'value: "[A-Z-]*"' package/dist/index.mjs | sed 's/value: "\(.*\)"/\1/' > prenoms.txt
 //      (ne garder que le bloc « prenoms_default » du fichier). Les prénoms sont acceptés comme des mots.
+//   4. (facultatif) fr_full.txt : la liste complète de FrequencyWords (CC BY-SA 4.0), tous les mots
+//      des sous-titres français. On garde ceux vus au moins 3 fois : argot, verlan, mots récents, anglicismes…
+//        curl -O https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/fr/fr_full.txt
+//   5. scripts/argot.txt (dans le dépôt) : argot, verlan, mots des jeunes et des réseaux, ajoutés à la main.
+//      C'est là qu'il faut ajouter un mot qui manque.
 //
 // Utilisation :
-//   node scripts/gen-mots.mjs package/index.json fr_50k.txt [prenoms.txt]
+//   node scripts/gen-mots.mjs package/index.json fr_50k.txt [prenoms.txt] [fr_full.txt]
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const [dicoPath, freqPath, prenomsPath] = process.argv.slice(2);
+const [dicoPath, freqPath, prenomsPath, fullPath] = process.argv.slice(2);
+const FULL_MIN = 3; // nombre minimal d'apparitions dans les sous-titres
 if (!dicoPath || !freqPath) {
   console.error('Usage : node scripts/gen-mots.mjs <an-array-of-french-words/index.json> <fr_50k.txt>');
   process.exit(1);
@@ -67,6 +73,29 @@ for (const w of [...all, ...EXTRAS, ...PLURALS]) {
 }
 const set = new Set(base);
 for (const w of PRENOMS) { const n = norm(w); if (n.length >= 2) set.add(n); }
+
+// Argot et verlan ajoutés à la main (scripts/argot.txt).
+const argotPath = join(dirname(fileURLToPath(import.meta.url)), 'argot.txt');
+const ARGOT = readFileSync(argotPath, 'utf8').split('\n').filter((l) => !l.startsWith('#')).join(' ').split(/\s+/).filter(Boolean);
+for (const w of ARGOT) {
+  const n = norm(w);
+  if (n.length >= 2) set.add(n);
+  // « laisse-béton » : chaque morceau compte aussi
+  for (const part of w.split(/[-']/)) { const m = norm(part); if (m.length >= 2) set.add(m); }
+}
+
+// Tous les mots des sous-titres vus au moins FULL_MIN fois.
+let fullCount = 0;
+if (fullPath) {
+  for (const line of readFileSync(fullPath, 'utf8').split('\n')) {
+    const [w, c] = line.split(' ');
+    if (!(+c >= FULL_MIN) || !/^[a-zàâäçéèêëîïôöùûüÿœæ-]+$/.test(w)) continue;
+    const n = norm(w);
+    // Pas d'onomatopées étirées (« zzzz », « noooon ») ni de mots sans voyelle (les sigles utiles sont dans argot.txt).
+    if (n.length < 3 || /(.)\1\1/.test(n) || !/[aeiouy]/.test(n) || set.has(n)) continue;
+    set.add(n); fullCount++;
+  }
+}
 const sorted = [...set].sort();
 
 // Codage « front coding » : chaque mot = [nb de lettres communes avec le précédent, en base 36,
@@ -102,7 +131,9 @@ const out = `// Le Bon Mot : dictionnaire. Fichier généré par scripts/gen-mot
 //
 // DICO : ${sorted.length} mots français (formes conjuguées et pluriels compris), sans accents, triés.
 //   Source : an-array-of-french-words 2.0.0 (licence MIT, © Zeke Sikelianos), complétée de quelques mots récents
-//   et de ${PRENOMS.length} prénoms (data.gouv.fr « Liste de prénoms et patronymes », Licence Ouverte).
+//   et de ${PRENOMS.length} prénoms (data.gouv.fr « Liste de prénoms et patronymes », Licence Ouverte),
+//   de ${ARGOT.length} mots d'argot et de verlan (scripts/argot.txt) et de ${fullCount} mots vus au moins ${FULL_MIN} fois
+//   dans les sous-titres français (FrequencyWords, Hermit Dave, CC BY-SA 4.0).
 //   Codage : chaque mot commence par le nombre de lettres qu'il partage avec le mot précédent (0-9 puis A-Z),
 //   suivi du reste du mot. Les retours à la ligne ne comptent pas.
 // COMMUNS : ${common.length} mots courants, du plus au moins fréquent.
