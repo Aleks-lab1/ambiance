@@ -1,12 +1,12 @@
 /* ========== Ambiance — styles ========== */
 :root {
-  --bg: #120d26;
-  --bg2: #1b1438;
-  --card: #241b47;
-  --card2: #2f2459;
-  --line: rgba(255, 255, 255, .09);
-  --text: #f6f3ff;
-  --muted: #aca2d0;
+  --bg: #3a2a86;
+  --bg2: #4a379c;
+  --card: rgba(255, 255, 255, .13);
+  --card2: rgba(255, 255, 255, .22);
+  --line: rgba(255, 255, 255, .2);
+  --text: #ffffff;
+  --muted: #e2dbff;
   --accent: #ff4d8d;
   --accent2: #7c5cff;
   --ok: #22d39a;
@@ -15,7 +15,7 @@
   --g1: #ff4d8d;
   --g2: #7c5cff;
   --radius: 20px;
-  --shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  --shadow: 0 12px 28px rgba(30, 10, 80, .3);
   --st: env(safe-area-inset-top, 0px);
   --sb: env(safe-area-inset-bottom, 0px);
   color-scheme: dark;
@@ -24,11 +24,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; min-height: 100%; }
 body {
-  background:
-    radial-gradient(900px 520px at 0% -10%, rgba(124, 92, 255, .35), transparent 60%),
-    radial-gradient(800px 480px at 110% 0%, rgba(255, 77, 141, .25), transparent 55%),
-    var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text);
   font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
@@ -38,6 +34,15 @@ body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+/* Fond coloré fixe sur tout l'écran (background-attachment: fixed ne marche pas sur iPhone). */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120vmax 80vmax at 0% 0%, rgba(124, 92, 255, .9), transparent 60%),
+    radial-gradient(110vmax 80vmax at 100% 10%, rgba(255, 77, 141, .75), transparent 55%),
+    radial-gradient(120vmax 90vmax at 50% 110%, rgba(46, 197, 255, .55), transparent 60%),
+    linear-gradient(160deg, #4b2f9e, #6a2c8f 55%, #2f3b9e);
 }
 input, textarea { -webkit-user-select: text; user-select: text; font: inherit; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -376,7 +381,7 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .front-play.flash-pass { background: var(--warn); }
 .front-play .exit { position: absolute; top: calc(var(--st) + 8px); right: 10px; pointer-events: auto; z-index: 2; }
 
-.touch-zone { position: fixed; inset: 0; z-index: 30; background: #0b0818; touch-action: none; overflow: hidden; }
+.touch-zone { position: fixed; inset: 0; z-index: 30; background: var(--bg); touch-action: none; overflow: hidden; }
 .touch-zone .hint { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; pointer-events: none; color: var(--muted); font-weight: 700; font-size: 20px; gap: 10px; }
 .finger { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; pointer-events: none; transition: transform .25s, opacity .3s; box-shadow: 0 0 0 6px rgba(255, 255, 255, .2), 0 0 40px currentColor; }
 .finger.loser { transform: scale(.4); opacity: .15; }
@@ -511,7 +516,7 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .liar-roll { display: flex; flex-direction: column; gap: 4px; }
 
 /* ---------- Duel ---------- */
-.duel { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; background: #0b0818; }
+.duel { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; background: var(--bg); }
 .duel-half { flex: 1; display: flex; align-items: center; justify-content: center; touch-action: none; transition: background .15s; border-bottom: 3px solid rgba(255, 255, 255, .15); padding: 12px; }
 .duel-half.top { transform: rotate(180deg); }
 .duel-inner { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; pointer-events: auto; }

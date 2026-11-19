@@ -113,7 +113,7 @@ export function start(ctx) {
           default: title = who ? `🎯 Gage pour ${who}` : '🎯 Gage'; text = gage();
         }
         sfx.fanfare(); buzz([50, 30, 80]);
-        result.replaceChildren(h('div', { class: 'qcard anim', style: { minHeight: '0', '--g1': seg.color, '--g2': '#120d26' } }, h('div', { class: 'kicker' }, title), h('div', { class: 'big', style: { fontSize: '22px' } }, text)));
+        result.replaceChildren(h('div', { class: 'qcard anim', style: { minHeight: '0', '--g1': seg.color, '--g2': '#3a2a86' } }, h('div', { class: 'kicker' }, title), h('div', { class: 'big', style: { fontSize: '22px' } }, text)));
       }, 4300);
     }
   }
