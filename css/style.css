@@ -606,6 +606,8 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .bm-input.ok { border-color: var(--ok); box-shadow: 0 0 0 2px rgba(34, 211, 154, .35); }
 .bm-msg { min-height: 22px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; text-align: center; font-weight: 700; font-size: 15px; color: var(--muted); }
 .bm-msg.bad { color: #ffb3b6; }
+.bm-malus { animation: shake .25s linear 2; }
+.bm-malus .timer-num { color: var(--bad); }
 .bm-pick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; width: 100%; max-width: 380px; }
 .bm-pick button { aspect-ratio: 1; border: 0; border-radius: 11px; background: #fff; color: #1d1440; font-weight: 900; font-size: 20px; padding: 0; box-shadow: 0 3px 0 rgba(0, 0, 0, .22); }
 .bm-pick button:active { transform: translateY(2px); box-shadow: none; }

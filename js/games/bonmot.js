@@ -119,10 +119,9 @@ export function start(ctx) {
     const form = h('form', { class: 'row bm-form', onsubmit: (e) => { e.preventDefault(); submit(); } },
       input, h('button', { class: 'btn btn-primary', type: 'submit', onmousedown: keep }, 'Valider'));
     const msg = h('div', { class: 'bm-msg', 'aria-live': 'polite' });
-    const passBtn = h('button', { class: 'btn btn-ghost btn-sm', type: 'button', onmousedown: keep, onclick: () => state === 'play' && fail('pass') }, '🏳️ Je sèche');
     const usedBox = h('div', { class: 'bm-used' });
     const livesBar = h('div', { class: 'bm-lives' });
-    const playZone = h('div', { class: 'col' }, tv.el, form, msg, h('div', { class: 'row' }, passBtn, h('div', { class: 'grow' })));
+    const playZone = h('div', { class: 'col' }, tv.el, form, msg);
 
     root.replaceChildren(
       topbar(ctx, { onBack: quit, right: h('button', { class: 'btn btn-ghost btn-sm', onmousedown: keep, onclick: summary }, '🏁 Fin') }),
@@ -243,8 +242,13 @@ export function start(ctx) {
       });
     }
 
+    // Mauvais mot : 3 secondes de moins sur le chrono.
+    const MALUS = 3;
     function reject(text, word = null) {
       sfx.bad(); buzz([60, 40, 60]);
+      if (timer) { timer.add(-MALUS); tv.set(timer.left, opts.time * 1000); }
+      text += ` −${MALUS} s ⏱️`;
+      tv.el.classList.remove('bm-malus'); void tv.el.offsetWidth; tv.el.classList.add('bm-malus');
       form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
       const acceptBtn = word && h('button', {
         class: 'btn btn-soft btn-sm', type: 'button', onmousedown: keep,
@@ -314,7 +318,7 @@ export function start(ctx) {
         chainInfo = h('div', { class: 'sub' }, `🔗 Chaîne de ${chain.length} mot${chain.length > 1 ? 's' : ''}${isRec ? ' — nouveau record ! 🏅' : ''}`);
       }
       const head = [
-        h('div', { class: 'res' }, kind === 'time' ? '⏰ Temps écoulé !' : solo ? '🏳️ Tu sèches !' : `🏳️ ${p} sèche !`),
+        h('div', { class: 'res' }, '⏰ Temps écoulé !'),
         h('div', { class: 'sub' }, dead
           ? (solo ? '💀 Plus de vies !' : `💀 ${p} est éliminé(e) et prend ${sip(2)} !`)
           : `${solo ? 'Tu perds' : p + ' perd'} une vie (${hearts(st.lives)})${solo ? '' : ' et prend ' + sip(1)}.`),
