@@ -1,4 +1,4 @@
-# 🎉 Keskonfet — jeux de soirée (PWA)
+# 🎉 Ambiance — jeux de soirée (PWA)
 
 Une application web installable (PWA) avec **41 jeux de soirée** en français, dont 15 jouables **en ligne, chacun sur son téléphone**.
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
