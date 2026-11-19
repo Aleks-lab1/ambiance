@@ -773,3 +773,64 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .eq-mem { font-size: 12px; color: var(--muted); }
 .loup-secret { border: 0; color: #fff; cursor: pointer; }
 .loup-secret.hidden-role { --g1: #2b2d6e; --g2: #121236; }
+
+/* ---------- Jeux d'ambiance (lot 3) ---------- */
+.rank-list { display: flex; flex-direction: column; gap: 6px; }
+.rank-item { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 10px 12px; text-align: left; color: inherit; font-weight: 700; }
+.rank-item.on { background: var(--card2); border-color: rgba(255, 255, 255, .5); }
+.rank-item .rk { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .12); font-weight: 900; flex: none; }
+.rank-item.on .rk { background: #fff; color: #1d1440; }
+.rank-item .t { flex: 1; }
+.rank-item .yr { font-size: 13px; color: var(--muted); font-weight: 800; text-align: right; }
+.rank-item:disabled { opacity: 1; }
+.scale { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.scale-bar { position: relative; height: 34px; border-radius: 999px; background: linear-gradient(90deg, #2ec5ff, #b07cff 50%, #ff4d6d); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .25); }
+.scale-target { position: absolute; top: -4px; bottom: -4px; width: 36px; transform: translateX(-50%); border-radius: 10px; background: rgba(255, 255, 255, .35); border: 3px solid #ffd23f; box-shadow: 0 0 16px rgba(255, 210, 63, .8); }
+.scale-mark { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: #fff; transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.scale-mark.me { width: 20px; height: 20px; background: #1d1440; border: 3px solid #fff; }
+.scale-mark span { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; white-space: nowrap; }
+.scale-labels { display: flex; justify-content: space-between; gap: 12px; font-weight: 800; font-size: 14px; }
+.scale-labels span:last-child { text-align: right; }
+.scale-bar.with-marks { margin-bottom: 20px; }
+.scale-range { width: 100%; accent-color: #ffd23f; height: 34px; }
+.qsj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.qsj-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.qsj-card .nm { font-size: 13px; color: var(--muted); font-weight: 700; }
+.qsj-card .w { font-weight: 900; font-size: 17px; }
+.qsj-card.me { border-color: #ffd23f; }
+.qsj-card.found { background: rgba(34, 211, 154, .2); }
+.chi-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.chi-btn { border: 2px solid transparent; border-radius: 20px; background: var(--card2); padding: 16px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 800; color: inherit; }
+.chi-btn .e { font-size: 48px; line-height: 1; }
+.chi-btn.on { border-color: #fff; background: rgba(255, 255, 255, .25); transform: scale(1.04); }
+
+/* ---------- Plateau : Bataille navale, Memory, Yam's ---------- */
+.bn-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; width: min(92vw, 380px); margin: 0 auto; padding: 6px; border-radius: 14px; background: #0d4d8c; }
+.bn-grid.small { width: min(60vw, 230px); gap: 2px; padding: 4px; }
+.bn-cell { aspect-ratio: 1; border: 0; border-radius: 4px; background: #1f6fbf; padding: 0; font-size: clamp(11px, 3.4vw, 17px); color: #fff; display: grid; place-items: center; }
+.bn-cell:not(:disabled):active { background: #ffd23f; }
+.bn-cell.ship { background: #7b8794; }
+.bn-cell.miss { background: #164f8a; color: rgba(255, 255, 255, .7); }
+.bn-cell.hit { background: #ff8a1f; }
+.bn-cell.sunk { background: #c62839; }
+.bn-cell:disabled { opacity: 1; }
+.mem-grid { display: grid; gap: 6px; width: min(94vw, 460px); margin: 0 auto; }
+.mem-card { aspect-ratio: 3 / 4; border: 0; border-radius: 12px; background: linear-gradient(135deg, var(--g1), var(--g2)); font-size: clamp(22px, 7vw, 36px); display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+.mem-card.up { background: #fff; animation: flip .3s ease; }
+.mem-card.done { background: rgba(255, 255, 255, .55); }
+.mem-card:disabled { opacity: 1; }
+.ys-dice { gap: 8px; }
+.ys-die { border: 0; background: transparent; padding: 0; }
+.ys-die.held { transform: translateY(-6px); }
+.ys-wrap { overflow-x: auto; margin: 0 -8px; padding: 0 8px; }
+.ys { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ys th, .ys td { padding: 5px 6px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ys th { font-size: 13px; color: var(--muted); }
+.ys th.cur { color: #fff; }
+.ys td.cat { text-align: left; font-weight: 700; }
+.ys td.cur { background: rgba(255, 255, 255, .08); }
+.ys td.val { font-weight: 800; }
+.ys tr.tot td { font-weight: 900; color: var(--muted); }
+.ys tr.tot.big td { color: #fff; font-size: 16px; border-bottom: 0; }
+.ys-pick { border: 0; border-radius: 8px; background: #ffd23f; color: #3a2a00; font-weight: 900; min-width: 38px; padding: 4px 6px; }
+.ys-pick.zero { background: rgba(255, 255, 255, .2); color: #fff; }

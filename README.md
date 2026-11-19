@@ -1,6 +1,6 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **52 jeux de soirée** en français, dont 35 jouables **en ligne, chacun sur son téléphone**.
+Une application web installable (PWA) avec **61 jeux de soirée** en français, dont 44 jouables **en ligne, chacun sur son téléphone**.
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## Les jeux
@@ -33,6 +33,13 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 🤫 🎤 ⏱️ 🤥 | **Chacun son tour** | Paranoïa (question secrète), Pour ou contre (débat + vote), 3 en 5 secondes, Deux vérités un mensonge. |
 | 🐺 | **Loup-garou** | Rôles secrets sur chaque téléphone, l'hôte est le meneur. |
 | 🙊 | **Je n'ai jamais** | Vote secret « déjà fait / jamais », puis les noms s'affichent. |
+| 🕵️‍♀️ | **Qui a écrit ça ?** | Réponses anonymes à une question perso, puis on devine l'auteur de chacune. |
+| 🎚️ | **Le Curseur** | Une échelle entre deux opposés, un indice, chacun place son curseur. Aussi sur un seul téléphone. |
+| 🧠 | **Dans sa tête** | Devine comment un ami classe 5 éléments. |
+| 📅 | **Dans l'ordre !** | Remets 4 événements dans l'ordre chronologique. Aussi sur un seul téléphone. |
+| 🎭 | **Qui suis-je ?** | Tout le monde voit ton identité secrète… sauf toi. |
+| ✂️ | **Chifoumi** | Pierre, feuille, ciseaux, chacun contre tous. Seul : contre le téléphone. |
+| 🚢 🧩 🎲 | **Bataille navale, Memory, Yam's** | Jeux de plateau : en ligne, ou sur un seul téléphone (contre le téléphone, ou chacun son tour). |
 | 🎱 | **Bingo de soirée** | Chacun sa grille de situations ; tout le monde est prévenu à chaque BINGO. |
 | 🤔 💯 👉 🗣️ | **Votes** | Tu préfères, C'est un 10 mais… (moyenne des notes), Qui de nous (vote secret), Opinions impopulaires. |
 

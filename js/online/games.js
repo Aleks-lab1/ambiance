@@ -6,6 +6,8 @@ import { paranoiaOnline, debatsOnline, cinqOnline, deuxOnline } from './tour.js'
 import { patateOnline, reflexesOnline, couleursOnline } from './live.js';
 import { petitbacOnline, motmystereOnline, morpionOnline } from './mots.js';
 import { eqMI, eqMime, eqFredonne, eqDisle, loupOnline } from './equipes.js';
+import { quiaecritOnline, curseurOnline, danssateteOnline, ordreOnline, quisuisjeOnline, chifoumiOnline } from './soiree.js';
+import { batailleOnline, memoryOnline, yamsOnline } from './plateau.js';
 import { raceQuiz, raceEmoji, raceAnag, raceEstim, raceVf, raceCalc } from './race.js';
 import { writePunch, writeDico } from './write.js';
 import telephone from './telephone.js';
@@ -16,5 +18,6 @@ import unisson from './unisson.js';
 
 export const ONLINE_GAMES = [dessin, imposteur, raceQuiz, writePunch, telephone, writeDico, menteur, raceEmoji, raceAnag, raceEstim, raceVf, raceCalc, bonmot, unisson, bingo, voteTP, voteDix, voteQui, voteOp, voteJamais,
   eqMI, eqMime, eqFredonne, eqDisle, petitbacOnline, patateOnline, reflexesOnline, couleursOnline, motmystereOnline, morpionOnline,
-  paranoiaOnline, debatsOnline, cinqOnline, deuxOnline, loupOnline];
+  paranoiaOnline, debatsOnline, cinqOnline, deuxOnline, loupOnline,
+  quiaecritOnline, curseurOnline, danssateteOnline, ordreOnline, quisuisjeOnline, chifoumiOnline, batailleOnline, memoryOnline, yamsOnline];
 export const onlineGame = (id) => ONLINE_GAMES.find((g) => g.id === id);

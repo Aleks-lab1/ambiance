@@ -37,6 +37,93 @@ export const GAMES = [
     load: () => import('./imposteur.js'),
   },
   {
+    id: 'quiaecrit', name: 'Qui a écrit ça ?', emoji: '🕵️‍♀️', colors: ['#8e2de2', '#4a00e0'], new: true,
+    desc: 'Chacun répond en secret à une question perso… puis devinez qui a écrit quoi !',
+    tags: ['online', 'bluff', 'hot'], players: '3-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'Une question perso s\'affiche (« Ton plus gros mensonge à tes parents »). Chacun écrit sa réponse en secret sur son téléphone.',
+      'Les réponses sont ensuite révélées une par une, anonymement : votez pour celui ou celle qui l\'a écrite ! +1 si tu trouves, et l\'auteur gagne +1 par joueur piégé.',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('quiaecrit')),
+  },
+  {
+    id: 'curseur', name: 'Le Curseur', emoji: '🎚️', colors: ['#ff6a00', '#ee0979'], new: true,
+    desc: 'Froid ↔ Chaud : un indice, et tout le monde place le curseur au bon endroit.',
+    tags: ['online', 'equipes'], players: '2-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'Une échelle entre deux opposés s\'affiche (Froid ↔ Chaud, Nul ↔ Génial…). Un joueur voit en secret une cible sur l\'échelle et donne un indice (« soupe », « Brad Pitt »…).',
+      'Les autres placent le curseur là où ils pensent que se trouve la cible. Plus on est proche, plus on marque (jusqu\'à 4 points). En ligne, chacun place son propre curseur.',
+    ],
+    load: () => import('./soiree.js').then((m) => m.curseur),
+  },
+  {
+    id: 'danssatete', name: 'Dans sa tête', emoji: '🧠', colors: ['#c94b4b', '#4b134f'], new: true,
+    desc: 'Les meilleures pizzas, les pires corvées… Devine le classement d\'un ami.',
+    tags: ['online'], players: '3-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'Un thème et 5 éléments s\'affichent (« Les pires corvées »). Le joueur désigné les classe selon SES goûts, en secret.',
+      'Les autres essaient de deviner son classement : +1 par élément à la bonne place. Le joueur désigné gagne 1 point par ami qui en a trouvé au moins 3.',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('danssatete')),
+  },
+  {
+    id: 'ordre', name: 'Dans l\'ordre !', emoji: '📅', colors: ['#2193b0', '#6dd5ed'], new: true,
+    desc: 'Pyramides, iPhone, Titanic… Remets 4 événements dans l\'ordre chronologique.',
+    tags: ['online', 'rapide'], players: '1-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'Quatre événements s\'affichent (« Naufrage du Titanic », « Sortie du premier iPhone »…). Classe-les du plus ancien au plus récent.',
+      'En ligne : +1 par événement bien placé, +2 si tout est juste, et +1 pour le plus rapide sans faute. Sur un seul téléphone, le groupe classe ensemble puis on vérifie les dates.',
+    ],
+    load: () => import('./soiree.js').then((m) => m.ordre),
+  },
+  {
+    id: 'quisuisje', name: 'Qui suis-je ?', emoji: '🎭', colors: ['#f7971e', '#ffd200'], new: true,
+    desc: 'Tout le monde voit ton personnage sur son téléphone… sauf toi !',
+    tags: ['online', 'rapide'], players: '3-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'Chaque joueur reçoit une identité secrète (célébrité, personnage, animal…) que tous les autres voient sur leur téléphone, mais pas lui !',
+      'À tour de rôle, pose une question fermée à voix haute (« Suis-je une femme ? »), les autres répondent oui ou non. Quand tu crois savoir, tape ta réponse : les premiers à trouver marquent le plus.',
+    ],
+    load: () => import('./enligne.js').then((m) => m.launcher('quisuisje')),
+  },
+  {
+    id: 'chifoumi', name: 'Chifoumi', emoji: '✂️', colors: ['#56ab2f', '#a8e063'], new: true,
+    desc: 'Pierre, feuille, ciseaux… chacun contre tous, en même temps !',
+    tags: ['online', 'rapide'], players: '1-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'En ligne : à chaque manche, tout le monde choisit en secret pierre, feuille ou ciseaux. Tu marques 1 point par joueur que tu bats. Pas de choix à temps ? Le hasard choisit pour toi !',
+      'Seul : affronte le téléphone, premier à 3 points.',
+    ],
+    load: () => import('./soiree.js').then((m) => m.chifoumi),
+  },
+  {
+    id: 'bataille', name: 'Bataille navale', emoji: '🚢', colors: ['#0d4d8c', '#2ec5ff'], new: true,
+    desc: 'Coule la flotte adverse ! En ligne, le gagnant reste et affronte le suivant.',
+    tags: ['online'], players: '1-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'Chacun a 5 bateaux sur une grille de 8 × 8 (placés au hasard, tu peux les remélanger). À ton tour, tire sur une case de l\'adversaire : à l\'eau, touché ou coulé ! Touché = tu rejoues.',
+      'Le premier qui coule toute la flotte adverse gagne. En ligne, les autres attendent leur tour et regardent la bataille. Seul, affronte le téléphone.',
+    ],
+    load: () => import('./plateau.js').then((m) => m.bataille),
+  },
+  {
+    id: 'memory', name: 'Memory', emoji: '🧩', colors: ['#fc466b', '#3f5efb'], new: true,
+    desc: 'Retourne les cartes deux par deux et trouve les paires.',
+    tags: ['online'], players: '1-16', badges: ['En ligne', 'Nouveau'],
+    rules: ['Les cartes sont face cachée. À ton tour, retournes-en deux : si c\'est une paire, tu marques un point et tu rejoues. Sinon, elles se retournent et c\'est au suivant. Le plus de paires gagne !'],
+    load: () => import('./plateau.js').then((m) => m.memory),
+  },
+  {
+    id: 'yams', name: 'Yam\'s', emoji: '🎲', colors: ['#7a1f3d', '#c79a2a'], new: true,
+    desc: '5 dés, 3 lancers, 13 combinaisons : brelan, full, suites, Yam\'s !',
+    tags: ['online'], players: '1-16', badges: ['En ligne', 'Nouveau'],
+    rules: [
+      'À ton tour, lance les 5 dés jusqu\'à 3 fois en gardant ceux que tu veux, puis inscris ton score dans une case encore libre (même 0 si rien ne va).',
+      'Haut de la feuille : total des 1, des 2… des 6 (bonus de 35 si tu atteins 63). Bas : brelan, carré, full (25), petite suite (30), grande suite (40), Yam\'s (50) et chance. Le plus gros total gagne.',
+    ],
+    load: () => import('./plateau.js').then((m) => m.yams),
+  },
+  {
     id: 'quiz', name: 'Le Quiz', emoji: '🧠', colors: ['#5f2c82', '#49a09d'],
     desc: '170 questions dans 9 thèmes. Le plus rapide marque le plus de points.',
     tags: ['online', 'rapide'], players: '2-16', rules: [
@@ -119,9 +206,9 @@ export const GAMES = [
     load: () => import('./bingo.js'),
   },
   {
-    id: 'vraifaux', name: 'Vrai ou faux', emoji: '✅', colors: ['#11998e', '#e94057'], new: true,
+    id: 'vraifaux', name: 'Vrai ou faux', emoji: '✅', colors: ['#11998e', '#e94057'],
     desc: 'Info ou intox ? 100 affirmations étonnantes, le plus rapide gagne.',
-    tags: ['online', 'rapide'], players: '2-16', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'rapide'], players: '2-16', badges: ['En ligne'],
     rules: [
       '<b>En ligne :</b> une affirmation s\'affiche (« Les pieuvres ont trois cœurs »). Vrai ou faux ? Plus tu réponds vite et juste, plus tu gagnes de points. L\'explication s\'affiche ensuite.',
       '<b>Sur un seul téléphone :</b> lis l\'affirmation à voix haute, chacun annonce « vrai » ou « faux », puis révèle la réponse et son explication.',
@@ -129,9 +216,9 @@ export const GAMES = [
     load: () => import('./race.js').then((m) => m.vraifaux),
   },
   {
-    id: 'calcul', name: 'Calcul express', emoji: '🧮', colors: ['#4568dc', '#00c9a7'], new: true,
+    id: 'calcul', name: 'Calcul express', emoji: '🧮', colors: ['#4568dc', '#00c9a7'],
     desc: 'Calcul mental chronométré : 3 niveaux, du « 7 + 5 » au « 17² ».',
-    tags: ['online', 'rapide'], players: '2-16', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'rapide'], players: '2-16', badges: ['En ligne'],
     rules: [
       '<b>En ligne :</b> un calcul s\'affiche sur tous les téléphones. Tape le résultat le plus vite possible : le plus rapide marque le plus de points, avec un bonus pour le premier.',
       '<b>Sur un seul téléphone :</b> le premier qui crie le bon résultat gagne le point. Trois niveaux : facile, moyen, difficile.',
@@ -139,9 +226,9 @@ export const GAMES = [
     load: () => import('./race.js').then((m) => m.calcul),
   },
   {
-    id: 'unisson', name: 'À l\'unisson', emoji: '🤝', colors: ['#00b09b', '#96c93d'], new: true,
+    id: 'unisson', name: 'À l\'unisson', emoji: '🤝', colors: ['#00b09b', '#96c93d'],
     desc: '« Un fruit jaune » : tout le monde doit répondre la même chose !',
-    tags: ['online', 'cartes'], players: '3-16', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'cartes'], players: '3-16', badges: ['En ligne'],
     rules: [
       'Un thème s\'affiche (« Un fruit jaune », « Un prénom de chien »…). À 3, tout le monde dit sa réponse en même temps : le but est de penser comme la majorité ! Ceux qui ont dit la même chose que la majorité marquent un point, les moutons noirs prennent une pénalité.',
       '<b>En ligne :</b> chacun écrit sa réponse en secret sur son téléphone, puis tout est révélé : tu marques un point par joueur qui a écrit la même chose que toi (pluriels et petites fautes tolérés).',
@@ -228,9 +315,9 @@ export const GAMES = [
     load: () => import('./action.js'),
   },
   {
-    id: 'cap', name: 'Cap ou pas cap ?', emoji: '💪', colors: ['#f12711', '#f5af19'], new: true,
+    id: 'cap', name: 'Cap ou pas cap ?', emoji: '💪', colors: ['#f12711', '#f5af19'],
     desc: 'Des défis de plus en plus fous. Pas cap ? Pénalité !',
-    tags: ['cartes', 'hot'], players: '2+', badges: ['Nouveau', '3 niveaux'],
+    tags: ['cartes', 'hot'], players: '2+', badges: ['3 niveaux'],
     rules: ['Le joueur désigné lit le défi : « Cap de… ? ». S\'il le relève, bravo ! S\'il n\'est pas cap, il prend une pénalité. Trois niveaux : Tranquille, Délire (téléphone et réseaux sociaux) et Hot. Chacun peut toujours refuser un défi.'],
     load: () => import('./cartes.js').then((m) => m.cap),
   },
@@ -245,10 +332,9 @@ export const GAMES = [
     load: () => import('./paranoia.js'),
   },
   {
-    id: 'bouteille', name: 'La Bouteille', emoji: '🍾', colors: ['#1d976c', '#f7b733'], new: true,
+    id: 'bouteille', name: 'La Bouteille', emoji: '🍾', colors: ['#1d976c', '#f7b733'],
     desc: 'Fais tourner la bouteille : elle désigne quelqu\'un… et un défi à deux.',
-    tags: ['hot', 'rapide'], players: '2+', badges: ['Nouveau'],
-    rules: [
+    tags: ['hot', 'rapide'], players: '2+', rules: [
       'Les prénoms des joueurs sont placés en cercle. Celui dont c\'est le tour fait tourner la bouteille : elle désigne un autre joueur, et un défi à faire à deux s\'affiche (« Alice fait un compliment à Bob », « …un bisou dans le cou » au niveau Hot).',
       'Refuser coûte une pénalité. C\'est ensuite la personne désignée qui fait tourner la bouteille.',
     ],
@@ -348,9 +434,9 @@ export const GAMES = [
     load: () => import('./petitbac.js'),
   },
   {
-    id: 'bonmot', name: 'Le Bon Mot', emoji: '🔠', colors: ['#4776e6', '#8e54e9'], new: true,
+    id: 'bonmot', name: 'Le Bon Mot', emoji: '🔠', colors: ['#4776e6', '#8e54e9'],
     desc: 'Des lettres au hasard (« DE »…) : tape vite un mot qui va avec. Ou enchaîne les mots !',
-    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne'],
     rules: [
       '<b>En ligne :</b> chacun joue sur son téléphone, à tour de rôle ; tout le monde voit en direct le mot que tape le joueur. Sinon, on se passe un seul téléphone.',
       '<b>Lettres imposées :</b> l\'appli tire des lettres au hasard, par exemple « DE ». Par défaut, on commence avec 1 lettre, puis une de plus tous les 2 tours (jusqu\'à 3) : plus la partie avance, plus c\'est dur ! Le joueur doit vite taper un mot qui commence par ces lettres (« dernier ») — ou qui les contient, selon le réglage.',
@@ -361,19 +447,18 @@ export const GAMES = [
     load: () => import('./bonmot.js'),
   },
   {
-    id: 'pendu', name: 'Le Pendu', emoji: '🪢', colors: ['#614385', '#516395'], new: true,
+    id: 'pendu', name: 'Le Pendu', emoji: '🪢', colors: ['#614385', '#516395'],
     desc: 'Le classique : trouve le mot lettre par lettre avant d\'être pendu.',
-    tags: ['equipes'], players: '1+', badges: ['Nouveau'],
-    rules: [
+    tags: ['equipes'], players: '1+', rules: [
       'Un mot est caché : propose des lettres. Chaque erreur ajoute un morceau au dessin ; au bout de 7 erreurs, c\'est perdu !',
       'Le mot est tiré au hasard (court, moyen ou long), ou choisi en secret par un joueur. Avec une liste de joueurs, chacun propose une lettre à son tour : celui qui se trompe passe la main.',
     ],
     load: () => import('./pendu.js'),
   },
   {
-    id: 'motmystere', name: 'Le Mot mystère', emoji: '🟩', colors: ['#1d976c', '#f0b429'], new: true,
+    id: 'motmystere', name: 'Le Mot mystère', emoji: '🟩', colors: ['#1d976c', '#f0b429'],
     desc: 'Trouve le mot en 6 essais grâce aux lettres bien ou mal placées.',
-    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne'],
     rules: [
       'Propose un mot de 5, 6 ou 7 lettres. Chaque lettre devient <b>verte</b> si elle est bien placée, <b>jaune</b> si elle est dans le mot mais ailleurs, <b>grise</b> si elle n\'y est pas. Tu as 6 essais.',
       'À plusieurs, chacun propose un mot à son tour : celui qui trouve distribue des gorgées. Si personne ne trouve, tout le monde boit !',
@@ -399,9 +484,9 @@ export const GAMES = [
     load: () => import('./duel.js'),
   },
   {
-    id: 'morpion', name: 'Morpion & 4 à la suite', emoji: '⭕', colors: ['#2193b0', '#6dd5ed'], new: true,
+    id: 'morpion', name: 'Morpion & 4 à la suite', emoji: '⭕', colors: ['#2193b0', '#6dd5ed'],
     desc: 'Les grands classiques à deux, ou contre le téléphone.',
-    tags: ['online', 'rapide'], players: '1-2', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'rapide'], players: '1-2', badges: ['En ligne'],
     rules: [
       '<b>Morpion :</b> aligne 3 symboles (ligne, colonne ou diagonale) avant l\'autre. <b>4 à la suite :</b> fais tomber tes jetons dans les colonnes et aligne-en 4.',
       'À deux sur le même téléphone, ou contre le téléphone (facile ou coriace). Le perdant prend une pénalité, et on alterne qui commence.',
@@ -418,9 +503,9 @@ export const GAMES = [
     load: () => import('./sequence.js'),
   },
   {
-    id: 'couleurs', name: 'Couleurs pièges', emoji: '🌈', colors: ['#ff3b4f', '#2f7bff'], new: true,
+    id: 'couleurs', name: 'Couleurs pièges', emoji: '🌈', colors: ['#ff3b4f', '#2f7bff'],
     desc: 'Le mot « ROUGE » écrit en bleu : touche le bleu ! Ton cerveau va souffrir.',
-    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne', 'Nouveau'],
+    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne'],
     rules: [
       'Un nom de couleur s\'affiche, écrit dans une autre couleur. Touche la couleur de l\'<b>encre</b>, pas celle du mot ! Bonne réponse : +1 (+2 avec une série de 5). Erreur : −1 et un petit blocage.',
       'Chaque joueur fait une manche chronométrée à son tour. Le plus petit score prend une pénalité. Mode Piège : 6 couleurs et des boutons trompeurs.',
@@ -438,20 +523,18 @@ export const GAMES = [
     load: () => import('./roi.js'),
   },
   {
-    id: 'plusmoins', name: 'Plus ou moins', emoji: '🃏', colors: ['#cb2d3e', '#ef473a'], new: true,
+    id: 'plusmoins', name: 'Plus ou moins', emoji: '🃏', colors: ['#cb2d3e', '#ef473a'],
     desc: 'La prochaine carte sera-t-elle plus haute ou plus basse ?',
-    tags: ['rapide'], players: '1+', badges: ['Nouveau'],
-    rules: [
+    tags: ['rapide'], players: '1+', rules: [
       'Une carte est retournée. Devine si la suivante sera plus haute ou plus basse (l\'As est la plus forte, une égalité compte comme perdu).',
       'Chaque bonne réponse allonge ta série. Si tu te trompes, tu prends autant de pénalités que ta série + 1 ! Après 3 bonnes réponses, tu peux passer la main au joueur suivant.',
     ],
     load: () => import('./paquet.js').then((m) => m.plusmoins),
   },
   {
-    id: 'bus', name: 'Le Bus', emoji: '🚌', colors: ['#f7971e', '#e94057'], new: true,
+    id: 'bus', name: 'Le Bus', emoji: '🚌', colors: ['#f7971e', '#e94057'],
     desc: '4 cartes, 4 questions : rate une seule fois et tu remontes dans le bus.',
-    tags: ['rapide'], players: '1+', badges: ['Nouveau'],
-    rules: [
+    tags: ['rapide'], players: '1+', rules: [
       'Pour descendre du bus, il faut deviner 4 cartes d\'affilée : 1. rouge ou noir ? 2. plus ou moins que la 1re ? 3. entre les deux premières ou à l\'extérieur ? 4. quelle couleur (cœur, carreau, trèfle, pique) ?',
       'Une erreur et tu prends une pénalité (une par étape atteinte), puis tu recommandes depuis le début. Celui qui descend du bus distribue des gorgées !',
     ],
