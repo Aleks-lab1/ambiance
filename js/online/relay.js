@@ -26,8 +26,11 @@ function packet(type, body) {
 }
 
 export class Mqtt {
-  constructor(url) {
-    this.url = url;
+  // url : 'wss://…' ou { url, user, pass } pour les serveurs qui demandent un identifiant
+  constructor(server) {
+    this.url = typeof server === 'string' ? server : server.url;
+    this.user = typeof server === 'string' ? null : server.user;
+    this.pass = typeof server === 'string' ? null : server.pass;
     this.subs = new Map();
     this.buf = new Uint8Array(0);
     this.pid = 1;
@@ -45,7 +48,10 @@ export class Mqtt {
       this.ws = ws;
       this.onConnack = (ok) => { clearTimeout(t); if (ok) { this.ready = true; resolve(this); } else fail(new Error('refusé')); };
       ws.onopen = () => {
-        const body = [...str('MQTT'), 4, 0x02, 0, 60, ...str('amb-' + rid() + rid())];
+        const flags = 0x02 | (this.user ? 0x80 : 0) | (this.user && this.pass ? 0x40 : 0);
+        const body = [...str('MQTT'), 4, flags, 0, 60, ...str('amb-' + rid() + rid())];
+        if (this.user) body.push(...str(this.user));
+        if (this.user && this.pass) body.push(...str(this.pass));
         ws.send(packet(0x10, body));
       };
       ws.onmessage = (e) => this.feed(new Uint8Array(e.data));

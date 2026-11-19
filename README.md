@@ -114,7 +114,7 @@ Le script liste tous les fichiers et calcule un numéro de version. Les utilisat
 
 ### En 4G/5G ou sur des Wi-Fi différents
 
-La connexion directe entre téléphones (WebRTC) est souvent bloquée par les opérateurs mobiles ou entre deux box. Dans ce cas, l'appli bascule toute seule sur un **relais** (`js/online/relay.js`) : les messages passent par des serveurs MQTT publics et gratuits (EMQX, HiveMQ, Mosquitto, listés dans `js/config.js`). L'hôte écoute sur tous ; un joueur essaie la connexion directe pendant 8 secondes puis passe au relais, sur le premier serveur où l'hôte répond. Si le serveur PeerJS est injoignable, tout passe par le relais.
+La connexion directe entre téléphones (WebRTC) est souvent bloquée par les opérateurs mobiles ou entre deux box. Dans ce cas, l'appli bascule toute seule sur un **relais** (`js/online/relay.js`) : les messages passent par des serveurs MQTT publics et gratuits (shiftr.io sur le port 443, qui passe même sur les réseaux filtrés, puis EMQX, HiveMQ et Mosquitto ; liste dans `js/config.js`). L'hôte écoute sur tous ; un joueur essaie la connexion directe pendant 8 secondes puis passe au relais, sur le premier serveur où l'hôte répond. Si le serveur PeerJS est injoignable, tout passe par le relais.
 
 Ces serveurs publics n'offrent aucune garantie (et les messages y transitent en clair, ce qui est sans conséquence pour un jeu de soirée). Pour une fiabilité maximale, tu peux aussi ajouter un serveur TURN dans `js/config.js` (par ex. un compte gratuit Metered, Twilio ou ton propre `coturn`), ou remplacer `relayBrokers` par ton propre serveur MQTT.
 

@@ -17,6 +17,8 @@ export const CONFIG = {
   // Relais de secours quand la connexion directe échoue (4G/5G, Wi-Fi différents…) :
   // serveurs MQTT publics et gratuits, essayés dans l'ordre. L'hôte écoute sur tous.
   relayBrokers: [
+    // Port 443 en premier : passe même sur les réseaux qui bloquent les ports inhabituels.
+    { url: 'wss://public.cloud.shiftr.io', user: 'public', pass: 'public' },
     'wss://broker.emqx.io:8084/mqtt',
     'wss://broker.hivemq.com:8884/mqtt',
     'wss://test.mosquitto.org:8081/mqtt',

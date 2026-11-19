@@ -320,6 +320,7 @@ class Client {
     if (this.dead || this.useRelay) return;
     this.useRelay = true;
     console.info('Connexion directe impossible : passage par le relais.');
+    if (!this.welcomed) this.onStatus('relay');
     this.open();
   }
 
@@ -527,6 +528,7 @@ export function start(ctx) {
   }
 
   function onStatus(s, reason) {
+    if (s === 'relay') { if (!room) busy('Connexion directe impossible : passage par le relais…'); return; }
     status = s;
     const banner = root.querySelector('.conn-banner.live');
     if (s === 'reconnecting') {
