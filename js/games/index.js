@@ -320,7 +320,7 @@ export const GAMES = [
     desc: 'Des lettres au hasard (« DE »…) : tape vite un mot qui va avec. Ou enchaîne les mots !',
     tags: ['rapide'], players: '1+', badges: ['Nouveau'],
     rules: [
-      '<b>Lettres imposées :</b> l\'appli tire 1, 2 ou 3 lettres au hasard, par exemple « DE ». Le joueur doit vite taper un mot qui commence par ces lettres (« dernier ») — ou qui les contient, selon le réglage.',
+      '<b>Lettres imposées :</b> l\'appli tire des lettres au hasard, par exemple « DE ». Par défaut, on commence avec 1 lettre, puis une de plus tous les 2 tours (jusqu\'à 3) : plus la partie avance, plus c\'est dur ! Le joueur doit vite taper un mot qui commence par ces lettres (« dernier ») — ou qui les contient, selon le réglage.',
       '<b>Mots en chaîne :</b> chaque mot doit commencer par la dernière lettre du mot précédent (« dernier » → « rose » → « escargot »…). Le premier joueur choisit la lettre de départ. Variante : reprendre les 2 ou 3 dernières lettres.',
       'Les mots sont vérifiés dans un dictionnaire de plus de 500 000 mots : prénoms, argot, verlan et mots des jeunes compris (accents facultatifs, pas de mot déjà joué). Mot trouvé : +1 point, puis compte à rebours de 3 secondes pour passer le téléphone. Chaque mauvais mot (inconnu, déjà joué, mauvaises lettres) coûte 3 secondes de chrono. Temps écoulé : pénalité !',
       '<b>Chaque joueur a 3 vies ❤️❤️❤️.</b> Quand le temps est écoulé, on perd une vie ; à zéro, on est éliminé. Le dernier joueur en vie gagne la partie.',

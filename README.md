@@ -51,7 +51,7 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 💣 | **Patate chaude** | Bombe à retardement aléatoire |
 | ⏱️ | **3 en 5 secondes** | Citer 3 choses en 5 secondes |
 | 🔤 | **Petit bac** | Lettre + catégories + chrono |
-| 🔠 | **Le Bon Mot** | 1 à 3 lettres tirées au hasard (« DE » → « dernier »), ou mots en chaîne sur la dernière lettre ; 3 vies par joueur, le dernier en vie gagne ; mots vérifiés dans un dictionnaire de 500 000 mots (argot, verlan et prénoms compris) |
+| 🔠 | **Le Bon Mot** | Lettres tirées au hasard (« DE » → « dernier »), de plus en plus nombreuses au fil de la partie, ou mots en chaîne sur la dernière lettre ; 3 vies par joueur, le dernier en vie gagne ; mots vérifiés dans un dictionnaire de 500 000 mots (argot, verlan et prénoms compris) |
 | 🙅 | **Ni oui ni non** | Tenir sans dire oui ni non face aux questions pièges |
 | 📚 | **Histoire folle** | Histoire à tour de rôle avec des mots imposés |
 | ⚡ | **Duel de réflexes** | Deux joueurs face à face sur le même écran |

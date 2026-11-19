@@ -20,7 +20,8 @@ const tiles = (letters) => h('div', { class: 'tiles bm-tiles' }, up(letters).spl
 
 export function start(ctx) {
   const { root, meta } = ctx;
-  const opts = Object.assign({ mode: 'lettres', len: 'mix', pos: 'start', chain: 1, time: 15, dico: true }, get('bonmot', {}));
+  const opts = Object.assign({ mode: 'lettres', len: 'prog', pos: 'start', chain: 1, time: 15, dico: true }, get('bonmot', {}));
+  if (opts.len === 'mix') opts.len = 'prog'; // ancien réglage « Mélange »
   const save = () => set('bonmot', opts);
   let dico = null;
   let timers = [];
@@ -49,7 +50,7 @@ export function start(ctx) {
           ], opts.chain, (v) => { opts.chain = v; save(); }))
           : [
             h('label', { class: 'field' }, 'Nombre de lettres imposées', seg([
-              { value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 'mix', label: '🎲 Mélange' },
+              { value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }, { value: 'prog', label: '📈 De + en +' },
             ], opts.len, (v) => { opts.len = v; save(); })),
             h('label', { class: 'field' }, 'Les lettres doivent être…', seg([
               { value: 'start', label: 'Au début du mot' }, { value: 'in', label: 'N\'importe où' },
@@ -138,7 +139,7 @@ export function start(ctx) {
       }));
       scorePill.textContent = chainMode
         ? `🔗 ${chain.length} mot${chain.length > 1 ? 's' : ''} · record ${Math.max(get('bonmot-record', 0), bestChain)}`
-        : `⭐ ${stats.get(p).pts} pt${stats.get(p).pts > 1 ? 's' : ''}`;
+        : `⭐ ${stats.get(p).pts} pt${stats.get(p).pts > 1 ? 's' : ''}${opts.len === 'prog' ? ` · 🔤 ${lenAt(turnsDone)}` : ''}`;
     }
 
     function renderUsed() {
@@ -159,8 +160,17 @@ export function start(ctx) {
     }
 
     // Lettres imposées du prochain tour (mode Lettres imposées).
+    // Mode « de plus en plus » : 1 lettre au début, puis une de plus tous les 2 tours de table (3 au maximum).
+    let turnsDone = 0;
+    const lenAt = (k) => {
+      if (opts.len !== 'prog') return opts.len;
+      const first = pos === 'in' ? 2 : 1;
+      const per = Math.max(4, 2 * alive().length);
+      return Math.min(3, first + Math.floor(k / per));
+    };
     function drawLetters() {
-      const len = opts.len === 'mix' ? (pos === 'in' ? 2 + Math.floor(Math.random() * 2) : 1 + Math.floor(Math.random() * 3)) : opts.len;
+      const len = lenAt(turnsDone);
+      turnsDone++;
       const s = dico.draw(pos, len, recent);
       recent.push(s);
       if (recent.length > 20) recent.shift();
@@ -179,7 +189,10 @@ export function start(ctx) {
         head,
         h('div', { class: 'kicker' }, solo ? 'Prépare-toi…' : `Au tour de ${p} !`),
         num,
-        chainMode ? h('div', { class: 'sub' }, `Prochain mot : commence par `, h('b', null, up(letters))) : null);
+        chainMode ? h('div', { class: 'sub' }, `Prochain mot : commence par `, h('b', null, up(letters))) : null,
+        !chainMode && turnsDone > 0 && lenAt(turnsDone) > lenAt(turnsDone - 1)
+          ? h('div', { class: 'bm-levelup' }, `⬆️ Ça se corse : ${lenAt(turnsDone)} lettres maintenant !`) : null);
+      if (!chainMode && turnsDone > 0 && lenAt(turnsDone) > lenAt(turnsDone - 1)) sfx.fanfare();
       let n = GAP;
       const step = () => {
         if (state !== 'count') return;
