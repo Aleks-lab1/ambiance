@@ -1,6 +1,7 @@
 // Thèmes de l'appli : couleurs, fond (éventuellement animé), particules et police.
 import { h } from './ui.js';
 import { settings, saveSettings } from './store.js';
+import { GAMES } from './games/index.js';
 
 export const THEME_CATS = [
   { id: 'classique', label: '✨ Classiques' },
@@ -77,8 +78,8 @@ export const THEMES = [
     bg: ['repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 2px, transparent 2px 4px)', rad('rgba(255,61,127,.4)', '0%', '100%'), lin('#2a1f6e', '#3b1f7a 55%', '#1f2a7a')].join(','),
     logo: 'linear-gradient(90deg, #ffcc00, #ff3d7f)', fx: { type: 'drift', items: ['👾', '🕹️', '⭐', '🍒'], count: 9 },
   },
-  { id: 'luxe', name: 'Luxe', emoji: '🥂', cat: 'style', base: '#1e1a14', g1: '#f5c86a', g2: '#b8862b', bg: [rad('rgba(245,200,106,.3)', '50%', '0%'), lin('#2a241a', '#1e1a14 55%', '#14110d')].join(','), logo: 'linear-gradient(90deg, #fff1c1, #f5c86a 50%, #b8862b)' },
-  { id: 'minimal', name: 'Minimal', emoji: '🖤', cat: 'style', base: '#26262e', g1: '#ffffff', g2: '#9aa0ff', bg: lin('#30303a', '#26262e 55%', '#1d1d24'), logo: 'linear-gradient(90deg, #fff, #c8c8d8)', extra: 'minimal' },
+  { id: 'luxe', name: 'Luxe', emoji: '🥂', cat: 'style', base: '#1e1a14', g1: '#f5c86a', g2: '#b8862b', pal: [['#3a3020', '#14110d'], ['#8a6420', '#2a2218'], ['#2e2a24', '#5a4422'], ['#a87a2a', '#3a2c16']], bg: [rad('rgba(245,200,106,.3)', '50%', '0%'), lin('#2a241a', '#1e1a14 55%', '#14110d')].join(','), logo: 'linear-gradient(90deg, #fff1c1, #f5c86a 50%, #b8862b)' },
+  { id: 'minimal', name: 'Minimal', emoji: '🖤', cat: 'style', base: '#26262e', g1: '#ffffff', g2: '#9aa0ff', pal: [['#44444f', '#2c2c35'], ['#3a3d5c', '#25263a'], ['#505060', '#33333d'], ['#4a4f78', '#2f3150']], bg: lin('#30303a', '#26262e 55%', '#1d1d24'), logo: 'linear-gradient(90deg, #fff, #c8c8d8)', extra: 'minimal' },
   {
     id: 'vapor', name: 'Vaporwave', emoji: '🌴', cat: 'style', base: '#5b3fa8', g1: '#ff71ce', g2: '#01cdfe',
     bg: [rad('rgba(1,205,254,.5)', '0%', '0%'), rad('rgba(255,113,206,.6)', '100%', '100%'), lin('#5b3fa8', '#7a49b5 55%', '#b967ff')].join(','),
@@ -89,7 +90,7 @@ export const THEMES = [
   { id: 'aurore', name: 'Aurore boréale', emoji: '🌠', cat: 'anime', base: '#123d5c', g1: '#4dffb5', g2: '#8a5cff', anim: 'shift', bg: lin('#0f3b5a', '#127a6a', '#3d2f8f', '#0f3b5a', '#5b2d8f', '#127a6a') },
   { id: 'feu', name: 'En feu', emoji: '🔥', cat: 'anime', base: '#a3221a', g1: '#ffb347', g2: '#ff3b1f', anim: 'shift', bg: lin('#7a1010', '#c73a12', '#e8701a', '#a3221a', '#5e0d16', '#c73a12'), fx: { type: 'rise', items: ['•', '·', '✦'], count: 26, color: '#ffcf70' } },
   { id: 'disco', name: 'Boule à facettes', emoji: '🪩', cat: 'anime', base: '#6a1fb0', g1: '#ff3df2', g2: '#3dd8ff', anim: 'hue', bg: [rad('rgba(255,61,242,.7)', '0%', '0%'), rad('rgba(61,216,255,.7)', '100%', '100%'), lin('#6a1fb0', '#2a2fb5')].join(','), fx: { type: 'twinkle', items: ['✨', '✦', '🪩'], count: 22 } },
-  { id: 'rainbow', name: 'Arc-en-ciel', emoji: '🌈', cat: 'anime', base: '#7b3fb5', g1: '#ffd23f', g2: '#ff4d8d', anim: 'shift', bg: lin('#d9334f', '#e8822a', '#c9a227', '#2fa86a', '#2a7bd9', '#7b3fb5', '#d9334f') },
+  { id: 'rainbow', name: 'Arc-en-ciel', emoji: '🌈', cat: 'anime', base: '#7b3fb5', g1: '#ffd23f', g2: '#ff4d8d', anim: 'shift', pal: [['#e53950', '#f0803a'], ['#ef8a2a', '#d4a52a'], ['#2fa86a', '#26b0a0'], ['#2a7bd9', '#4f5ae0'], ['#7b3fb5', '#c43fa8'], ['#d9334f', '#7b3fb5']], bg: lin('#d9334f', '#e8822a', '#c9a227', '#2fa86a', '#2a7bd9', '#7b3fb5', '#d9334f') },
   { id: 'holo', name: 'Holographique', emoji: '💿', cat: 'anime', base: '#6c6fc9', g1: '#ff9de2', g2: '#7ee0ff', anim: 'shift', bg: lin('#7b6fd6', '#c46fc9', '#5fa8d9', '#8fd0c4', '#b07fd9', '#7b6fd6') },
   { id: 'lave', name: 'Lampe à lave', emoji: '🫧', cat: 'anime', base: '#7a1fa2', g1: '#ff6b6b', g2: '#ffb36b', anim: 'pulse', bg: [rad('rgba(255,107,107,.9)', '20%', '30%', '60vmax 60vmax'), rad('rgba(255,179,107,.85)', '80%', '70%', '55vmax 55vmax'), rad('rgba(255,61,180,.7)', '70%', '10%', '45vmax 45vmax'), lin('#7a1fa2', '#4a1880')].join(',') },
   { id: 'galaxie', name: 'Galaxie', emoji: '🪐', cat: 'anime', base: '#231a5e', g1: '#ff7ad9', g2: '#6b8bff', anim: 'hue', bg: [rad('rgba(255,122,217,.5)', '30%', '30%', '70vmax 50vmax'), rad('rgba(107,139,255,.55)', '70%', '70%', '80vmax 60vmax'), lin('#231a5e', '#140f3d')].join(','), fx: { type: 'drift', items: ['🚀', '🪐', '🛸', '☄️', '⭐'], count: 10 } },
@@ -110,6 +111,49 @@ export const THEMES = [
 ];
 
 export const DEFAULT_THEME = 'ambiance';
+
+// ---------- Couleurs des cases de jeux ----------
+function hexToHsl(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  let hh = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > .5 ? d / (2 - max - min) : d / (max + min);
+    hh = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    hh *= 60;
+  }
+  return [hh, s * 100, l * 100];
+}
+const hsl = (hh, s, l) => `hsl(${(((hh % 360) + 360) % 360).toFixed(0)} ${s.toFixed(0)}% ${l.toFixed(0)}%)`;
+// Teinte décalée, luminosité bornée pour que le texte blanc reste lisible (les jaunes/verts plus foncés).
+function shade(hex, shift, dl = 0) {
+  const [hh, s, l] = hexToHsl(hex);
+  const h2 = hh + shift;
+  const hue = ((h2 % 360) + 360) % 360;
+  const maxL = hue > 40 && hue < 190 ? 42 : 58;
+  return hsl(h2, s, Math.min(maxL, Math.max(28, l + dl)));
+}
+const SHIFTS = [[0, 0], [10, -7], [-10, 5], [18, -3], [-16, -9], [6, 8], [-6, -5], [14, 3]];
+const palCache = new Map();
+function paletteOf(t) {
+  if (t.pal) return t.pal;
+  if (!palCache.has(t.id)) palCache.set(t.id, SHIFTS.map(([sh, dl], i) => (i % 2
+    ? [shade(t.g2, sh, dl), shade(t.g1, sh, dl - 6)]
+    : [shade(t.g1, sh, dl), shade(t.g2, sh, dl - 6)])));
+  return palCache.get(t.id);
+}
+
+/** Couleurs d'une case (ou d'un écran) de jeu selon le thème. Le thème Ambiance garde les couleurs d'origine. */
+export function gameColors(id, original) {
+  const t = themeById(settings.theme);
+  if (t.id === DEFAULT_THEME && original) return original;
+  const pal = paletteOf(t);
+  let i = GAMES.findIndex((g) => g.id === id);
+  if (i < 0) { i = 0; for (const c of String(id)) i = (i * 31 + c.charCodeAt(0)) >>> 0; }
+  return pal[i % pal.length];
+}
 export const themeById = (id) => THEMES.find((t) => t.id === id) || THEMES[0];
 
 let fxEl = null;
@@ -160,6 +204,7 @@ export function applyTheme(id = settings.theme) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', t.base);
   buildFx(t);
+  document.dispatchEvent(new CustomEvent('theme-changed'));
 }
 
 export function setTheme(id) {

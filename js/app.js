@@ -6,7 +6,7 @@ import { editPlayers } from './players.js';
 import { ensureAdult } from './common.js';
 import { getFavs, isFav, toggleFav } from './favorites.js';
 import { sfx, buzz } from './sfx.js';
-import { THEMES, THEME_CATS, themeById, applyTheme, setTheme, themeSwatch } from './themes.js';
+import { THEMES, THEME_CATS, themeById, applyTheme, setTheme, themeSwatch, gameColors } from './themes.js';
 
 const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
@@ -66,7 +66,8 @@ async function openScreen(id, opts = {}, push = true) {
   const url = urlFor(id, opts);
   if (push) history.pushState(state, '', url);
   const token = ++navToken;
-  const root = h('div', { class: 'screen game-screen', style: { '--g1': meta.colors[0], '--g2': meta.colors[1] } });
+  const gc = gameColors(id, meta.colors);
+  const root = h('div', { class: 'screen game-screen', style: { '--g1': gc[0], '--g2': gc[1] } });
   mount(root);
   document.title = `${meta.name} — Ambiance`;
   document.body.classList.add('in-game');
@@ -164,7 +165,7 @@ function renderHome() {
       star.addEventListener('click', () => { renderFavs(); if (filter === 'fav') renderGrid(); });
       return h('div', { class: 'tile-wrap' },
         h('button', {
-          class: 'tile', style: { '--g1': g.colors[0], '--g2': g.colors[1] },
+          class: 'tile', style: { '--g1': gameColors(g.id, g.colors)[0], '--g2': gameColors(g.id, g.colors)[1] },
           onclick: () => { sfx.unlock(); openScreen(g.id); },
         },
           h('div', { class: 'badges' }, (g.badges || []).slice(0, 1).map((b) => h('span', { class: 'badge' + (b === 'Nouveau' ? ' new' : '') }, b)), h('span', { class: 'badge' }, '👤 ' + g.players)),
@@ -183,7 +184,7 @@ function renderHome() {
     favSlot.replaceChildren(
       h('div', { class: 'section-title' }, '⭐ Mes favoris'),
       h('div', { class: 'scroll-x fav-row' }, favs.map((g) => h('button', {
-        class: 'mini-tile', style: { '--g1': g.colors[0], '--g2': g.colors[1] },
+        class: 'mini-tile', style: { '--g1': gameColors(g.id, g.colors)[0], '--g2': gameColors(g.id, g.colors)[1] },
         onclick: () => { sfx.unlock(); openScreen(g.id); },
       }, h('span', { class: 'emo' }, g.emoji), h('span', { class: 'nm' }, g.name)))));
   }
@@ -319,6 +320,8 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 
 // ---------------- Démarrage ----------------
 applyTheme();
+// Changement de thème depuis les réglages : l'accueil se recolore aussitôt.
+document.addEventListener('theme-changed', () => { if (!current && document.querySelector('.grid')) renderHome(); });
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
 const target = parseHash();
 history.replaceState({ screen: 'home' }, '', location.pathname + location.search);

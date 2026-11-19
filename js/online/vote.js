@@ -1,5 +1,6 @@
 // Jeux de vote en ligne : Tu préfères, C'est un 10 mais…, Qui de nous…
 import { h, shuffle } from '../ui.js';
+import { gameColors } from '../themes.js';
 import { LEVELS } from '../data/levels.js';
 import { levelPicker } from '../common.js';
 import { drinks } from '../store.js';
@@ -93,7 +94,7 @@ function makeVote(mode) {
 
       function renderCard(v) {
         const lvl = M.levels.find((l) => l.id === v.q.l) || M.levels[0];
-        const card = h('div', { class: 'qcard anim', style: { '--g1': M.colors[0], '--g2': M.colors[1], minHeight: '0', padding: '22px 18px' } },
+        const card = h('div', { class: 'qcard anim', style: { '--g1': gameColors('mode-' + mode, M.colors)[0], '--g2': gameColors('mode-' + mode, M.colors)[1], minHeight: '0', padding: '22px 18px' } },
           h('span', { class: 'badge lvl' }, `${lvl.emoji} ${lvl.name}`),
           h('span', { class: 'count' }, `#${v.n}`),
           h('div', { class: 'kicker', style: { marginTop: '14px' } }, mode === 'dix' && typeof v.q.it === 'object' ? `C'est un ${v.q.it.n} mais…` : M.kicker),

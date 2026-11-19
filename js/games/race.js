@@ -1,5 +1,6 @@
 // Quiz, Émojis mystères, Anagrammes, À vue de nez : version un seul téléphone.
 import { h, topbar, seg } from '../ui.js';
+import { gameColors } from '../themes.js';
 import { get, set, getPlayers } from '../store.js';
 import { levelPicker, onlineBanner, podium } from '../common.js';
 import { playersPanel } from '../players.js';
@@ -8,7 +9,7 @@ import { RACE_MODES, buildQuestions } from '../race-core.js';
 
 export function cardFor(mode, q) {
   const M = RACE_MODES[mode];
-  const style = { '--g1': M.colors[0], '--g2': M.colors[1], minHeight: '0', padding: '22px 18px' };
+  const style = { '--g1': gameColors('mode-' + mode, M.colors)[0], '--g2': gameColors('mode-' + mode, M.colors)[1], minHeight: '0', padding: '22px 18px' };
   if (mode === 'quiz') return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.theme), h('div', { class: 'big', style: { marginTop: '16px', fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q));
   if (mode === 'emoji') return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.cat), h('div', { class: 'emoji-big' }, q.e));
   if (mode === 'anag') return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, `${M.kicker} · ${q.len} lettres`), h('div', { class: 'tiles' }, q.s.split('').map((c) => h('span', null, c))));
