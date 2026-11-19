@@ -130,7 +130,7 @@ Tout le contenu est dans `js/data/` (un fichier par jeu, simples listes JavaScri
 - `tupreferes.js`, `jamais.js`, `dix.js`, `qui.js`, `paranoia.js`, `action.js`, `gages.js` : cartes par niveau
 - `dessin.js` : mots à dessiner (facile / moyen / difficile)
 - `motsinterdits.js`, `mime.js`, `chapeau.js`, `front.js`, `imposteur.js`, `patate.js`, `petitbac.js`, `cinq.js`, `debats.js`
-- `mots.js` : dictionnaire du Bon Mot, **généré** par `scripts/gen-mots.mjs` (voir l'en-tête du script). Sources : [an-array-of-french-words](https://github.com/words/an-array-of-french-words) (MIT) pour les 320 000 mots, et [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0) pour la liste des mots courants.
+- `mots.js` : dictionnaire du Bon Mot, **généré** par `scripts/gen-mots.mjs` (voir l'en-tête du script). Sources : [an-array-of-french-words](https://github.com/words/an-array-of-french-words) (MIT) pour les 320 000 mots, [Liste de prénoms et patronymes](https://www.data.gouv.fr/fr/datasets/liste-de-prenoms-et-patronymes/) (Licence Ouverte) pour les ~5 800 prénoms, et [FrequencyWords](https://github.com/hermitdave/FrequencyWords) (CC BY-SA 4.0) pour la liste des mots courants.
 
 Les niveaux d'intensité sont définis dans `js/data/levels.js`.
 

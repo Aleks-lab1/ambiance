@@ -91,6 +91,7 @@ export function start(ctx) {
     const chainMode = opts.mode === 'chaine';
     const pos = chainMode ? 'start' : opts.pos;
     const used = new Set();   // mots déjà joués (forme normalisée)
+    const names = new Set(list.map(normWord)); // les prénoms des joueurs sont toujours acceptés
     const played = [];        // mots joués, pour l'affichage
     const recent = [];        // derniers tirages, pour éviter les répétitions
     let chain = [];           // chaîne en cours
@@ -257,6 +258,13 @@ export function start(ctx) {
       setMsg(text, 'bad', acceptBtn);
     }
 
+    // Mot connu : dictionnaire (prénoms compris), prénom d'un joueur, ou nom composé (« Jean-Pierre »).
+    function known(raw, n) {
+      if (dico.has(n) || names.has(n)) return true;
+      const parts = raw.split(/[\s'’-]+/).map(normWord).filter(Boolean);
+      return parts.length > 1 && parts.every((x) => dico.has(x) || names.has(x));
+    }
+
     function submit() {
       if (state === 'count') { setMsg('Attends le top départ !'); return; }
       if (state !== 'play') return;
@@ -267,7 +275,7 @@ export function start(ctx) {
       if (!fits(n, letters, pos)) return reject(`« ${raw} » ${pos === 'in' ? 'ne contient pas' : 'ne commence pas par'} ${L}`);
       if (n.length < minLength(letters)) return reject(`Trop court ! Au moins ${minLength(letters)} lettres.`);
       if (used.has(n)) return reject(`« ${raw} » a déjà été joué !`);
-      if (opts.dico && !dico.has(n)) return reject(`« ${raw} » n'est pas dans le dictionnaire.`, raw);
+      if (opts.dico && !known(raw, n)) return reject(`« ${raw} » n'est pas dans le dictionnaire.`, raw);
       accept(raw);
     }
 
