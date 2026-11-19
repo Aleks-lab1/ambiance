@@ -6,6 +6,7 @@ import { editPlayers } from './players.js';
 import { ensureAdult } from './common.js';
 import { getFavs, isFav, toggleFav } from './favorites.js';
 import { sfx, buzz } from './sfx.js';
+import { THEMES, THEME_CATS, themeById, applyTheme, setTheme, themeSwatch } from './themes.js';
 
 const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
@@ -243,8 +244,35 @@ function renderHome() {
 }
 let homeInstallRefresh = null;
 
+// ---------------- Thèmes ----------------
+async function openThemes() {
+  const initial = settings.theme || 'ambiance';
+  const wrap = h('div', { class: 'col' });
+  function render() {
+    const cur = settings.theme || 'ambiance';
+    wrap.replaceChildren(
+      toggleRow('✨ Animations et particules', 'Fonds qui bougent, flocons, emojis qui tombent… (désactive si le téléphone rame)', settings.themeFx !== false, (v) => { settings.themeFx = v; saveSettings(); applyTheme(); }),
+      h('button', { class: 'btn btn-soft', onclick: () => { const pool = THEMES.filter((t) => t.id !== cur); setTheme(pool[Math.floor(Math.random() * pool.length)].id); sfx.pop(); render(); } }, '🎲 Thème au hasard'),
+      THEME_CATS.map((c) => [
+        h('div', { class: 'theme-cat' }, c.label),
+        h('div', { class: 'theme-grid' }, THEMES.filter((t) => t.cat === c.id).map((t) => themeSwatch(t, t.id === cur, () => { setTheme(t.id); sfx.pop(); buzz(10); render(); }))),
+      ]));
+  }
+  render();
+  const v = await modal({ title: '🎨 Thème', content: wrap, actions: [{ label: 'Annuler', value: 'cancel' }, { label: 'Choisir', value: true, primary: true }] });
+  if (v === 'cancel') setTheme(initial);
+  else toast(`${themeById(settings.theme).emoji} Thème « ${themeById(settings.theme).name} » appliqué`, 1800);
+}
+
 async function openSettings() {
+  const t = themeById(settings.theme);
+  const themeBtn = h('button', { class: 'btn btn-soft theme-btn', onclick: async () => {
+    await openThemes();
+    const nt = themeById(settings.theme);
+    themeBtn.replaceChildren(h('span', { class: 'sw-mini', style: { background: nt.bg } }, nt.emoji), h('span', { class: 'grow' }, h('b', null, '🎨 Thème'), h('div', { class: 'muted small' }, nt.name)), h('span', null, '›'));
+  } }, h('span', { class: 'sw-mini', style: { background: t.bg } }, t.emoji), h('span', { class: 'grow' }, h('b', null, '🎨 Thème'), h('div', { class: 'muted small' }, `${t.name} · ${THEMES.length} au choix`)), h('span', null, '›'));
   const content = h('div', { class: 'col' },
+    themeBtn,
     toggleRow('🍻 Pénalités en gorgées', 'Désactivé : mode sans alcool, les pénalités deviennent des points de gage.', settings.drink, (v) => { settings.drink = v; saveSettings(); }),
     toggleRow('🔊 Sons', null, settings.sound, (v) => { settings.sound = v; saveSettings(); }),
     toggleRow('📳 Vibrations', null, settings.vibrate, (v) => { settings.vibrate = v; saveSettings(); }),
@@ -291,6 +319,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 }
 
 // ---------------- Démarrage ----------------
+applyTheme();
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
 const target = parseHash();
 history.replaceState({ screen: 'home' }, '', location.pathname + location.search);
