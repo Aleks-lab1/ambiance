@@ -353,10 +353,8 @@ export function start(ctx) {
         pickScreen(h('div', { class: 'bm-fail' }, head));
         return;
       }
-      card.replaceChildren(...head, h('button', {
-        class: 'btn btn-primary', onmousedown: keep,
-        onclick: () => { input.focus(); countdownThen(null); },
-      }, solo ? 'Continuer →' : `Au tour de ${who()} →`));
+      // On enchaîne directement : compte à rebours pour le joueur suivant, sous le récap de l'échec.
+      countdownThen(h('div', { class: 'bm-fail' }, head));
     }
 
     // ----- Fin de partie -----
