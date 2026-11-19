@@ -14,6 +14,15 @@ export const CONFIG = {
   peerSecure: true,
   idPrefix: 'ambiance-soiree-v1-',
   maxPlayers: 16,
+  // Relais de secours quand la connexion directe échoue (4G/5G, Wi-Fi différents…) :
+  // serveurs MQTT publics et gratuits, essayés dans l'ordre. L'hôte écoute sur tous.
+  relayBrokers: [
+    'wss://broker.emqx.io:8084/mqtt',
+    'wss://broker.hivemq.com:8884/mqtt',
+    'wss://test.mosquitto.org:8081/mqtt',
+  ],
+  relayPrefix: 'ambiance-soiree-v1',
+  directTimeout: 8000,     // ms avant de basculer sur le relais si la connexion directe ne s'établit pas
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },

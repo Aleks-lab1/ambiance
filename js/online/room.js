@@ -6,6 +6,7 @@ import { h, toast, modal, confirmBox, uid, chip } from '../ui.js';
 import { getName, setName, get, set } from '../store.js';
 import { CONFIG } from '../config.js';
 import { ONLINE_GAMES, onlineGame } from './games.js';
+import { RelayHub, relayConnect } from './relay.js';
 import { sfx, buzz } from '../sfx.js';
 
 const LETTERS = 'BCDFGHJKLMNPQRSTVWXZ';
@@ -60,7 +61,7 @@ function errText(e) {
   if (t === 'peer-unavailable') return 'Partie introuvable. Vérifie le code (l\'hôte doit garder l\'appli ouverte).';
   if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' || t === 'timeout') return 'Impossible de joindre le serveur de connexion. Vérifie ta connexion Internet.';
   if (t === 'browser-incompatible') return 'Ce navigateur ne permet pas le jeu en ligne.';
-  if (t === 'webrtc' || t === 'negotiation-failed') return 'La connexion directe a échoué. Essayez d\'être sur le même Wi-Fi.';
+  if (t === 'webrtc' || t === 'negotiation-failed' || t === 'relay') return 'Partie introuvable ou injoignable. Vérifie le code et ta connexion Internet (l\'hôte doit garder l\'appli ouverte).';
   return 'Erreur de connexion' + (t ? ` (${t})` : '') + '.';
 }
 
@@ -79,9 +80,13 @@ class Host {
     this.gs = null;
     this.iv = setInterval(() => this.tick(), 250);
     this.hb = setInterval(() => this.heartbeat(), 4000);
-    peer.on('connection', (conn) => this.attach(conn));
-    peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (!this.dead && peer.disconnected) peer.reconnect(); } catch { /* */ } }, 1500); });
-    peer.on('error', (e) => console.warn('peer host error', e && e.type));
+    if (peer) {
+      peer.on('connection', (conn) => this.attach(conn));
+      peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (!this.dead && peer.disconnected) peer.reconnect(); } catch { /* */ } }, 1500); });
+      peer.on('error', (e) => console.warn('peer host error', e && e.type));
+    }
+    // Les joueurs dont la connexion directe échoue arrivent par le relais.
+    this.hub = new RelayHub(code, (conn) => this.attach(conn));
   }
 
   get api() {
@@ -259,7 +264,8 @@ class Host {
     clearInterval(this.iv);
     clearInterval(this.hb);
     for (const c of this.conns.values()) this.safeSend(c, { t: 'bye', reason: 'L\'hôte a fermé la partie.' });
-    setTimeout(() => { try { this.peer.destroy(); } catch { /* */ } }, 400);
+    this.hub.destroy();
+    setTimeout(() => { try { this.peer && this.peer.destroy(); } catch { /* */ } }, 400);
   }
 }
 
@@ -278,16 +284,20 @@ class Client {
     this.attempts = 0;
     this.lastMsg = Date.now();
     this.welcomed = false;
-    peer.on('error', (e) => {
-      if (this.dead) return;
-      if (e && e.type === 'peer-unavailable') {
-        if (!this.welcomed) this.fail(e);
-        else this.retryLater();
-      } else if (e && (e.type === 'network' || e.type === 'disconnected' || e.type === 'server-error')) {
-        this.retryLater();
-      }
-    });
-    peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (!this.dead && peer.disconnected) peer.reconnect(); } catch { /* */ } }, 1000); });
+    this.useRelay = !peer; // pas de serveur de connexion directe : on passe directement par le relais
+    if (peer) {
+      peer.on('error', (e) => {
+        if (this.dead || this.useRelay) return;
+        if (e && e.type === 'peer-unavailable') {
+          // Hôte introuvable en direct (ou connexion directe impossible) : on tente le relais.
+          if (!this.welcomed) this.toRelay();
+          else this.retryLater();
+        } else if (e && (e.type === 'network' || e.type === 'disconnected' || e.type === 'server-error')) {
+          if (!this.welcomed) this.toRelay(); else this.retryLater();
+        }
+      });
+      peer.on('disconnected', () => { if (!this.dead && !this.useRelay) setTimeout(() => { try { if (!this.dead && peer.disconnected) peer.reconnect(); } catch { /* */ } }, 1000); });
+    }
     this.ping = setInterval(() => {
       if (this.dead) return;
       if (this.conn && this.conn.open) { try { this.conn.send({ t: 'ping' }); } catch { /* */ } }
@@ -305,14 +315,31 @@ class Client {
     });
   }
 
+  // La connexion directe ne passe pas (4G, box différentes…) : on bascule sur le relais.
+  toRelay() {
+    if (this.dead || this.useRelay) return;
+    this.useRelay = true;
+    console.info('Connexion directe impossible : passage par le relais.');
+    this.open();
+  }
+
   open() {
     if (this.dead) return;
     if (this.conn) { this.conn._stale = true; try { this.conn.close(); } catch { /* */ } }
     this.lastMsg = Date.now();
-    const conn = this.peer.connect(CONFIG.idPrefix + this.code, { reliable: true, serialization: 'json' });
+    const relay = this.useRelay;
+    const conn = relay ? relayConnect(this.code) : this.peer.connect(CONFIG.idPrefix + this.code, { reliable: true, serialization: 'json' });
     this.conn = conn;
-    const timeout = setTimeout(() => { if (!conn.open && this.conn === conn) { conn._stale = true; try { conn.close(); } catch { /* */ } this.welcomed ? this.retryLater() : this.fail({ type: 'webrtc' }); } }, 14000);
+    const onTimeout = () => {
+      if (conn.open || this.conn !== conn) return;
+      conn._stale = true; try { conn.close(); } catch { /* */ }
+      if (!relay) this.toRelay();
+      else if (this.welcomed) this.retryLater();
+      else this.fail({ type: 'relay' });
+    };
+    const timeout = setTimeout(onTimeout, relay ? 30000 : (CONFIG.directTimeout || 8000));
     conn.on('open', () => {
+      if (conn._stale || this.conn !== conn) { try { conn.close(); } catch { /* */ } return; }
       clearTimeout(timeout);
       this.lastMsg = Date.now();
       conn.send({ t: 'hello', pid: this.me.pid, name: this.me.name });
@@ -328,7 +355,13 @@ class Client {
       if (m.t === 'bye') { this.byeReason = m.reason; }
       this.deliver(m);
     });
-    conn.on('close', () => { clearTimeout(timeout); if (!conn._stale && this.conn === conn && !this.dead) { if (this.byeReason) this.onStatus('closed', this.byeReason); else this.lost(); } });
+    conn.on('close', () => {
+      clearTimeout(timeout);
+      if (conn._stale || this.conn !== conn || this.dead) return;
+      if (this.byeReason) this.onStatus('closed', this.byeReason);
+      else if (!this.welcomed) relay ? this.fail({ type: 'relay' }) : this.toRelay();
+      else this.lost();
+    });
     conn.on('error', () => { /* géré par close */ });
   }
 
@@ -350,7 +383,7 @@ class Client {
     this.rt = setTimeout(() => {
       this.rt = null;
       if (this.dead) return;
-      try { if (this.peer.disconnected) this.peer.reconnect(); } catch { /* */ }
+      try { if (this.peer && !this.useRelay && this.peer.disconnected) this.peer.reconnect(); } catch { /* */ }
       this.open();
     }, Math.min(800 * this.attempts, 5000));
   }
@@ -367,7 +400,7 @@ class Client {
     clearTimeout(this.rt);
     document.removeEventListener('visibilitychange', this.onVis);
     try { this.conn && this.conn.close(); } catch { /* */ }
-    setTimeout(() => { try { this.peer.destroy(); } catch { /* */ } }, 200);
+    setTimeout(() => { try { this.peer && this.peer.destroy(); } catch { /* */ } }, 200);
   }
 }
 
@@ -426,7 +459,7 @@ export function start(ctx) {
       ...(joinFirst ? [joinPanel, createPanel] : [createPanel, joinPanel]),
       h('div', { class: 'panel rules' },
         h('p', null, '📱 Chacun joue sur son téléphone. Pas besoin d\'installer l\'appli : le lien ou le QR code suffit.'),
-        h('p', null, '📶 Idéalement, tout le monde sur le même Wi-Fi. L\'hôte doit garder l\'appli ouverte.')),
+        h('p', null, '📶 Marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit. L\'hôte doit garder l\'appli ouverte.')),
     );
     if (opts.join && me.name) setTimeout(() => codeIn.value.length === 4 ? null : codeIn.focus(), 50);
     else if (!me.name) setTimeout(() => nameIn.focus(), 50);
@@ -454,11 +487,14 @@ export function start(ctx) {
     try {
       const Peer = await getPeer();
       let peer = null, code = null;
-      for (let i = 0; i < 4 && !peer; i++) {
+      let direct = true;
+      for (let i = 0; i < 4 && !peer && direct; i++) {
         code = makeCode();
-        try { peer = await openPeer(Peer, CONFIG.idPrefix + code); } catch (e) { if (e.type !== 'unavailable-id') throw e; }
+        try { peer = await openPeer(Peer, CONFIG.idPrefix + code); } catch (e) {
+          // Serveur de connexion directe injoignable : la partie fonctionnera uniquement par le relais.
+          if (e.type !== 'unavailable-id') { console.warn('PeerJS indisponible, relais seul', e && e.type); direct = false; }
+        }
       }
-      if (!peer) throw Object.assign(new Error('id'), { type: 'server-error' });
       isHost = true;
       net = new Host(peer, code, me, (m) => queueMicrotask(() => onMessage(m)));
       ctx.setGuard('Quitter la partie ? Elle sera fermée pour tout le monde.');
@@ -477,8 +513,8 @@ export function start(ctx) {
   async function joinRoom(code) {
     busy(`Connexion à la partie ${code}…`);
     try {
-      const Peer = await getPeer();
-      const peer = await openPeer(Peer, null);
+      let peer = null;
+      try { peer = await openPeer(await getPeer(), null); } catch (e) { console.warn('PeerJS indisponible, relais seul', e && e.type); }
       isHost = false;
       net = new Client(peer, code, me, (m) => onMessage(m), onStatus);
       await net.connect();

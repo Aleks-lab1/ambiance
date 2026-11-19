@@ -13,7 +13,7 @@ const ONLINE_META = {
   rules: [
     'Un joueur <b>crée la partie</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre</b> et entrent ce code : chacun joue sur son propre téléphone.',
     'L\'hôte choisit parmi 16 jeux : Je dessine tu devines, L\'Imposteur, Le Quiz, Punchlines, Téléphone dessiné, Dico bluff, Menteur !, Émojis mystères, Anagrammes, À vue de nez, Le Bon Mot, Bingo de soirée, et les votes de Tu préfères, C\'est un 10 mais…, Qui de nous et Opinions impopulaires.',
-    'Astuce : l\'hôte doit garder l\'appli ouverte pendant la partie. Tout le monde sur le même Wi-Fi, c\'est l\'idéal.',
+    'Astuce : l\'hôte doit garder l\'appli ouverte pendant la partie. Ça marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.',
   ],
   load: () => import('./online/room.js'),
 };

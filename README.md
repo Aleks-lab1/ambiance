@@ -110,11 +110,13 @@ Le script liste tous les fichiers et calcule un numéro de version. Les utilisat
 - Connexion **pair-à-pair** (WebRTC) via [PeerJS](https://peerjs.com). Le serveur public gratuit `0.peerjs.com` sert seulement à mettre les téléphones en relation, puis les données passent directement entre eux.
 - L'**hôte** (celui qui crée la partie) fait tourner le jeu : il garde l'état complet et envoie à chaque joueur uniquement ce qu'il a le droit de voir (le mot à dessiner n'est envoyé qu'au dessinateur, chaque joueur ne reçoit que son mot à L'Imposteur…).
 - Code à 4 lettres + QR code + lien de partage. Reconnexion automatique si un joueur perd le réseau ou recharge la page (le dessin en cours est restauré).
-- L'hôte doit garder l'appli ouverte. Idéalement, tout le monde est sur le même Wi-Fi.
+- L'hôte doit garder l'appli ouverte. Ça marche en Wi-Fi comme en 4G/5G, même à distance (relais automatique, voir ci-dessous).
 
-### Fiabilité en 4G/5G
+### En 4G/5G ou sur des Wi-Fi différents
 
-Sans serveur TURN, certaines connexions entre réseaux mobiles peuvent échouer (NAT stricts). Pour une fiabilité maximale, ajoute un serveur TURN dans `js/config.js` (par ex. un compte gratuit Metered, Twilio ou ton propre `coturn`).
+La connexion directe entre téléphones (WebRTC) est souvent bloquée par les opérateurs mobiles ou entre deux box. Dans ce cas, l'appli bascule toute seule sur un **relais** (`js/online/relay.js`) : les messages passent par des serveurs MQTT publics et gratuits (EMQX, HiveMQ, Mosquitto, listés dans `js/config.js`). L'hôte écoute sur tous ; un joueur essaie la connexion directe pendant 8 secondes puis passe au relais, sur le premier serveur où l'hôte répond. Si le serveur PeerJS est injoignable, tout passe par le relais.
+
+Ces serveurs publics n'offrent aucune garantie (et les messages y transitent en clair, ce qui est sans conséquence pour un jeu de soirée). Pour une fiabilité maximale, tu peux aussi ajouter un serveur TURN dans `js/config.js` (par ex. un compte gratuit Metered, Twilio ou ton propre `coturn`), ou remplacer `relayBrokers` par ton propre serveur MQTT.
 
 Tu peux aussi héberger ton propre serveur de mise en relation PeerJS :
 
