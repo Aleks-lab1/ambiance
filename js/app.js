@@ -300,20 +300,19 @@ window.addEventListener('appinstalled', () => { deferredInstall = null; toast('A
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('sw.js');
-      const notify = (worker) => {
-        const t = toast(h('span', null, '✨ Nouvelle version disponible ', h('button', { class: 'btn btn-sm btn-primary', onclick: () => worker.postMessage('skipWaiting') }, 'Mettre à jour')), 12000);
-        t.style.pointerEvents = 'auto';
-      };
-      if (reg.waiting && navigator.serviceWorker.controller) notify(reg.waiting);
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        nw && nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) notify(nw); });
-      });
-      // Recharge uniquement lors d'une mise à jour (pas lors de la toute première installation).
+      const reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+      if (reg.waiting) reg.waiting.postMessage('skipWaiting');
+      // Cherche une nouvelle version à chaque retour dans l'appli.
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+      // Nouvelle version active : on recharge tout de suite sur l'accueil, sinon on propose (pour ne pas couper une partie).
       const hadController = !!navigator.serviceWorker.controller;
       let reloaded = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController || reloaded) return;
+        if (!current) { reloaded = true; location.reload(); return; }
+        const t = toast(h('span', null, '✨ Nouvelle version prête ', h('button', { class: 'btn btn-sm btn-primary', onclick: () => { reloaded = true; location.reload(); } }, 'Recharger')), 60000);
+        t.style.pointerEvents = 'auto';
+      });
     } catch (e) { console.warn('SW', e); }
   });
 }

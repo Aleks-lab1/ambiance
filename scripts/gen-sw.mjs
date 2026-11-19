@@ -31,7 +31,11 @@ const CACHE = 'ambiance-' + VERSION;
 const ASSETS = ${JSON.stringify(assets, null, 2)};
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
+  // cache: 'reload' : on télécharge les fichiers neufs, sans passer par le cache HTTP du navigateur
+  // (sinon la nouvelle version pouvait embarquer d'anciens fichiers). Puis on s'active tout de suite.
+  event.waitUntil(caches.open(CACHE)
+    .then((cache) => cache.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -52,7 +56,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (req.mode === 'navigate') {
-    event.respondWith(caches.match('./index.html').then((r) => r || fetch(req)));
+    // Page : le réseau d'abord (version à jour), le cache si hors ligne.
+    event.respondWith(fetch(req, { cache: 'no-cache' }).catch(() => caches.match('./index.html')));
     return;
   }
   event.respondWith(
