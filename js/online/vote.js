@@ -3,24 +3,26 @@ import { h, shuffle } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { LEVELS } from '../data/levels.js';
 import { levelPicker } from '../common.js';
-import { drinks } from '../store.js';
+import { drinks, drinkPl } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import TP from '../data/tupreferes.js';
 import DIX from '../data/dix.js';
 import QUI from '../data/qui.js';
 import OP from '../data/opinions.js';
+import JAMAIS from '../data/jamais.js';
 
 const MODES = {
   tp: { name: 'Tu préfères', emoji: '🤔', short: 'Votez pour un camp', data: TP, levels: LEVELS.tupreferes, kicker: 'Tu préfères…', min: 2, colors: ['#7c5cff', '#2ec5ff'] },
   dix: { name: "C'est un 10 mais…", emoji: '💯', short: 'Notez sur 10', data: DIX, levels: LEVELS.dix, kicker: "C'est un 10 mais…", min: 2, colors: ['#ff3d6e', '#ffc93c'] },
   op: { name: 'Opinions impopulaires', emoji: '🗣️', short: 'D\'accord ou pas ?', data: OP, levels: LEVELS.opinions, kicker: 'Opinion impopulaire…', min: 2, colors: ['#ee0979', '#ff6a00'] },
+  jamais: { name: 'Je n\'ai jamais', emoji: '🙊', short: 'Qui l\'a déjà fait ?', data: JAMAIS, levels: LEVELS.jamais, kicker: 'Je n\'ai jamais…', min: 2, colors: ['#ff4d8d', '#ff9a5a'] },
   qui: { name: 'Qui de nous…', emoji: '👉', short: 'Désignez quelqu\'un', data: QUI, levels: LEVELS.qui, kicker: 'Qui de nous est le plus susceptible de…', min: 3, colors: ['#00b39b', '#5a6cff'] },
 };
 
 function makeVote(mode) {
   const M = MODES[mode];
-  const binary = mode === 'tp' || mode === 'op';
-  const optLabel = (it, i) => (mode === 'tp' ? it[i] : (i === 0 ? '👍 D\'accord' : '👎 Pas d\'accord'));
+  const binary = mode === 'tp' || mode === 'op' || mode === 'jamais';
+  const optLabel = (it, i) => (mode === 'tp' ? it[i] : mode === 'jamais' ? (i === 0 ? '🙋 Je l\'ai déjà fait' : '🙅 Jamais') : (i === 0 ? '👍 D\'accord' : '👎 Pas d\'accord'));
   const validLevels = (ls) => (Array.isArray(ls) ? ls.filter((l) => M.levels.some((x) => x.id === l)) : []);
 
   function next(s) {
@@ -122,7 +124,8 @@ function makeVote(mode) {
               h('div', { class: 'bar' }, h('i', { style: { width: (names.length / total * 100) + '%' } })),
               h('div', { class: 'names' }, names.join(', ') || '—'));
             let verdict;
-            if (a.length === b.length) verdict = 'Égalité parfaite ! Tout le monde trinque 🥂';
+            if (mode === 'jamais') verdict = a.length ? `${a.join(', ')} ${a.length > 1 ? drinkPl(1) : drinks(1)} ! 🍹 Racontez !` : 'Personne ? Bande de saints 😇';
+            else if (a.length === b.length) verdict = 'Égalité parfaite ! Tout le monde trinque 🥂';
             else { const min = a.length < b.length ? a : b; verdict = min.length ? `La minorité (${min.join(', ')}) ${drinks(1)} !` : 'Unanimité ! 🤝'; }
             slot.replaceChildren(bar(0, a), bar(1, b), h('div', { class: 'foot' }, verdict));
           }
@@ -194,3 +197,4 @@ export const voteTP = makeVote('tp');
 export const voteDix = makeVote('dix');
 export const voteQui = makeVote('qui');
 export const voteOp = makeVote('op');
+export const voteJamais = makeVote('jamais');

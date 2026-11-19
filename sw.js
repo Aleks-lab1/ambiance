@@ -1,5 +1,5 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = '62e8c94840';
+const VERSION = '99fccd692d';
 const CACHE = 'ambiance-' + VERSION;
 const ASSETS = [
   "./",
@@ -90,13 +90,18 @@ const ASSETS = [
   "./js/online/bingo.js",
   "./js/online/bonmot.js",
   "./js/online/dessin.js",
+  "./js/online/equipes.js",
   "./js/online/games.js",
   "./js/online/imposteur.js",
+  "./js/online/kit.js",
+  "./js/online/live.js",
   "./js/online/menteur.js",
+  "./js/online/mots.js",
   "./js/online/race.js",
   "./js/online/relay.js",
   "./js/online/room.js",
   "./js/online/telephone.js",
+  "./js/online/tour.js",
   "./js/online/unisson.js",
   "./js/online/vote.js",
   "./js/online/write.js",

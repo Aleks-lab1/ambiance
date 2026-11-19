@@ -1,5 +1,6 @@
 // Patate chaude : on répond et on passe avant l'explosion.
 import { h, topbar, seg, rand } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, makeDeck, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -16,6 +17,7 @@ export function start(ctx) {
     clear();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'patate', { text: 'La bombe passe de téléphone en téléphone : touche « Passer » avant qu\'elle explose !' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('label', { class: 'field' }, 'Type de thème', seg([
         { value: 'categories', label: 'Catégories' }, { value: 'syllabes', label: 'Syllabes' }, { value: 'lettres', label: 'Lettres' }, { value: 'mix', label: 'Mélange' },

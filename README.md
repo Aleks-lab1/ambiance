@@ -1,6 +1,6 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **52 jeux de soirée** en français, dont 19 jouables **en ligne, chacun sur son téléphone**.
+Une application web installable (PWA) avec **52 jeux de soirée** en français, dont 35 jouables **en ligne, chacun sur son téléphone**.
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## Les jeux
@@ -23,6 +23,16 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | ✅ | **Vrai ou faux** | 100 affirmations étonnantes (« Les pieuvres ont trois cœurs ») avec explication. |
 | 🧮 | **Calcul express** | Calcul mental chronométré, 3 niveaux. |
 | 🤝 | **À l'unisson** | Tout le monde doit écrire la même réponse que les autres. Aussi sur un seul téléphone. |
+| 🚫 🤸 🎵 🎭 | **Jeux en équipes** | Mots interdits, Mime express, Fredonne !, Dis-le comme… : le mot s'affiche sur le téléphone de celui qui fait deviner, l'équipe adverse surveille sur le sien. |
+| 🔤 | **Petit bac** | Chacun écrit sur son téléphone, points comptés automatiquement (2 si unique, 1 si partagé), l'hôte peut refuser une réponse. |
+| 💣 | **Patate chaude** | La bombe passe de téléphone en téléphone. |
+| ⚡ | **Réflexes** | Le plus rapide quand l'écran passe au vert (version à plusieurs du Duel). |
+| 🌈 | **Couleurs pièges** | Tout le monde joue la même manche en même temps. |
+| 🟩 | **Le Mot mystère** | Course : le premier qui trouve le mot gagne. |
+| ⭕ | **Morpion & 4 à la suite** | Le gagnant reste et affronte le suivant. |
+| 🤫 🎤 ⏱️ 🤥 | **Chacun son tour** | Paranoïa (question secrète), Pour ou contre (débat + vote), 3 en 5 secondes, Deux vérités un mensonge. |
+| 🐺 | **Loup-garou** | Rôles secrets sur chaque téléphone, l'hôte est le meneur. |
+| 🙊 | **Je n'ai jamais** | Vote secret « déjà fait / jamais », puis les noms s'affichent. |
 | 🎱 | **Bingo de soirée** | Chacun sa grille de situations ; tout le monde est prévenu à chaque BINGO. |
 | 🤔 💯 👉 🗣️ | **Votes** | Tu préfères, C'est un 10 mais… (moyenne des notes), Qui de nous (vote secret), Opinions impopulaires. |
 

@@ -162,7 +162,7 @@ export const GAMES = [
   {
     id: 'jamais', name: "Je n'ai jamais", emoji: '🙊', colors: ['#ff4d8d', '#ff9a5a'],
     desc: 'Ceux qui l\'ont déjà fait se dénoncent. 5 niveaux, jusqu\'au Hot++.',
-    tags: ['cartes', 'hot'], players: '3+', badges: ['5 niveaux'],
+    tags: ['online', 'cartes', 'hot'], players: '3+', badges: ['En ligne', '5 niveaux'],
     rules: [
       'Une phrase « Je n\'ai jamais… » s\'affiche. Tous ceux qui l\'ont <b>déjà fait</b> boivent une gorgée (ou marquent un point en mode sans alcool).',
       'Le plus drôle : raconter l\'histoire derrière ! Personne n\'est obligé de répondre aux questions qui le mettent mal à l\'aise.',
@@ -214,7 +214,7 @@ export const GAMES = [
   {
     id: 'deuxverites', name: 'Deux vérités, un mensonge', emoji: '🤥', colors: ['#283c86', '#45a247'],
     desc: 'Raconte trois anecdotes dont une fausse. Démasquez le mensonge !',
-    tags: ['cartes', 'bluff', 'hot'], players: '3+', rules: ['Le joueur désigné raconte trois anecdotes sur le thème de la carte : deux vraies et une inventée. Les autres votent pour le mensonge. Ceux qui se trompent prennent une pénalité ; si personne ne trouve, c\'est le conteur qui gagne.'],
+    tags: ['online', 'cartes', 'bluff', 'hot'], players: '3+', badges: ['En ligne'], rules: ['Le joueur désigné raconte trois anecdotes sur le thème de la carte : deux vraies et une inventée. Les autres votent pour le mensonge. Ceux qui se trompent prennent une pénalité ; si personne ne trouve, c\'est le conteur qui gagne.'],
     load: () => import('./cartes.js').then((m) => m.deuxverites),
   },
   {
@@ -237,7 +237,7 @@ export const GAMES = [
   {
     id: 'paranoia', name: 'Paranoïa', emoji: '🤫', colors: ['#2b2d6e', '#d6336c'],
     desc: 'Une question chuchotée, un nom prononcé… et un pile ou face.',
-    tags: ['cartes', 'hot', 'bluff'], players: '3+',
+    tags: ['online', 'cartes', 'hot', 'bluff'], players: '3+', badges: ['En ligne'],
     rules: [
       'Le téléphone passe de main en main. Le joueur lit une question <b>en secret</b> (ex. « Qui ici est le plus jaloux ? ») et répond à voix haute en donnant <b>le nom</b> d\'un joueur.',
       'Puis on lance la pièce : si c\'est <b>révélé</b>, la question est montrée à tout le monde. Sinon, le mystère reste entier… 😈',
@@ -257,7 +257,7 @@ export const GAMES = [
   {
     id: 'debats', name: 'Pour ou contre', emoji: '🎤', colors: ['#f857a6', '#ff5858'],
     desc: 'Deux joueurs, un sujet absurde, 45 secondes pour convaincre.',
-    tags: ['cartes', 'rapide'], players: '3+',
+    tags: ['online', 'cartes', 'rapide'], players: '3+', badges: ['En ligne'],
     rules: [
       'Deux joueurs sont tirés au sort : l\'un défend <b>Pour</b>, l\'autre <b>Contre</b>, même s\'il n\'est pas d\'accord !',
       'Chacun a 45 secondes pour argumenter. Les autres votent ensuite pour le plus convaincant. Le perdant prend une pénalité.',
@@ -267,7 +267,7 @@ export const GAMES = [
   {
     id: 'motsinterdits', name: 'Mots interdits', emoji: '🚫', colors: ['#ff512f', '#dd2476'],
     desc: 'Fais deviner un mot sans dire les mots interdits.',
-    tags: ['equipes'], players: '4+',
+    tags: ['online', 'equipes'], players: '4+', badges: ['En ligne'],
     rules: [
       'Par équipes. Un joueur fait deviner un maximum de mots à son équipe avant la fin du temps, <b>sans prononcer</b> le mot ni les 5 mots interdits (ni des mots de la même famille).',
       '<b>Trouvé</b> : +1 point. <b>Passer</b> : 0 point. <b>Interdit !</b> (l\'équipe adverse surveille) : −1 point.',
@@ -277,7 +277,7 @@ export const GAMES = [
   {
     id: 'mime', name: 'Mime express', emoji: '🤸', colors: ['#11998e', '#38ef7d'],
     desc: 'Mime un max de mots en 60 secondes. Interdit de parler !',
-    tags: ['equipes', 'rapide'], players: '4+',
+    tags: ['online', 'equipes', 'rapide'], players: '4+', badges: ['En ligne'],
     rules: [
       'Par équipes. Le mimeur regarde le mot sur le téléphone et le fait deviner à son équipe <b>sans parler ni faire de bruit</b>.',
       'Trouvé : +1 point. Tu peux passer un mot trop dur. L\'équipe avec le plus de points à la fin gagne.',
@@ -298,13 +298,13 @@ export const GAMES = [
   {
     id: 'fredonne', name: 'Fredonne !', emoji: '🎵', colors: ['#da22ff', '#9733ee'],
     desc: 'Fais deviner des chansons en les fredonnant, sans paroles.',
-    tags: ['equipes', 'rapide'], players: '4+', rules: ['Par équipes. Le joueur fredonne (« lalala », « mmm ») la chanson affichée, <b>sans prononcer les paroles</b>. Son équipe doit trouver le titre ou l\'artiste. Trouvé : +1 point.'],
+    tags: ['online', 'equipes', 'rapide'], players: '4+', badges: ['En ligne'], rules: ['Par équipes. Le joueur fredonne (« lalala », « mmm ») la chanson affichée, <b>sans prononcer les paroles</b>. Son équipe doit trouver le titre ou l\'artiste. Trouvé : +1 point.'],
     load: () => import('./teamwords.js').then((m) => m.fredonne),
   },
   {
     id: 'disle', name: 'Dis-le comme…', emoji: '🎭', colors: ['#f953c6', '#b91d73'],
     desc: 'Dis une phrase banale avec une émotion ou un personnage secret.',
-    tags: ['equipes', 'rapide'], players: '4+', rules: ['Par équipes. Le joueur doit dire la phrase affichée (« Passe-moi le sel ») à la manière indiquée en secret (« comme un pirate », « en pleine rupture »…). Son équipe doit deviner la manière. Trouvé : +1 point.'],
+    tags: ['online', 'equipes', 'rapide'], players: '4+', badges: ['En ligne'], rules: ['Par équipes. Le joueur doit dire la phrase affichée (« Passe-moi le sel ») à la manière indiquée en secret (« comme un pirate », « en pleine rupture »…). Son équipe doit deviner la manière. Trouvé : +1 point.'],
     load: () => import('./teamwords.js').then((m) => m.disle),
   },
   {
@@ -320,7 +320,7 @@ export const GAMES = [
   {
     id: 'patate', name: 'Patate chaude', emoji: '💣', colors: ['#ee0979', '#ff6a00'],
     desc: 'Réponds et passe le téléphone avant que ça explose !',
-    tags: ['rapide'], players: '3+',
+    tags: ['online', 'rapide'], players: '3+', badges: ['En ligne'],
     rules: [
       'Un thème s\'affiche (ex. « Une marque de voiture » ou « un mot contenant OU »). Le joueur qui tient le téléphone donne une réponse et le passe à son voisin.',
       'Interdit de répéter une réponse déjà donnée. La bombe explose après un temps aléatoire : celui qui la tient a perdu !',
@@ -330,7 +330,7 @@ export const GAMES = [
   {
     id: 'cinq', name: '3 en 5 secondes', emoji: '⏱️', colors: ['#00c6ff', '#0072ff'],
     desc: 'Cite 3 choses en 5 secondes. Plus dur qu\'il n\'y paraît !',
-    tags: ['rapide'], players: '2+',
+    tags: ['online', 'rapide'], players: '2+', badges: ['En ligne'],
     rules: [
       'Une consigne apparaît, par exemple « 3 marques de céréales ». Le joueur a <b>5 secondes</b> pour citer 3 réponses.',
       'Les autres jugent : réussi ou raté ? Le joueur qui rate prend une pénalité.',
@@ -340,7 +340,7 @@ export const GAMES = [
   {
     id: 'petitbac', name: 'Petit bac', emoji: '🔤', colors: ['#56ab2f', '#a8e063'],
     desc: 'Une lettre, des catégories, un chrono. Papier et stylo !',
-    tags: ['rapide'], players: '2+',
+    tags: ['online', 'rapide'], players: '2+', badges: ['En ligne'],
     rules: [
       'Une lettre et des catégories sont tirées au sort. Chacun écrit sur papier un mot par catégorie commençant par cette lettre.',
       'Le premier qui a fini crie « STOP » (ou le chrono s\'arrête). 2 points pour une réponse unique, 1 point si quelqu\'un a la même.',
@@ -373,7 +373,7 @@ export const GAMES = [
   {
     id: 'motmystere', name: 'Le Mot mystère', emoji: '🟩', colors: ['#1d976c', '#f0b429'], new: true,
     desc: 'Trouve le mot en 6 essais grâce aux lettres bien ou mal placées.',
-    tags: ['rapide'], players: '1+', badges: ['Nouveau'],
+    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne', 'Nouveau'],
     rules: [
       'Propose un mot de 5, 6 ou 7 lettres. Chaque lettre devient <b>verte</b> si elle est bien placée, <b>jaune</b> si elle est dans le mot mais ailleurs, <b>grise</b> si elle n\'y est pas. Tu as 6 essais.',
       'À plusieurs, chacun propose un mot à son tour : celui qui trouve distribue des gorgées. Si personne ne trouve, tout le monde boit !',
@@ -395,13 +395,13 @@ export const GAMES = [
   {
     id: 'duel', name: 'Duel de réflexes', emoji: '⚡', colors: ['#f7ff00', '#db36a4'],
     desc: 'Deux joueurs face à face sur le même téléphone. Le plus rapide gagne.',
-    tags: ['rapide'], players: '2', rules: ['Posez le téléphone à plat entre vous deux, chacun de son côté. <b>Réflexe :</b> touchez votre moitié dès que l\'écran devient vert (trop tôt = point perdu). <b>Mitraillette :</b> tapez le plus de fois possible en 5 secondes. Premier à 3 points !'],
+    tags: ['online', 'rapide'], players: '2', badges: ['En ligne'], rules: ['Posez le téléphone à plat entre vous deux, chacun de son côté. <b>Réflexe :</b> touchez votre moitié dès que l\'écran devient vert (trop tôt = point perdu). <b>Mitraillette :</b> tapez le plus de fois possible en 5 secondes. Premier à 3 points !'],
     load: () => import('./duel.js'),
   },
   {
     id: 'morpion', name: 'Morpion & 4 à la suite', emoji: '⭕', colors: ['#2193b0', '#6dd5ed'], new: true,
     desc: 'Les grands classiques à deux, ou contre le téléphone.',
-    tags: ['rapide'], players: '1-2', badges: ['Nouveau'],
+    tags: ['online', 'rapide'], players: '1-2', badges: ['En ligne', 'Nouveau'],
     rules: [
       '<b>Morpion :</b> aligne 3 symboles (ligne, colonne ou diagonale) avant l\'autre. <b>4 à la suite :</b> fais tomber tes jetons dans les colonnes et aligne-en 4.',
       'À deux sur le même téléphone, ou contre le téléphone (facile ou coriace). Le perdant prend une pénalité, et on alterne qui commence.',
@@ -420,7 +420,7 @@ export const GAMES = [
   {
     id: 'couleurs', name: 'Couleurs pièges', emoji: '🌈', colors: ['#ff3b4f', '#2f7bff'], new: true,
     desc: 'Le mot « ROUGE » écrit en bleu : touche le bleu ! Ton cerveau va souffrir.',
-    tags: ['rapide'], players: '1+', badges: ['Nouveau'],
+    tags: ['online', 'rapide'], players: '1+', badges: ['En ligne', 'Nouveau'],
     rules: [
       'Un nom de couleur s\'affiche, écrit dans une autre couleur. Touche la couleur de l\'<b>encre</b>, pas celle du mot ! Bonne réponse : +1 (+2 avec une série de 5). Erreur : −1 et un petit blocage.',
       'Chaque joueur fait une manche chronométrée à son tour. Le plus petit score prend une pénalité. Mode Piège : 6 couleurs et des boutons trompeurs.',
@@ -460,7 +460,7 @@ export const GAMES = [
   {
     id: 'loup', name: 'Loup-garou', emoji: '🐺', colors: ['#232526', '#7b2ff7'],
     desc: 'Distribution des rôles et assistant du meneur de jeu.',
-    tags: ['bluff'], players: '6-20',
+    tags: ['online', 'bluff'], players: '6-20', badges: ['En ligne'],
     rules: [
       'Un <b>meneur</b> ne joue pas : il distribue les rôles avec le téléphone puis guide la partie grâce au script.',
       'La nuit, les loups-garous désignent une victime. Le jour, le village débat et vote pour éliminer un suspect.',

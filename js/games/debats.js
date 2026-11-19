@@ -1,5 +1,6 @@
 // Pour ou contre : débats absurdes chronométrés.
 import { h, topbar, shuffle, countdown, timerView, seg } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, makeDeck, drinks } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
@@ -14,6 +15,7 @@ export function start(ctx) {
     timer && timer.stop();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'debats', { text: 'Les deux orateurs sont tirés au sort, le chrono et le vote s\'affichent sur tous les téléphones.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(2),
       h('label', { class: 'field' }, 'Temps de parole', seg([30, 45, 60, 90].map((v) => ({ value: v, label: v + ' s' })), opts.time, (v) => { opts.time = v; set('debats', opts); })),

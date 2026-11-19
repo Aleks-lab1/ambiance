@@ -1,5 +1,6 @@
 // Le Mot mystère : trouve le mot en 6 essais. Vert = bien placée, jaune = mal placée, gris = absente.
 import { h, topbar, seg, pick, toast } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, sip, getPlayers } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
@@ -35,6 +36,7 @@ export function start(ctx) {
     unbind();
     const btn = h('button', { class: 'btn btn-primary btn-big btn-block', disabled: true }, '⏳ Chargement des mots…');
     root.replaceChildren(topbar(ctx),
+      onlineBanner(ctx, 'motmystere', { text: 'Course : tout le monde cherche le même mot en même temps. Le premier qui trouve gagne !' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('label', { class: 'field' }, 'Longueur du mot', seg([5, 6, 7].map((v) => ({ value: v, label: `${v} lettres` })), opts.len, (v) => { opts.len = v; set('motmystere', opts); })),
       playersPanel(0),

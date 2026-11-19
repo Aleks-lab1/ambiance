@@ -734,3 +734,42 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .c4-cell.p0 { background: #ff3b4f; }
 .c4-cell.p1 { background: #ffd21f; }
 .c4-cell.win { box-shadow: 0 0 0 3px #fff, 0 0 14px #fff; }
+
+/* ---------- Jeux en ligne (nouveaux) ---------- */
+.debate-sides { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.debate-sides .side { background: rgba(0, 0, 0, .2); border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 14px; opacity: .75; }
+.debate-sides .side.on { opacity: 1; background: #fff; color: #1d1440; }
+.reveal-opt { border: 1px solid var(--line); }
+.reveal-opt.mine { border-color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, .5); }
+.reveal-opt.lie { border-color: var(--bad); background: linear-gradient(135deg, rgba(255, 90, 95, .3), var(--card)); }
+.reveal-opt.truth { opacity: .7; }
+.reflex-zone { width: 100%; min-height: 50vh; border: 0; border-radius: 28px; display: grid; place-items: center; touch-action: none; transition: background .08s; }
+.reflex-zone.wait { background: #c62839; }
+.reflex-zone.go { background: #1fd17a; }
+.reflex-zone.early { background: #5a2a3a; }
+.reflex-zone.done { background: var(--card2); }
+.reflex-txt { font-size: clamp(28px, 9vw, 44px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+.pb-form .field { gap: 4px; }
+.pb-cat { gap: 6px; padding: 12px; }
+.pb-ans { display: flex; gap: 8px; align-items: center; border: 0; border-radius: 10px; padding: 8px 10px; text-align: left; background: rgba(255, 255, 255, .08); color: inherit; font-size: 14px; }
+.pb-ans .n { font-weight: 800; min-width: 64px; opacity: .85; }
+.pb-ans .t { flex: 1; font-weight: 700; }
+.pb-ans .s { font-weight: 900; }
+.pb-ans.uniq { background: rgba(34, 211, 154, .25); }
+.pb-ans.shared { background: rgba(240, 180, 41, .25); }
+.pb-ans.bad { opacity: .6; text-decoration: line-through; }
+.mm-others { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.mm-other { display: flex; align-items: center; gap: 6px; background: var(--card); border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 700; }
+.mm-other.won { background: rgba(34, 211, 154, .3); }
+.mm-other .dots { display: flex; gap: 2px; }
+.mm-other .dots i { width: 9px; height: 9px; border-radius: 2px; background: rgba(0, 0, 0, .35); }
+.mm-other .dots i.good { background: var(--ok); }
+.mm-other .dots i.near { background: #f0b429; }
+.eq-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.eq-team { background: var(--card); border: 2px solid transparent; border-radius: 14px; padding: 8px 10px; }
+.eq-team.cur { border-color: var(--c); box-shadow: 0 0 14px color-mix(in srgb, var(--c) 50%, transparent); }
+.eq-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 14px; }
+.eq-score { font-weight: 900; font-size: 22px; color: var(--c); }
+.eq-mem { font-size: 12px; color: var(--muted); }
+.loup-secret { border: 0; color: #fff; cursor: pointer; }
+.loup-secret.hidden-role { --g1: #2b2d6e; --g2: #121236; }

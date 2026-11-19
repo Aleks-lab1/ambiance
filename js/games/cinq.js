@@ -1,5 +1,6 @@
 // 3 en 5 secondes.
 import { h, topbar } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { makeDeck, sip, getPlayers } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
@@ -13,6 +14,7 @@ export function start(ctx) {
     clearInterval(iv);
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'cinq', { text: 'Le chrono s\'affiche sur tous les téléphones et les autres jugent sur le leur.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(0),
       h('p', { class: 'muted small' }, 'Avec une liste de joueurs, l\'appli désigne qui joue et compte les points.'),

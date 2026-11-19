@@ -1,5 +1,6 @@
 // Petit bac : lettre + catégories + chrono.
 import { h, topbar, seg, shuffle, pick, countdown, timerView, toggleRow } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -19,6 +20,7 @@ export function start(ctx) {
     timer && timer.stop(); clearInterval(anim);
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'petitbac', { text: 'Chacun écrit ses réponses sur son téléphone : les points sont comptés automatiquement.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('label', { class: 'field' }, 'Nombre de catégories', seg([4, 5, 6, 8].map((v) => ({ value: v, label: String(v) })), opts.count, (v) => { opts.count = v; save(); })),
       h('label', { class: 'field' }, 'Chrono', seg([60, 90, 120, 180].map((v) => ({ value: v, label: v < 120 ? v + ' s' : (v / 60) + ' min' })), opts.time, (v) => { opts.time = v; save(); })),

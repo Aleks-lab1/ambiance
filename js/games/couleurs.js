@@ -2,10 +2,10 @@
 import { h, topbar, seg, countdown, timerView } from '../ui.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
-import { podium } from '../common.js';
+import { podium, onlineBanner } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 
-const COLORS = [
+export const COLORS = [
   { id: 'rouge', name: 'ROUGE', c: '#ff3b4f' },
   { id: 'bleu', name: 'BLEU', c: '#2f7bff' },
   { id: 'vert', name: 'VERT', c: '#1fd17a' },
@@ -26,6 +26,7 @@ export function start(ctx) {
   function setup() {
     clear();
     root.replaceChildren(topbar(ctx),
+      onlineBanner(ctx, 'couleurs', { text: 'Tout le monde joue la même manche en même temps, chacun sur son téléphone.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(0),
       h('label', { class: 'field' }, 'Difficulté', seg([

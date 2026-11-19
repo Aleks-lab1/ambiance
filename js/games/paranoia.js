@@ -1,11 +1,11 @@
 // Paranoïa : question secrète, réponse à voix haute, pile ou face pour révéler.
 import { h, topbar } from '../ui.js';
 import { get, set, makeDeck } from '../store.js';
-import { levelPicker } from '../common.js';
+import { levelPicker, onlineBanner } from '../common.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const LEVELS = [
+export const LEVELS = [
   { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des questions drôles et gentilles.' },
   { id: 'epice', name: 'Épicé', emoji: '🌶️', desc: 'Ça risque de vexer…' },
   { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
@@ -21,6 +21,7 @@ export function start(ctx) {
   function setup() {
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'paranoia', { text: 'La question secrète arrive sur le téléphone du joueur, et tout le monde voit le pile ou face.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(3),
       h('div', { class: 'section-title' }, 'Niveaux'),

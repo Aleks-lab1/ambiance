@@ -1,6 +1,7 @@
 // Mots interdits & Mime express : jeux de mots en équipes.
 import { h, topbar, seg, confirmBox, pick } from '../ui.js';
 import { get, set, makeDeck } from '../store.js';
+import { onlineBanner } from '../common.js';
 import { teamsSetup, readyScreen, playTurn, reviewTurn, scoresScreen, finalScreen } from '../turn.js';
 
 export function teamWordGame(cfg) {
@@ -16,6 +17,8 @@ export function teamWordGame(cfg) {
         const ts = teamsSetup();
         root.replaceChildren(
           topbar(ctx),
+          cfg.online ? onlineBanner(ctx, cfg.online, { text: 'Le mot s\'affiche sur le téléphone de celui qui fait deviner, et l\'équipe adverse surveille sur le sien.' }) : null,
+          h('div', { class: 'section-title' }, cfg.online ? 'Ou sur un seul téléphone' : 'Règles'),
           h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
           h('div', { class: 'section-title' }, 'Équipes'), ts.el,
           h('div', { class: 'section-title' }, 'Durée d\'un tour'),
@@ -62,6 +65,7 @@ export function teamWordGame(cfg) {
 }
 
 export const motsinterdits = teamWordGame({
+  online: 'eq-mi',
   duration: 60,
   data: () => import('../data/motsinterdits.js'),
   verb: 'fait deviner',
@@ -80,6 +84,7 @@ export const motsinterdits = teamWordGame({
 });
 
 export const mime = teamWordGame({
+  online: 'eq-mime',
   duration: 60,
   data: () => import('../data/mime.js'),
   verb: 'mime',
@@ -93,6 +98,7 @@ export const mime = teamWordGame({
 });
 
 export const fredonne = teamWordGame({
+  online: 'eq-fredonne',
   duration: 60,
   data: () => import('../data/chansons.js'),
   verb: 'fredonne une chanson',
@@ -106,6 +112,7 @@ export const fredonne = teamWordGame({
 });
 
 export const disle = teamWordGame({
+  online: 'eq-disle',
   duration: 60,
   data: () => import('../data/disle.js'),
   prepare: (d) => d.manieres.map((m) => ({ m, p: pick(d.phrases) })),

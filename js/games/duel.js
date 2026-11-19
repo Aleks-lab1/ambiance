@@ -1,5 +1,6 @@
 // Duel de réflexes : deux joueurs face à face sur le même téléphone posé à plat.
 import { h, topbar, seg, rand } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -16,6 +17,7 @@ export function start(ctx) {
     const n2 = h('input', { class: 'input', maxlength: '14', value: pl[1] || 'Joueur 2', 'aria-label': 'Joueur 2' });
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'reflexes', { text: 'Réflexes à plusieurs : chacun sur son téléphone, le plus rapide quand l\'écran passe au vert gagne.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('div', { class: 'row' },
         h('label', { class: 'field grow' }, '⬆️ Côté haut', n1),

@@ -161,6 +161,7 @@ export const tupreferes = cardGame({
 export const jamais = cardGame({
   levels: LEVELS.jamais,
   data: () => import('../data/jamais.js'),
+  online: 'vote-jamais',
   kicker: 'Je n\'ai jamais…',
   customHelp: 'Une carte par ligne, sans « Je n\'ai jamais ». Exemple : dormi dans une baignoire',
   customHint: 'dormi dans une baignoire',
@@ -271,6 +272,7 @@ export const deuxverites = cardGame({
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Vie amoureuse et coquine, réservé aux adultes.', adult: true },
   ],
   data: () => import('../data/deuxverites.js'),
+  online: 'deuxverites',
   perPlayer: true,
   kicker: 'Deux vérités, un mensonge…',
   customHelp: 'Un thème par ligne. Exemple : sur ton premier appartement',

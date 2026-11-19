@@ -1,10 +1,11 @@
 // Loup-garou : distribution des rôles + assistant du meneur.
 import { h, topbar, shuffle, confirmBox, stepper, toggleRow, countdown, timerView, seg } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const ROLES = {
+export const ROLES = {
   loup: { name: 'Loup-garou', emoji: '🐺', team: 'loups', colors: ['#7a0c2e', '#2b0a3d'], desc: 'Chaque nuit, avec les autres loups, tu choisis une victime. Le jour, fais-toi passer pour un innocent villageois.' },
   villageois: { name: 'Villageois', emoji: '🧑‍🌾', team: 'village', colors: ['#2f7d32', '#1b4d3e'], desc: 'Tu n\'as pas de pouvoir, mais ton vote compte ! Débusque les loups pendant les débats.' },
   voyante: { name: 'Voyante', emoji: '🔮', team: 'village', colors: ['#5a2ca0', '#2b1a6e'], desc: 'Chaque nuit, tu peux découvrir le vrai rôle d\'un joueur. Aide le village… sans te faire repérer !' },
@@ -33,6 +34,7 @@ export function start(ctx) {
     renderWolves();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'loup', { text: 'Chacun reçoit son rôle secret sur son téléphone. L\'hôte est le meneur : il voit tout et suit le script.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(5, () => { wolves = null; renderWolves(); }),
       h('p', { class: 'muted small' }, 'Le meneur ne fait pas partie de la liste des joueurs.'),

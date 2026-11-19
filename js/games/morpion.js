@@ -1,5 +1,6 @@
 // Morpion et 4 à la suite : à deux sur le même téléphone, ou contre le téléphone.
 import { h, topbar, seg } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -7,7 +8,7 @@ const SYM = ['❌', '⭕'];
 
 // ---------------- Morpion ----------------
 const LINES3 = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-function win3(b) {
+export function win3(b) {
   for (const l of LINES3) if (b[l[0]] !== null && b[l[0]] === b[l[1]] && b[l[1]] === b[l[2]]) return { p: b[l[0]], cells: l };
   return b.every((x) => x !== null) ? { p: -1, cells: [] } : null;
 }
@@ -38,9 +39,9 @@ function ai3(b, me, level) {
 }
 
 // ---------------- 4 à la suite ----------------
-const W = 7, H = 6;
-function drop(b, col) { for (let r = H - 1; r >= 0; r--) if (b[r * W + col] === null) return r * W + col; return -1; }
-function win4(b) {
+export const W = 7, H = 6;
+export function drop(b, col) { for (let r = H - 1; r >= 0; r--) if (b[r * W + col] === null) return r * W + col; return -1; }
+export function win4(b) {
   const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
     const p = b[r * W + c];
@@ -119,6 +120,7 @@ export function start(ctx) {
       opts.vs === 'deux' ? h('p', { class: 'muted small' }, `Joueurs : ${names().join(' contre ')} (les deux premiers de la liste des joueurs).`) : null);
     render();
     root.replaceChildren(topbar(ctx),
+      onlineBanner(ctx, 'morpion', { text: 'Chacun joue sur son téléphone : le gagnant reste et affronte le suivant.' }),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       box, h('div', { class: 'grow' }),
       h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => { scores[0] = scores[1] = 0; first = 0; play(); } }, '▶ Jouer'));

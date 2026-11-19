@@ -1,7 +1,7 @@
 {
   "name": "Ambiance — jeux de soirée",
   "short_name": "Ambiance",
-  "description": "52 jeux de soirée, dont 19 en ligne : Je dessine tu devines, Le Quiz, Punchlines, Téléphone dessiné, Tu préfères, Je n'ai jamais, C'est un 10 mais… et bien plus.",
+  "description": "52 jeux de soirée, dont 35 en ligne : Je dessine tu devines, Le Quiz, Punchlines, Téléphone dessiné, Tu préfères, Je n'ai jamais, C'est un 10 mais… et bien plus.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
