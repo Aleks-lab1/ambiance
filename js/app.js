@@ -12,7 +12,7 @@ const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
   rules: [
     'Un joueur <b>crée la partie</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre</b> et entrent ce code : chacun joue sur son propre téléphone.',
-    'L\'hôte choisit parmi 16 jeux : Je dessine tu devines, L\'Imposteur, Le Quiz, Punchlines, Téléphone dessiné, Dico bluff, Menteur !, Émojis mystères, Anagrammes, À vue de nez, Le Bon Mot, Bingo de soirée, et les votes de Tu préfères, C\'est un 10 mais…, Qui de nous et Opinions impopulaires.',
+    'L\'hôte choisit parmi 19 jeux : Je dessine tu devines, L\'Imposteur, Le Quiz, Punchlines, Téléphone dessiné, Dico bluff, Menteur !, Émojis mystères, Anagrammes, À vue de nez, Vrai ou faux, Calcul express, Le Bon Mot, À l\'unisson, Bingo de soirée, et les votes de Tu préfères, C\'est un 10 mais…, Qui de nous et Opinions impopulaires.',
     'Astuce : l\'hôte doit garder l\'appli ouverte pendant la partie. Ça marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.',
   ],
   load: () => import('./online/room.js'),
@@ -228,7 +228,7 @@ function renderHome() {
     h('div', { class: 'online-banner' },
       h('div', { class: 'deco' }, '📱'),
       h('h2', null, '🌐 Jouer en ligne'),
-      h('p', null, '16 jeux où chacun joue sur son téléphone : quiz, dessin, bluff…'),
+      h('p', null, '19 jeux où chacun joue sur son téléphone : quiz, dessin, bluff…'),
       h('div', { class: 'row' },
         h('button', { class: 'btn grow', onclick: () => openScreen('online', { create: true }) }, 'Créer une partie'),
         h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre'))),

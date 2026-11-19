@@ -1,6 +1,6 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **41 jeux de soirée** en français, dont 16 jouables **en ligne, chacun sur son téléphone**.
+Une application web installable (PWA) avec **52 jeux de soirée** en français, dont 19 jouables **en ligne, chacun sur son téléphone**.
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## Les jeux
@@ -20,6 +20,9 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 🔀 | **Anagrammes** | Remets les lettres dans l'ordre le plus vite possible. |
 | 📏 | **À vue de nez** | Estimations : le plus proche gagne. |
 | 🔠 | **Le Bon Mot** | Chacun son tour, tout le monde voit le mot s'écrire en direct ; l'hôte vérifie les mots. |
+| ✅ | **Vrai ou faux** | 100 affirmations étonnantes (« Les pieuvres ont trois cœurs ») avec explication. |
+| 🧮 | **Calcul express** | Calcul mental chronométré, 3 niveaux. |
+| 🤝 | **À l'unisson** | Tout le monde doit écrire la même réponse que les autres. Aussi sur un seul téléphone. |
 | 🎱 | **Bingo de soirée** | Chacun sa grille de situations ; tout le monde est prévenu à chaque BINGO. |
 | 🤔 💯 👉 🗣️ | **Votes** | Tu préfères, C'est un 10 mais… (moyenne des notes), Qui de nous (vote secret), Opinions impopulaires. |
 
@@ -36,6 +39,7 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 💬 | **Confidences** | Pour rire, Profond, Amour, Hot |
 | 🤥 | **Deux vérités, un mensonge** | Classique, Hot |
 | 🎯 | **Action ou vérité** | Tranquille, Fun, Hot, Hot++ |
+| 💪 | **Cap ou pas cap ?** | Tranquille, Délire, Hot |
 | 🤫 | **Paranoïa** | Tranquille, Épicé, Hot, Hot++ |
 | 🎤 | **Pour ou contre** | Débats absurdes chronométrés |
 
@@ -56,6 +60,13 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 🙅 | **Ni oui ni non** | Tenir sans dire oui ni non face aux questions pièges |
 | 📚 | **Histoire folle** | Histoire à tour de rôle avec des mots imposés |
 | ⚡ | **Duel de réflexes** | Deux joueurs face à face sur le même écran |
+| 🌈 | **Couleurs pièges** | « ROUGE » écrit en bleu : touche la couleur de l'encre |
+| 🪢 | **Le Pendu** | Mot au hasard ou choisi par un joueur, dessin en 7 étapes |
+| 🟩 | **Le Mot mystère** | 5, 6 ou 7 lettres en 6 essais, lettres bien ou mal placées |
+| ⭕ | **Morpion & 4 à la suite** | À deux ou contre le téléphone |
+| 🍾 | **La Bouteille** | Cercle des joueurs, bouteille qui tourne, défi à deux (jusqu'au Hot) |
+| 🃏 | **Plus ou moins** | Carte plus haute ou plus basse, la série fait monter les gorgées |
+| 🚌 | **Le Bus** | 4 cartes, 4 questions : rouge/noir, plus/moins, entre/dehors, couleur |
 | 🔴 | **La Séquence** | Mémoire : suite de couleurs et de sons qui s'allonge, compte à rebours de 3 s entre chaque joueur |
 | 👑 | **Le Roi** | Jeu de cartes, une règle par carte |
 | 🐺 | **Loup-garou** | Distribution des rôles + script du meneur |

@@ -5,12 +5,13 @@ import { get, set, getPlayers } from '../store.js';
 import { levelPicker, onlineBanner, podium } from '../common.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
-import { RACE_MODES, buildQuestions } from '../race-core.js';
+import { RACE_MODES, buildQuestions, isQcm, CALC_LEVELS } from '../race-core.js';
 
 export function cardFor(mode, q) {
   const M = RACE_MODES[mode];
   const style = { '--g1': gameColors('mode-' + mode, M.colors)[0], '--g2': gameColors('mode-' + mode, M.colors)[1], minHeight: '0', padding: '22px 18px' };
-  if (mode === 'quiz') return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.theme), h('div', { class: 'big', style: { marginTop: '16px', fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q));
+  if (isQcm(mode)) return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.theme), h('div', { class: 'big', style: { marginTop: '16px', fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q));
+  if (mode === 'calc') return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, M.kicker), h('div', { class: 'calc-big' }, q.q, ' = ?'));
   if (mode === 'emoji') return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.cat), h('div', { class: 'emoji-big' }, q.e));
   if (mode === 'anag') return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, `${M.kicker} · ${q.len} lettres`), h('div', { class: 'tiles' }, q.s.split('').map((c) => h('span', null, c))));
   return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, M.kicker), h('div', { class: 'big', style: { fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q), q.unit ? h('div', { class: 'foot' }, `Réponse en : ${q.unit}`) : null);
@@ -20,9 +21,9 @@ function raceLocal(mode, load, onlineId) {
   return {
     start(ctx) {
       const { root, meta } = ctx;
-      const opts = Object.assign({ count: 15, themes: null }, get('race:' + mode, {}));
+      const opts = Object.assign({ count: 15, themes: null, level: 'moyen' }, get('race:' + mode, {}));
       const save = () => set('race:' + mode, opts);
-      const dataP = load().then((m) => m.default);
+      const dataP = load().then((m) => m && m.default);
       let alive = true;
 
       async function setup() {
@@ -39,6 +40,7 @@ function raceLocal(mode, load, onlineId) {
           h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
           h('div', { class: 'panel rules' }, h('p', { html: meta.rules[meta.rules.length - 1] })),
           themes,
+          mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, opts.level, (v) => { opts.level = v; save(); })) : null,
           h('label', { class: 'field' }, 'Nombre de questions', seg([10, 15, 20, 30].map((v) => ({ value: v, label: String(v) })), opts.count, (v) => { opts.count = v; save(); })),
           playersPanel(0),
           h('p', { class: 'muted small' }, 'Avec une liste de joueurs, touche le prénom de ceux qui ont trouvé pour compter les points.'),
@@ -47,7 +49,7 @@ function raceLocal(mode, load, onlineId) {
       }
 
       function play(data) {
-        const list = buildQuestions(mode, data, opts.count, { themes: opts.themes });
+        const list = buildQuestions(mode, data, opts.count, { themes: opts.themes, level: opts.level });
         const players = getPlayers();
         const scores = Object.fromEntries(players.map((p) => [p, 0]));
         let i = 0;
@@ -58,7 +60,7 @@ function raceLocal(mode, load, onlineId) {
           const Q = list[i];
           let revealed = false;
           const card = cardFor(mode, Q.pub);
-          const opts4 = mode === 'quiz' ? h('div', { class: 'quiz-opts' }, Q.pub.opts.map((o, k) => h('div', { class: 'quiz-opt' }, h('b', null, 'ABCD'[k]), o))) : null;
+          const opts4 = isQcm(mode) ? h('div', { class: 'quiz-opts' + (mode === 'vf' ? ' vf' : '') }, Q.pub.opts.map((o, k) => h('div', { class: 'quiz-opt' }, h('b', null, 'ABCD'[k]), o))) : null;
           const answer = h('div', { class: 'answer-reveal hidden' }, h('span', { class: 'muted small' }, 'La réponse'), h('b', null, Q.ans.text), Q.ans.note ? h('span', { class: 'small muted' }, Q.ans.note) : null);
           const gained = new Set();
           const chips = players.length ? h('div', { class: 'chips' }, players.map((p) => {
@@ -111,3 +113,5 @@ export const quiz = raceLocal('quiz', () => import('../data/quiz.js'), 'race-qui
 export const emojis = raceLocal('emoji', () => import('../data/emojis.js'), 'race-emoji');
 export const anagrammes = raceLocal('anag', () => import('../data/anagrammes.js'), 'race-anag');
 export const estimations = raceLocal('estim', () => import('../data/estimations.js'), 'race-estim');
+export const vraifaux = raceLocal('vf', () => import('../data/vraifaux.js'), 'race-vf');
+export const calcul = raceLocal('calc', () => Promise.resolve(null), 'race-calc');

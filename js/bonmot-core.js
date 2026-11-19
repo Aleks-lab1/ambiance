@@ -141,7 +141,14 @@ export function makeDico({ DICO, COMMUNS }) {
   /** Lettre de départ au hasard (parmi les lettres courantes). */
   function randomStart(rnd = Math.random) { return draw('start', 1, [], rnd); }
 
-  return { size: words.length, has, withPrefix, candidates, draw, examples, chainLetters, randomStart };
+  /** Mots courants « jouables » (pas de forme conjuguée ni de participe) de longueur min à max. */
+  function playable(min, max) {
+    // Testé sur la forme sans accents : écarte conjugaisons, participes (« -ées ») et pluriels en « -es ».
+    const VERB = /(ons|ez|ais|ait|aient|ions|iez|rent|ant|ee|ees|es|ai|as|era|erai|eras|eront|ont)$/;
+    return common.filter(({ w, n }) => n.length >= min && n.length <= max && /^[a-zàâäçéèêëîïôöùûüÿœæ]+$/.test(w) && !VERB.test(n));
+  }
+
+  return { size: words.length, has, playable, withPrefix, candidates, draw, examples, chainLetters, randomStart };
 }
 
 // Le dictionnaire (1,7 Mo) n'est chargé et décodé qu'une fois, en local comme en ligne.

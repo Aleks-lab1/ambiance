@@ -1,6 +1,6 @@
 // Moteur générique des jeux de cartes/questions + Tu préfères, Je n'ai jamais, C'est un 10 mais, Qui de nous.
 import { h, topbar, onSwipe, toast } from '../ui.js';
-import { get, set, makeDeck, getCustom, setCustom, drinkPl, drinks, getPlayers } from '../store.js';
+import { get, set, makeDeck, getCustom, setCustom, drinkPl, drinks, getPlayers, sip } from '../store.js';
 import { levelPicker } from '../common.js';
 import { LEVELS } from '../data/levels.js';
 import { playersPanel } from '../players.js';
@@ -277,4 +277,50 @@ export const deuxverites = cardGame({
   customHint: 'sur ton premier appartement',
   render: (it) => h('div', { class: 'big' }, `Raconte trois anecdotes ${it}`),
   footer: () => `Deux vraies, une inventée. À 3, tout le monde désigne le mensonge ! Ceux qui se trompent ${drinkPl(1)}.`,
+});
+
+// ---------------- Cap ou pas cap ? ----------------
+export const cap = cardGame({
+  levels: [
+    { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des défis gentils pour tout le monde.' },
+    { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Téléphone, réseaux sociaux et grosses hontes.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes. Chacun peut refuser.', adult: true },
+  ],
+  data: () => import('../data/cap.js'),
+  perPlayer: true,
+  kicker: '🎯 Cap ou pas cap ?',
+  customHelp: 'Un défi par ligne. Exemple : Cap de chanter sous la douche… tout habillé ?',
+  customHint: 'Cap de parler en rimes jusqu\'à ton prochain tour ?',
+  render: (it) => h('div', { class: 'big' }, it),
+  footer: () => `Cap ? Fais-le ! Pas cap ? ${sip(2)} pour toi !`,
+});
+
+// ---------------- À l'unisson ----------------
+export const unisson = cardGame({
+  levels: [
+    { id: 'fun', name: 'Classique', emoji: '🤝', desc: 'Des thèmes pour tout le monde.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Amour et séduction, réservé aux adultes.', adult: true },
+  ],
+  data: () => import('../data/unisson.js'),
+  online: 'unisson',
+  kicker: 'Pensez tous pareil…',
+  customHelp: 'Un thème par ligne. Exemple : Un fruit jaune',
+  customHint: 'Un fruit jaune',
+  render: (it) => {
+    const big = h('div', { class: 'big' }, it);
+    const out = h('div', { class: 'foot' });
+    const btn = h('button', {
+      class: 'btn btn-soft', style: { alignSelf: 'center', background: 'rgba(0,0,0,.25)' },
+      onclick: () => {
+        btn.disabled = true;
+        let n = 3;
+        const step = () => {
+          if (n > 0) { btn.textContent = String(n); sfx.beep(); n--; setTimeout(step, 800); }
+          else { btn.textContent = '🗣️ DITES-LE !'; sfx.go(); buzz([60, 40, 60]); out.textContent = `Ceux qui ont dit la même chose que la majorité marquent 1 point. Les moutons noirs ${drinkPl(1)} !`; }
+        };
+        step();
+      },
+    }, '3, 2, 1… Tous ensemble !');
+    return h('div', { class: 'col', style: { alignItems: 'center' } }, big, btn, out);
+  },
 });

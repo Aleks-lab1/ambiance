@@ -513,6 +513,10 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .quiz-opt.dim { opacity: .45; }
 .quiz-opt.good { border-color: var(--ok); background: rgba(34, 211, 154, .2); opacity: 1; }
 .quiz-opt:disabled { color: inherit; }
+.calc-big { font-size: clamp(40px, 13vw, 64px); font-weight: 900; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.quiz-opts.vf { display: grid; grid-template-columns: 1fr 1fr; }
+.quiz-opts.vf .quiz-opt { justify-content: center; font-size: 20px; min-height: 64px; }
+.quiz-opts.vf .quiz-opt b { display: none; }
 .answer-reveal { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; background: #fff; color: #1d1440; border-radius: 18px; padding: 14px; box-shadow: var(--shadow); animation: pop .4s ease; }
 .answer-reveal b { font-size: 24px; font-weight: 900; line-height: 1.15; }
 .answer-reveal .muted { color: #6b5d99; }
@@ -646,3 +650,87 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .mini-tile:active { transform: scale(.96); }
 .mini-tile .emo { font-size: 28px; line-height: 1; }
 .mini-tile .nm { font-weight: 800; font-size: 13px; line-height: 1.15; }
+
+/* ---------- La Bouteille ---------- */
+.bt-ring { position: relative; width: min(86vw, 380px); aspect-ratio: 1; margin: 0 auto; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03) 70%); border: 2px dashed rgba(255, 255, 255, .25); flex: none; }
+.bt-name { position: absolute; transform: translate(-50%, -50%); background: var(--card2); border: 2px solid transparent; border-radius: 999px; padding: 5px 11px; font-weight: 800; font-size: 14px; white-space: nowrap; max-width: 34%; overflow: hidden; text-overflow: ellipsis; transition: transform .2s, background .2s; }
+.bt-name.cur { border-color: #fff; }
+.bt-name.hit { background: #ffd23f; color: #3a2a00; transform: translate(-50%, -50%) scale(1.18); box-shadow: 0 0 22px rgba(255, 210, 63, .8); }
+.bt-bottle { position: absolute; left: 50%; top: 50%; width: 22%; height: 62%; transform: translate(-50%, -50%) rotate(0deg); transition: transform 3.6s cubic-bezier(.12, .7, .15, 1); cursor: pointer; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .4)); }
+
+/* ---------- Cartes à jouer ---------- */
+.pc { position: relative; width: 74px; height: 104px; border-radius: 10px; background: #fff; color: #1d1440; box-shadow: 0 6px 16px rgba(0, 0, 0, .3); flex: none; font-weight: 900; }
+.pc.red { color: #d61f3c; }
+.pc .tl, .pc .br { position: absolute; font-size: 14px; line-height: 1; text-align: center; }
+.pc .tl { top: 6px; left: 7px; }
+.pc .br { bottom: 6px; right: 7px; transform: rotate(180deg); }
+.pc .mid { position: absolute; inset: 0; display: grid; place-items: center; font-size: 38px; }
+.pc.back { background: repeating-linear-gradient(45deg, var(--g1), var(--g1) 6px, var(--g2) 6px, var(--g2) 12px); border: 4px solid #fff; display: grid; place-items: center; color: rgba(255, 255, 255, .6); font-size: 30px; }
+.pc.big { width: 120px; height: 168px; border-radius: 14px; }
+.pc.big .tl, .pc.big .br { font-size: 22px; }
+.pc.big .mid { font-size: 64px; }
+.pc.mid-size { width: 70px; height: 98px; }
+.pc.mini { width: 34px; height: 48px; border-radius: 6px; box-shadow: none; }
+.pc.mini .tl, .pc.mini .br { display: none; }
+.pc.mini .mid { font-size: 13px; }
+.pc.flip { animation: flip .4s ease; }
+.pc.good { box-shadow: 0 0 0 4px var(--ok), 0 6px 16px rgba(0, 0, 0, .3); }
+.pc.bad { box-shadow: 0 0 0 4px var(--bad), 0 6px 16px rgba(0, 0, 0, .3); }
+.pc.next { outline: 3px dashed #fff; outline-offset: 3px; }
+.pc-table { display: flex; justify-content: center; gap: 18px; padding: 8px 0; }
+.pc-table.four { gap: 8px; }
+.pc-trail { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 48px; }
+.bus-steps { display: flex; justify-content: center; gap: 8px; }
+.bus-step { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; background: var(--card); border: 2px solid var(--line); }
+.bus-step.cur { border-color: #fff; background: var(--card2); }
+.bus-step.done { background: var(--ok); color: #05261b; border-color: transparent; }
+.answer-btns.four-opts { grid-template-columns: 1fr 1fr; }
+
+/* ---------- Couleurs pièges ---------- */
+.stroop-word { text-align: center; font-size: clamp(54px, 17vw, 96px); font-weight: 900; letter-spacing: .02em; padding: 18px 0; text-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+.stroop-word.pop { animation: pop .25s ease; }
+.stroop-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; max-height: 340px; }
+.stroop-btns.six { grid-template-columns: 1fr 1fr 1fr; }
+.stroop-btn { border: 0; border-radius: 20px; background: var(--c); min-height: 90px; font-weight: 900; font-size: 18px; touch-action: none; box-shadow: 0 5px 0 rgba(0, 0, 0, .25); }
+.stroop-btn:active { transform: translateY(3px); box-shadow: none; }
+.stroop-btn.piege span { background: rgba(255, 255, 255, .92); padding: 4px 8px; border-radius: 8px; }
+.stroop-btn.wrong { animation: shake .25s linear 2; outline: 4px solid #fff; }
+
+/* ---------- Pendu & Mot mystère ---------- */
+.pendu-svg { width: 150px; height: 150px; margin: 0 auto; color: #fff; }
+.pendu-word { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pendu-word .ltr { width: 30px; height: 40px; border-bottom: 3px solid #fff; display: grid; place-items: end center; font-size: 26px; font-weight: 900; padding-bottom: 2px; }
+.pendu-word .ltr.miss { color: #ffb3b6; }
+.pendu-word .sp { width: 14px; }
+.kb { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+.kb-key { min-width: 32px; height: 46px; border: 0; border-radius: 8px; background: var(--card2); font-weight: 900; font-size: 17px; padding: 0 4px; }
+.kb-key:disabled { opacity: 1; }
+.kb-key.good { background: var(--ok); color: #05261b; }
+.kb-key.bad, .kb-key.absent { background: rgba(0, 0, 0, .35); color: rgba(255, 255, 255, .45); }
+.kb-key.near { background: #f0b429; color: #2b1c00; }
+.kb-key.wide { min-width: 52px; font-size: 14px; }
+.kb.done { opacity: .5; pointer-events: none; }
+.mm-kb { flex-direction: column; align-items: center; gap: 6px; }
+.kb-row { display: flex; gap: 4px; justify-content: center; width: 100%; }
+.mm-kb .kb-key { min-width: 0; flex: 1; max-width: 40px; }
+.mm-kb .kb-key.wide { max-width: 60px; flex: 1.5; }
+.mm-grid { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.mm-row { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 6px; width: min(calc(var(--n) * 58px), 92vw); }
+.mm-row.shake { animation: shake .25s linear 2; }
+.mm-cell { aspect-ratio: 1; border: 2px solid rgba(255, 255, 255, .25); border-radius: 8px; display: grid; place-items: center; font-size: clamp(20px, 6vw, 28px); font-weight: 900; text-transform: uppercase; }
+.mm-cell.filled { border-color: rgba(255, 255, 255, .7); animation: pop .15s ease; }
+.mm-cell.flip { animation: flip .35s ease; border-color: transparent; }
+.mm-cell.good { background: var(--ok); color: #05261b; }
+.mm-cell.near { background: #f0b429; color: #2b1c00; }
+.mm-cell.absent { background: rgba(0, 0, 0, .35); }
+
+/* ---------- Morpion & 4 à la suite ---------- */
+.ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(86vw, 340px); margin: 0 auto; aspect-ratio: 1; }
+.ttt-cell { border: 0; border-radius: 18px; background: var(--card2); font-size: clamp(40px, 13vw, 64px); display: grid; place-items: center; }
+.ttt-cell.win { background: #ffd23f; }
+.ttt-cell.pop, .c4-cell.pop { animation: pop .3s ease; }
+.c4-board { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; width: min(92vw, 420px); margin: 0 auto; padding: 8px; border-radius: 16px; background: #1f4fd1; box-shadow: var(--shadow); }
+.c4-cell { aspect-ratio: 1; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .35); padding: 0; }
+.c4-cell.p0 { background: #ff3b4f; }
+.c4-cell.p1 { background: #ffd21f; }
+.c4-cell.win { box-shadow: 0 0 0 3px #fff, 0 0 14px #fff; }

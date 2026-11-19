@@ -7,7 +7,43 @@ export const RACE_MODES = {
   emoji: { name: 'Émojis mystères', emoji: '🧩', short: 'Devine le film en émojis', colors: ['#f7971e', '#ffd200'], kicker: 'Que cachent ces émojis ?' },
   anag: { name: 'Anagrammes', emoji: '🔀', short: 'Remets les lettres en ordre', colors: ['#1d976c', '#93f9b9'], kicker: 'Retrouve le mot' },
   estim: { name: 'À vue de nez', emoji: '📏', short: 'Le plus proche gagne', colors: ['#e65c00', '#f9d423'], kicker: 'À ton avis…' },
+  vf: { name: 'Vrai ou faux', emoji: '✅', short: 'Info ou intox ?', colors: ['#11998e', '#e94057'], kicker: 'Vrai ou faux ?' },
+  calc: { name: 'Calcul express', emoji: '🧮', short: 'Calcul mental chronométré', colors: ['#4568dc', '#00c9a7'], kicker: 'Calcule !' },
 };
+
+/** Modes à choix multiples (boutons) et modes à réponse libre (texte). */
+export const isQcm = (mode) => mode === 'quiz' || mode === 'vf';
+export const isText = (mode) => mode === 'emoji' || mode === 'anag' || mode === 'calc';
+
+export const CALC_LEVELS = [
+  { value: 'facile', label: '😌 Facile' },
+  { value: 'moyen', label: '🤔 Moyen' },
+  { value: 'dur', label: '🔥 Difficile' },
+];
+
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+/** Un calcul au hasard : { q: '7 × 8', n: 56 }. */
+export function makeCalc(level = 'moyen') {
+  const kinds = level === 'facile' ? ['+', '-', 'x'] : level === 'moyen' ? ['+', '-', 'x', 'x', '/', 'mix'] : ['x', 'x', '/', 'mix', 'mix', 'sq', '%'];
+  const k = kinds[ri(0, kinds.length - 1)];
+  if (level === 'facile') {
+    if (k === '+') { const a = ri(3, 40), b = ri(2, 30); return { q: `${a} + ${b}`, n: a + b }; }
+    if (k === '-') { const a = ri(10, 60), b = ri(2, a - 1); return { q: `${a} − ${b}`, n: a - b }; }
+    const a = ri(2, 6), b = ri(2, 10); return { q: `${a} × ${b}`, n: a * b };
+  }
+  if (level === 'moyen') {
+    if (k === '+') { const a = ri(25, 99), b = ri(15, 99); return { q: `${a} + ${b}`, n: a + b }; }
+    if (k === '-') { const a = ri(40, 150), b = ri(12, a - 5); return { q: `${a} − ${b}`, n: a - b }; }
+    if (k === 'x') { const a = ri(3, 10), b = ri(4, 12); return { q: `${a} × ${b}`, n: a * b }; }
+    if (k === '/') { const b = ri(2, 9), n = ri(3, 12); return { q: `${b * n} ÷ ${b}`, n }; }
+    const a = ri(2, 9), b = ri(2, 9), c = ri(3, 20); return { q: `${a} × ${b} + ${c}`, n: a * b + c };
+  }
+  if (k === 'x') { const a = ri(12, 25), b = ri(3, 9); return { q: `${a} × ${b}`, n: a * b }; }
+  if (k === '/') { const b = ri(3, 12), n = ri(6, 25); return { q: `${b * n} ÷ ${b}`, n }; }
+  if (k === 'sq') { const a = ri(11, 20); return { q: `${a}²`, n: a * a }; }
+  if (k === '%') { const p = [10, 20, 25, 50, 75][ri(0, 4)], base = [40, 60, 80, 120, 200, 240, 360][ri(0, 6)]; return { q: `${p} % de ${base}`, n: (p * base) / 100 }; }
+  const a = ri(6, 15), b = ri(3, 9), c = ri(10, 60); return Math.random() < 0.5 ? { q: `${a} × ${b} − ${c}`, n: a * b - c } : { q: `(${a} + ${c}) × ${b}`, n: (a + c) * b };
+}
 
 // Articles et petits mots ignorés pour comparer les réponses libres.
 const LEADING = /^(le|la|les|l|un|une|des|du|de|d|the)\s+/;
@@ -61,6 +97,17 @@ export function buildQuestions(mode, data, count, opts = {}) {
     });
   } else if (mode === 'emoji') {
     pool = data.map(([e, a, cat, alts, keys]) => ({ pub: { e, cat }, ans: { text: a, alts: alts || [], keys: keys || null } }));
+  } else if (mode === 'vf') {
+    pool = data.map(([q, ok, note]) => ({ pub: { q, opts: ['Vrai', 'Faux'], theme: '✅ Vrai ou faux' }, ans: { i: ok ? 0 : 1, text: ok ? 'Vrai' : 'Faux', note: note || '' } }));
+  } else if (mode === 'calc') {
+    const seen = new Set();
+    pool = [];
+    for (let k = 0; pool.length < count && k < count * 20; k++) {
+      const c = makeCalc(opts.level);
+      if (seen.has(c.q)) continue;
+      seen.add(c.q);
+      pool.push({ pub: { q: c.q }, ans: { text: String(c.n), alts: [] } });
+    }
   } else if (mode === 'anag') {
     pool = data.map((w) => ({ pub: { s: scramble(w), len: norm(w).replace(/ /g, '').length }, ans: { text: w } }));
   } else {

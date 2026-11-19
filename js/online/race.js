@@ -3,20 +3,22 @@ import { h, uid, seg } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
-import { RACE_MODES, buildQuestions, matches, estimPoints, formatNumber } from '../race-core.js';
+import { RACE_MODES, buildQuestions, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS } from '../race-core.js';
+import VF from '../data/vraifaux.js';
 import QUIZ from '../data/quiz.js';
 import EMOJIS from '../data/emojis.js';
 import ANAG from '../data/anagrammes.js';
 import ESTIM from '../data/estimations.js';
 
-const DATA = { quiz: QUIZ, emoji: EMOJIS, anag: ANAG, estim: ESTIM };
+const DATA = { quiz: QUIZ, emoji: EMOJIS, anag: ANAG, estim: ESTIM, vf: VF, calc: null };
 const REVEAL_MS = 9000;
 const player = (room, pid) => room.players.find((p) => p.pid === pid);
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 function makeRace(mode) {
   const M = RACE_MODES[mode];
-  const text = mode === 'emoji' || mode === 'anag';
+  const text = isText(mode);
+  const qcm = isQcm(mode);
 
   function nextQ(s) {
     s.i++;
@@ -51,12 +53,13 @@ function makeRace(mode) {
     short: M.short,
     emoji: M.emoji,
     minPlayers: 2,
-    defaults: { count: 10, time: mode === 'quiz' ? 20 : mode === 'estim' ? 25 : 40, themes: mode === 'quiz' ? QUIZ.themes.map((t) => t.id) : undefined },
+    defaults: { count: 10, time: mode === 'quiz' ? 20 : mode === 'vf' ? 15 : mode === 'calc' ? 20 : mode === 'estim' ? 25 : 40, themes: mode === 'quiz' ? QUIZ.themes.map((t) => t.id) : undefined, level: mode === 'calc' ? 'moyen' : undefined },
 
     settingsForm(st, set) {
       const parts = [
         h('label', { class: 'field' }, 'Nombre de questions', seg([5, 10, 15, 20].map((n) => ({ value: n, label: String(n) })), st.count, (v) => set({ count: v }))),
-        h('label', { class: 'field' }, 'Temps par question', seg((text ? [30, 40, 60] : [15, 20, 30]).map((n) => ({ value: n, label: n + ' s' })), st.time, (v) => set({ time: v }))),
+        h('label', { class: 'field' }, 'Temps par question', seg((mode === 'vf' ? [10, 15, 20] : mode === 'calc' ? [10, 20, 30] : text ? [30, 40, 60] : [15, 20, 30]).map((n) => ({ value: n, label: n + ' s' })), st.time, (v) => set({ time: v }))),
+        mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, st.level || 'moyen', (v) => set({ level: v }))) : null,
       ];
       if (mode === 'quiz') {
         const sel = new Set(st.themes && st.themes.length ? st.themes : QUIZ.themes.map((t) => t.id));
@@ -81,8 +84,8 @@ function makeRace(mode) {
       if (a.type !== 'answer' || s.phase !== 'q' || !player(room, pid)) return false;
       const Q = s.list[s.i];
       const frac = clamp01((s.deadline - Date.now()) / (s.st.time * 1000));
-      if (mode === 'quiz') {
-        if (s.answers[pid] || !Number.isInteger(a.v) || a.v < 0 || a.v > 3) return false;
+      if (qcm) {
+        if (s.answers[pid] || !Number.isInteger(a.v) || a.v < 0 || a.v >= Q.pub.opts.length) return false;
         const ok = a.v === Q.ans.i;
         s.answers[pid] = { v: a.v, ok, pts: ok ? 100 + Math.round(100 * frac) : 0 };
       } else if (mode === 'estim') {
@@ -93,7 +96,8 @@ function makeRace(mode) {
         if (s.answers[pid] && s.answers[pid].ok) return false;
         const guess = String(a.v || '').trim().slice(0, 80);
         if (!guess) return false;
-        if (matches(guess, [Q.ans.text, ...(Q.ans.alts || [])], Q.ans.keys)) {
+        const good = mode === 'calc' ? Number(guess.replace(/\s/g, '').replace(',', '.')) === Number(Q.ans.text) : matches(guess, [Q.ans.text, ...(Q.ans.alts || [])], Q.ans.keys);
+        if (good) {
           const first = !Object.values(s.answers).some((x) => x.ok);
           s.answers[pid] = { v: guess, ok: true, pts: 100 + Math.round(100 * frac) + (first ? 50 : 0), first };
         } else {
@@ -124,7 +128,7 @@ function makeRace(mode) {
         q: Q ? Q.pub : null,
         hint: mode === 'anag' && s.hinted && Q ? Q.ans.text.charAt(0).toUpperCase() : null,
         answered: Object.keys(s.answers).filter((p) => !text || s.answers[p].ok),
-        mine: mine ? (mode === 'quiz' ? { v: mine.v } : mine) : null,
+        mine: mine ? (qcm ? { v: mine.v } : mine) : null,
         wrong: s.wrong[pid] || null,
         reveal: s.phase === 'reveal' && Q ? { ans: Q.ans, results: Object.entries(s.answers).map(([p, x]) => ({ pid: p, ...x })) } : null,
       };
@@ -157,7 +161,8 @@ function makeRace(mode) {
 
       function cardFor(q) {
         const style = { '--g1': gameColors('mode-' + mode, M.colors)[0], '--g2': gameColors('mode-' + mode, M.colors)[1], minHeight: '0', padding: '22px 18px' };
-        if (mode === 'quiz') return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.theme), h('div', { class: 'big', style: { marginTop: '16px', fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q));
+        if (qcm) return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.theme), h('div', { class: 'big', style: { marginTop: '16px', fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q));
+        if (mode === 'calc') return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, M.kicker), h('div', { class: 'calc-big' }, q.q, ' = ?'));
         if (mode === 'emoji') return h('div', { class: 'qcard anim', style }, h('span', { class: 'badge lvl' }, q.cat), h('div', { class: 'emoji-big' }, q.e));
         if (mode === 'anag') return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, `${M.kicker} · ${q.len} lettres`), h('div', { class: 'tiles' }, q.s.split('').map((c) => h('span', null, c))));
         return h('div', { class: 'qcard anim', style }, h('div', { class: 'kicker' }, M.kicker), h('div', { class: 'big', style: { fontSize: 'clamp(20px,5.4vw,28px)' } }, q.q), q.unit ? h('div', { class: 'foot' }, `Réponse en : ${q.unit}`) : null);
@@ -166,8 +171,8 @@ function makeRace(mode) {
       function answerUI() {
         const send = (val) => { g.send({ type: 'answer', v: val }); };
         if (v.phase !== 'q') return [];
-        if (mode === 'quiz') {
-          return [h('div', { class: 'quiz-opts' }, v.q.opts.map((o, i) => h('button', {
+        if (qcm) {
+          return [h('div', { class: 'quiz-opts' + (mode === 'vf' ? ' vf' : '') }, v.q.opts.map((o, i) => h('button', {
             class: 'quiz-opt' + (v.mine && v.mine.v === i ? ' on' : '') + (v.mine && v.mine.v !== i ? ' dim' : ''),
             disabled: !!v.mine,
             onclick: () => { send(i); sfx.pop(); buzz(15); },
@@ -176,7 +181,7 @@ function makeRace(mode) {
         }
         if (text) {
           if (v.mine && v.mine.ok) return [h('div', { class: 'panel center' }, h('h3', null, `✅ Trouvé : ${v.mine.v}`), h('p', { class: 'muted small' }, 'Bravo ! Attends les autres…'))];
-          input = h('input', { class: 'input', placeholder: 'Ta réponse…', maxlength: '80', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'send' });
+          input = h('input', { class: 'input', placeholder: mode === 'calc' ? 'Le résultat…' : 'Ta réponse…', inputmode: mode === 'calc' ? 'decimal' : null, maxlength: '80', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'send' });
           return [h('form', { class: 'chat-form', onsubmit: (e) => { e.preventDefault(); const t = input.value.trim(); if (t) { send(t); input.value = ''; } } },
             input, h('button', { class: 'btn btn-primary', type: 'submit', 'aria-label': 'Envoyer' }, '➤')),
           v.wrong ? h('p', { class: 'small center', style: { color: 'var(--warn)' } }, `❌ « ${v.wrong.last} » : ce n'est pas ça (${v.wrong.n} essai${v.wrong.n > 1 ? 's' : ''})`) : null];
@@ -190,10 +195,10 @@ function makeRace(mode) {
       function revealUI() {
         const r = v.reveal;
         const res = r.results.slice().sort((a, b) => (b.pts || 0) - (a.pts || 0));
-        const label = (x) => (mode === 'quiz' ? v.q.opts[x.v] : mode === 'estim' ? (v.q.unit ? formatNumber(x.v) : String(x.v)) : x.v);
+        const label = (x) => (qcm ? v.q.opts[x.v] : mode === 'estim' ? (v.q.unit ? formatNumber(x.v) : String(x.v)) : x.v);
         const answeredPids = new Set(res.map((x) => x.pid));
         const missing = (room ? room.players.filter((p) => p.on && !answeredPids.has(p.pid)) : []);
-        if (mode === 'quiz') {
+        if (qcm) {
           [...answerSlot.querySelectorAll('.quiz-opt')].forEach((b, i) => { b.classList.toggle('good', i === r.ans.i); });
         }
         return [
@@ -231,7 +236,7 @@ function makeRace(mode) {
             const total = r.players.filter((p) => p.on).length;
             status.textContent = text ? `🔎 ${v.answered.length}/${total} ont trouvé` : `🗳️ ${v.answered.length}/${total} ont répondu`;
           } else {
-            if (mode !== 'quiz' || !answerSlot.querySelector('.quiz-opts')) answerSlot.replaceChildren(...answerUI().filter(Boolean));
+            if (!qcm || !answerSlot.querySelector('.quiz-opts')) answerSlot.replaceChildren(...answerUI().filter(Boolean));
             const keep = answerSlot.querySelector('.quiz-opts');
             answerSlot.replaceChildren(...[keep, ...revealUI()].filter(Boolean));
             status.textContent = '';
@@ -261,3 +266,5 @@ export const raceQuiz = makeRace('quiz');
 export const raceEmoji = makeRace('emoji');
 export const raceAnag = makeRace('anag');
 export const raceEstim = makeRace('estim');
+export const raceVf = makeRace('vf');
+export const raceCalc = makeRace('calc');
