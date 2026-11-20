@@ -211,7 +211,7 @@ export const GAMES = [
     tags: ['online', 'rapide'], players: '2-16', badges: ['En ligne'],
     rules: [
       '<b>En ligne :</b> une affirmation s\'affiche (« Les pieuvres ont trois cœurs »). Vrai ou faux ? Plus tu réponds vite et juste, plus tu gagnes de points. L\'explication s\'affiche ensuite.',
-      '<b>Sur un seul téléphone :</b> lis l\'affirmation à voix haute, chacun annonce « vrai » ou « faux », puis révèle la réponse et son explication.',
+      '<b>Sur un seul téléphone :</b> chacun son tour, le joueur désigné touche « Vrai » ou « Faux ». La bonne réponse s\'affiche en vert (en rouge si c\'est raté) avec son explication, et le point est compté automatiquement.',
     ],
     load: () => import('./race.js').then((m) => m.vraifaux),
   },

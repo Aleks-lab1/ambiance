@@ -43,7 +43,7 @@ function raceLocal(mode, load, onlineId) {
           mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, opts.level, (v) => { opts.level = v; save(); })) : null,
           h('label', { class: 'field' }, 'Nombre de questions', seg([10, 15, 20, 30].map((v) => ({ value: v, label: String(v) })), opts.count, (v) => { opts.count = v; save(); })),
           playersPanel(0),
-          h('p', { class: 'muted small' }, 'Avec une liste de joueurs, touche le prénom de ceux qui ont trouvé pour compter les points.'),
+          h('p', { class: 'muted small' }, mode === 'vf' ? 'Avec une liste de joueurs, chacun répond à son tour et les points sont comptés automatiquement.' : 'Avec une liste de joueurs, touche le prénom de ceux qui ont trouvé pour compter les points.'),
           h('div', { class: 'grow' }),
           h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => play(data) }, '▶ Jouer sur ce téléphone'));
       }
@@ -60,7 +60,8 @@ function raceLocal(mode, load, onlineId) {
           const Q = list[i];
           let revealed = false;
           const card = cardFor(mode, Q.pub);
-          const opts4 = isQcm(mode) ? h('div', { class: 'quiz-opts' + (mode === 'vf' ? ' vf' : '') }, Q.pub.opts.map((o, k) => h('div', { class: 'quiz-opt' }, h('b', null, 'ABCD'[k]), o))) : null;
+          if (mode === 'vf') { showVf(Q); return; }
+          const opts4 = isQcm(mode) ? h('div', { class: 'quiz-opts' }, Q.pub.opts.map((o, k) => h('div', { class: 'quiz-opt' }, h('b', null, 'ABCD'[k]), o))) : null;
           const answer = h('div', { class: 'answer-reveal hidden' }, h('span', { class: 'muted small' }, 'La réponse'), h('b', null, Q.ans.text), Q.ans.note ? h('span', { class: 'small muted' }, Q.ans.note) : null);
           const gained = new Set();
           const chips = players.length ? h('div', { class: 'chips' }, players.map((p) => {
@@ -88,6 +89,36 @@ function raceLocal(mode, load, onlineId) {
             card, opts4, answer,
             whoBox,
             h('div', { class: 'grow' }), btn);
+          sfx.swoosh();
+        }
+
+        // Vrai ou faux : le joueur dont c'est le tour touche Vrai ou Faux ; le point est compté automatiquement.
+        function showVf(Q) {
+          const who = players.length ? players[i % players.length] : null;
+          const next = h('button', { class: 'btn btn-primary btn-big btn-block hidden' }, i + 1 < list.length ? 'Question suivante →' : '🏆 Voir les résultats');
+          next.onclick = () => { i++; show(); };
+          const answer = h('div', { class: 'answer-reveal hidden' }, h('span', { class: 'muted small' }, 'La réponse'), h('b', null, Q.ans.text), Q.ans.note ? h('span', { class: 'small muted' }, Q.ans.note) : null);
+          const result = h('p', { class: 'center hidden', style: { fontWeight: '800', margin: '0' } });
+          let answered = false;
+          const btns = Q.pub.opts.map((o, k) => h('button', { class: 'quiz-opt', onclick: () => pick(k) }, h('b', null, 'AB'[k]), o));
+          function pick(k) {
+            if (answered) return;
+            answered = true;
+            const ok = k === Q.ans.i;
+            btns.forEach((b, j) => { b.disabled = true; b.classList.add(j === Q.ans.i ? 'good' : j === k ? 'bad' : 'dim'); });
+            if (who && ok) scores[who]++;
+            result.textContent = ok ? (who ? `✅ Bien joué ${who} ! +1 point` : '✅ Bonne réponse !') : (who ? `❌ Raté pour ${who}…` : '❌ Raté…');
+            result.classList.remove('hidden');
+            answer.classList.remove('hidden');
+            next.classList.remove('hidden');
+            if (ok) { sfx.ok(); buzz(30); } else { sfx.bad(); buzz(80); }
+          }
+          root.replaceChildren(top,
+            h('div', { class: 'row' },
+              h('span', { class: 'pill' }, `${meta.emoji} ${i + 1}/${list.length}`),
+              who ? h('span', { class: 'pill' }, `🎯 Au tour de ${who} · ${scores[who]} pt${scores[who] > 1 ? 's' : ''}`) : null),
+            cardFor(mode, Q.pub), h('div', { class: 'quiz-opts vf' }, btns), result, answer,
+            h('div', { class: 'grow' }), next);
           sfx.swoosh();
         }
 
