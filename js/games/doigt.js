@@ -1,5 +1,6 @@
 // Qui commence ? Chacun pose un doigt, le hasard choisit.
 import { h, topbar, seg, shuffle } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -14,6 +15,8 @@ export function start(ctx) {
     cleanupZone && cleanupZone();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'doigt', { text: 'Chacun pose son doigt sur son propre téléphone : pratique quand on n\'est pas tous autour du même écran.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('label', { class: 'field' }, 'Mode', seg([{ value: 'one', label: '1 gagnant' }, { value: 'teams', label: '2 équipes' }, { value: 'order', label: 'Ordre de jeu' }], opts.mode, (v) => { opts.mode = v; set('doigt', opts); })),
       h('div', { class: 'grow' }),

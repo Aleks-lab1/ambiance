@@ -1,11 +1,13 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **61 jeux de soirée** en français, dont 44 jouables **en ligne, chacun sur son téléphone**.
+Une application web installable (PWA) avec **61 jeux de soirée** en français, **tous jouables en ligne, chacun sur son téléphone** (ou sur un seul téléphone qu'on se passe).
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## Les jeux
 
-### 🌐 En ligne (chacun sur son téléphone)
+### 🌐 En ligne : tous les jeux (chacun sur son téléphone)
+
+Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi…), c'est le joueur dont c'est le tour (ou l'hôte) qui joue, et les autres suivent en direct sur leur téléphone.
 
 | | Jeu | Principe |
 |---|---|---|
@@ -42,6 +44,15 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 🚢 🧩 🎲 | **Bataille navale, Memory, Yam's** | Jeux de plateau : en ligne, ou sur un seul téléphone (contre le téléphone, ou chacun son tour). |
 | 🎱 | **Bingo de soirée** | Chacun sa grille de situations ; tout le monde est prévenu à chaque BINGO. |
 | 🤔 💯 👉 🗣️ | **Votes** | Tu préfères, C'est un 10 mais… (moyenne des notes), Qui de nous (vote secret), Opinions impopulaires. |
+| 🌀 💬 💪 🎯 | **Et si…, Confidences, Cap ou pas cap, Action ou vérité** | La carte s'affiche sur tous les téléphones ; le joueur désigné (ou l'hôte) agit, les autres regardent. Défi relevé : +1 point. |
+| 🍾 🎡 | **La Bouteille, La roue des gages** | Elles tournent sur tous les téléphones en même temps, chacun son tour. |
+| 👑 🃏 🚌 | **Le Roi, Plus ou moins, Le Bus** | Chacun son tour pioche ou devine sur son téléphone, les autres suivent la partie. |
+| 🎩 | **Le Chapeau** | 3 manches par équipes ; les noms s'affichent chez celui qui fait deviner. |
+| 🤳 | **Sur le front** | Le mot s'affiche chez tous les autres… sauf toi ! Ils valident quand tu as trouvé. |
+| 🙅 📚 | **Ni oui ni non, Histoire folle** | Les questions (ou le mot imposé) et le chrono sur tous les téléphones ; buzzer « oui ou non entendu ! ». |
+| 🪢 | **Le Pendu** | Chacun propose une lettre à son tour ; mot au hasard ou choisi en secret par un joueur. |
+| 🔴 | **La Séquence** | Tout le monde reproduit la même suite en même temps ; une erreur et tu es éliminé. |
+| ☝️ 🧰 | **Qui commence ?, Boîte à outils** | Chacun garde son doigt sur son téléphone ; dés, pièce, équipes, chrono et points partagés. |
 
 ### 🃏 Questions et cartes (on touche la carte pour passer à la suivante)
 
@@ -175,7 +186,7 @@ js/games/index.js    catalogue des jeux
 js/games/*.js        un module par jeu (chargé à la demande)
 js/online/room.js    salon en ligne, hôte, clients, reconnexion
 js/online/*.js       jeux en ligne (dessin, imposteur, votes, quiz/rapidité, écriture,
-                     téléphone dessiné, bingo, menteur)
+                     téléphone dessiné, bingo, menteur, cartes, paquet, hasard, oral…)
 js/race-core.js      logique partagée des jeux de rapidité (local + en ligne)
 js/bingo-core.js     grilles et lignes du bingo
 js/bonmot-core.js    dictionnaire et tirage des lettres du Bon Mot

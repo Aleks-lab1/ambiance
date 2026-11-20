@@ -31,4 +31,20 @@ export const LEVELS = {
     { id: 'epice', name: 'Ça divise', emoji: '🌶️', desc: 'Amour, amitié, argent : ça va débattre.' },
     { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Sexe et couple, réservé aux adultes.', adult: true },
   ],
+  etsi: [
+    { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Des situations complètement folles.' },
+    { id: 'deep', name: 'Réflexion', emoji: '🧠', desc: 'Pour refaire le monde.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
+  ],
+  confidences: [
+    { id: 'fun', name: 'Pour rire', emoji: '😂', desc: 'Hontes et anecdotes.' },
+    { id: 'deep', name: 'Profond', emoji: '🌙', desc: 'Pour se livrer vraiment.' },
+    { id: 'love', name: 'Amour', emoji: '💕', desc: 'Cœur, couple et rendez-vous.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Intime, réservé aux adultes.', adult: true },
+  ],
+  cap: [
+    { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des défis gentils pour tout le monde.' },
+    { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Téléphone, réseaux sociaux et grosses hontes.' },
+    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes. Chacun peut refuser.', adult: true },
+  ],
 };

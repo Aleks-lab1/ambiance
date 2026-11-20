@@ -1,16 +1,17 @@
 // Jeux avec un paquet de 52 cartes : Plus ou moins, Le Bus.
 import { h, topbar, shuffle } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip, drinks } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const SUITS = [
+export const SUITS = [
   { s: '♥', n: 'Cœur', red: true }, { s: '♦', n: 'Carreau', red: true },
   { s: '♣', n: 'Trèfle', red: false }, { s: '♠', n: 'Pique', red: false },
 ];
-const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'V', 'D', 'R', 'A']; // valeur = index + 2 (As = 14)
+export const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'V', 'D', 'R', 'A']; // valeur = index + 2 (As = 14)
 
-function newDeck() {
+export function newDeck() {
   const d = [];
   for (const su of SUITS) RANKS.forEach((r, i) => d.push({ r, v: i + 2, ...su }));
   return shuffle(d);
@@ -38,6 +39,8 @@ export const plusmoins = {
     const { root, meta } = ctx;
     function setup() {
       root.replaceChildren(topbar(ctx),
+        onlineBanner(ctx, 'plusmoins', { text: 'Le joueur dont c\'est le tour choisit sur son téléphone, les autres suivent la partie sur le leur.' }),
+        h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
         h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
         playersPanel(0),
         h('p', { class: 'center muted' }, `🏅 Record : ${get('pm-record', 0)} cartes d'affilée`),
@@ -105,14 +108,14 @@ export const plusmoins = {
 // =====================================================================
 // LE BUS
 // =====================================================================
-const STEPS = [
+export const STEPS = [
   { q: 'Rouge ou noir ?', opts: [{ id: 'rouge', label: '🟥 Rouge' }, { id: 'noir', label: '⬛ Noir' }] },
   { q: 'Plus ou moins que la 1re carte ?', opts: [{ id: 'plus', label: '⬆️ Plus' }, { id: 'moins', label: '⬇️ Moins' }] },
   { q: 'Entre les deux ou à l\'extérieur ?', opts: [{ id: 'entre', label: '↔️ Entre' }, { id: 'dehors', label: '⬅️➡️ Dehors' }] },
   { q: 'Quelle couleur ?', opts: SUITS.map((su) => ({ id: su.s, label: `${su.s} ${su.n}` })) },
 ];
 
-function stepOk(step, cards, c) {
+export function stepOk(step, cards, c) {
   if (step === 0) return the(c.red ? 'rouge' : 'noir');
   if (step === 1) return (choice) => (choice === 'plus' ? c.v > cards[0].v : c.v < cards[0].v);
   if (step === 2) {
@@ -128,6 +131,8 @@ export const bus = {
     const { root, meta } = ctx;
     function setup() {
       root.replaceChildren(topbar(ctx),
+        onlineBanner(ctx, 'bus', { text: 'Chacun monte dans le bus à son tour et répond sur son téléphone, les autres regardent.' }),
+        h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
         h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
         playersPanel(0),
         h('div', { class: 'grow' }),

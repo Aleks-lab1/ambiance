@@ -1,10 +1,11 @@
 // La Séquence : retenir une suite de couleurs qui s'allonge à chaque tour.
 import { h, topbar, randInt } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const PADS = [
+export const PADS = [
   { c: '#ff4d6d', f: 329.63, n: 'rouge' },
   { c: '#22d39a', f: 261.63, n: 'vert' },
   { c: '#2ec5ff', f: 392.0, n: 'bleu' },
@@ -21,6 +22,8 @@ export function start(ctx) {
     clear();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'sequence', { text: 'Tout le monde reproduit la même suite en même temps, chacun sur son téléphone. Le dernier en lice gagne !' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(0),
       h('p', { class: 'center muted' }, `🏅 Record : ${get('seq-record', 0)} couleurs`),

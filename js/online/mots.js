@@ -1,12 +1,13 @@
-// Jeux en ligne de lettres et de plateau : Petit bac, Mot mystère (course), Morpion & 4 à la suite.
+// Jeux en ligne de lettres et de plateau : Petit bac, Mot mystère (course), Le Pendu, Morpion & 4 à la suite.
 import { h, uid, shuffle, seg, pick, norm, toast } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import { sip } from '../store.js';
-import { activePids, addScore, playerOf, timerPill, endScreen, actBtn } from './kit.js';
+import { activePids, addScore, playerOf, nextOn, timerPill, endScreen, actBtn } from './kit.js';
 import { softNorm } from '../race-core.js';
 import { loadDico, normWord } from '../bonmot-core.js';
 import { score as mmScore } from '../games/motmystere.js';
 import { win3, win4, drop, W } from '../games/morpion.js';
+import { drawing, KEYS as PENDU_KEYS, MAX as PENDU_MAX } from '../games/pendu.js';
 import PB from '../data/petitbac.js';
 
 const name = (g, pid) => (pid === g.me ? 'Toi' : g.nameOf(pid));
@@ -342,3 +343,164 @@ export const morpionOnline = {
   },
 };
 function newBoard(s) { s.n++; s.board = Array(s.quatre ? 42 : 9).fill(null); s.turn = s.first; s.phase = 'play'; s.win = null; s.last = -1; }
+
+// =====================================================================
+// LE PENDU : chacun son tour propose une lettre.
+// =====================================================================
+const PENDU_LEN = { court: [4, 6], moyen: [6, 9], long: [9, 13] };
+
+export const penduOnline = {
+  id: 'pendu', name: 'Le Pendu', short: 'Chacun son tour propose une lettre', emoji: '🪢', minPlayers: 2,
+  defaults: { mode: 'hasard', len: 'moyen', rounds: 3 },
+  settingsForm(st, set) {
+    ensureDico();
+    return h('div', { class: 'col' },
+      h('label', { class: 'field' }, 'Le mot', seg([{ value: 'hasard', label: '🎲 Au hasard' }, { value: 'secret', label: '🤫 Un joueur choisit' }], st.mode, (v) => set({ mode: v }))),
+      h('label', { class: 'field' }, 'Longueur (mot au hasard)', seg([{ value: 'court', label: 'Court' }, { value: 'moyen', label: 'Moyen' }, { value: 'long', label: 'Long' }], st.len, (v) => set({ len: v }))),
+      h('label', { class: 'field' }, 'Nombre de mots', seg([3, 5, 8].map((n) => ({ value: n, label: String(n) })), st.rounds, (v) => set({ rounds: v }))),
+      h('p', { class: 'muted small' }, 'Bonne lettre : +1 et tu rejoues. Mot trouvé : +2. En mode « Un joueur choisit », celui qui a choisi le mot gagne 3 points si personne ne le trouve.'));
+  },
+  init(room, st) {
+    ensureDico();
+    const s = { gid: uid(), st, order: shuffle(activePids(room)), round: 0, phase: 'loading', recent: [], chooser: null, cur: null };
+    if (st.mode === 'secret') penduRound(room, s);
+    return s;
+  },
+  action(room, s, pid, a) {
+    if (a.type === 'word' && s.phase === 'choose' && pid === s.chooser) {
+      const w = String(a.w || '').trim().slice(0, 24);
+      if (normWord(w).length < 3 || !/^[\p{L}' -]+$/u.test(w)) { s.msg = 'Un mot d\'au moins 3 lettres, sans chiffres'; return true; }
+      s.msg = null;
+      penduStart(room, s, w);
+      return true;
+    }
+    if (a.type === 'letter' && s.phase === 'play' && pid === s.cur && PENDU_KEYS.includes(a.k) && !s.tried.includes(a.k)) {
+      const k = a.k;
+      s.tried.push(k);
+      const good = s.target.includes(k.toLowerCase());
+      s.last = { k, good, by: pid };
+      if (good) addScore(room, pid, 1);
+      else { s.errors++; s.cur = penduNext(room, s, pid); }
+      if ([...new Set(s.target)].every((c) => s.tried.includes(c.toUpperCase()))) { s.phase = 'over'; s.won = pid; addScore(room, pid, 2); }
+      else if (s.errors >= PENDU_MAX) { s.phase = 'over'; s.won = null; if (s.chooser) addScore(room, s.chooser, 3); }
+      return true;
+    }
+    if (a.type === 'next' && s.phase === 'over' && (pid === room.host || pid === s.chooser)) { penduRound(room, s); return true; }
+    return false;
+  },
+  tick(room, s) {
+    if (s.phase === 'loading' && dico) { penduRound(room, s); return true; }
+    return false;
+  },
+  onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
+  onLeave(room, s, pid) {
+    if (pid === s.chooser && s.phase === 'choose') { s.round--; penduRound(room, s); }
+    else if (pid === s.cur && s.phase === 'play') s.cur = penduNext(room, s, pid);
+  },
+  view(room, s, pid) {
+    if (s.phase === 'loading' || s.phase === 'end') return { gid: s.gid, phase: s.phase };
+    const base = { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, chooser: s.chooser, msg: pid === s.chooser ? s.msg : null };
+    if (s.phase === 'choose') return base;
+    const over = s.phase === 'over';
+    const slots = [...s.word.toUpperCase()].map((ch) => {
+      const b = normWord(ch);
+      if (!b) return { sp: ch };
+      const found = [...b].every((c) => s.tried.includes(c.toUpperCase())); // « œ » = O + E
+      return { c: found || over || pid === s.chooser ? ch : '', miss: !found && (over || pid === s.chooser) };
+    });
+    return { ...base, cur: s.cur, tried: s.tried, errors: s.errors, slots, won: s.won, last: s.last,
+      good: s.tried.filter((k) => s.target.includes(k.toLowerCase())) };
+  },
+  mount(root, g) {
+    const main = h('div', { class: 'col' });
+    root.append(main);
+    let v = null, lastKey = null, onKey = null, form = null;
+    const unbind = () => { if (onKey) document.removeEventListener('keydown', onKey); onKey = null; };
+    const myTurn = () => v && v.phase === 'play' && v.cur === g.me;
+    const send = (k) => { if (myTurn() && !v.tried.includes(k)) { g.send({ type: 'letter', k }); sfx.pop(); } };
+    return {
+      update(r, view) {
+        v = view;
+        if (v.phase === 'end') { unbind(); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'loading') { main.replaceChildren(h('div', { class: 'big-center' }, h('h2', null, '⏳ Chargement des mots chez l\'hôte…'))); return; }
+        const key = `${v.gid}:${v.round}:${v.phase}:${(v.tried || []).length}`;
+        const head = h('div', { class: 'row' }, h('span', { class: 'pill' }, `🪢 Mot ${v.round}/${v.rounds}`), h('div', { class: 'grow' }),
+          v.phase !== 'choose' ? h('span', { class: 'pill' }, `❤️ ${PENDU_MAX - v.errors}`) : null);
+        if (v.phase === 'choose') {
+          unbind();
+          const me = v.chooser === g.me;
+          if (me && form && lastKey === key && !v.msg) return; // ne pas effacer la saisie
+          if (me) {
+            const input = h('input', { class: 'input code-input', type: 'password', placeholder: 'Le mot secret', maxlength: '20', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', style: { letterSpacing: '.15em', textTransform: 'none' } });
+            form = h('form', { class: 'col', style: { width: '100%' }, onsubmit: (e) => { e.preventDefault(); const w = input.value.trim(); if (w) { g.send({ type: 'word', w }); input.blur(); } } }, input,
+              v.msg ? h('p', { class: 'small center', style: { color: '#ffb3b6' } }, v.msg) : null,
+              h('button', { class: 'btn btn-primary btn-big btn-block', type: 'submit' }, 'C\'est parti !'));
+            main.replaceChildren(head, h('div', { class: 'big-center' }, h('div', { class: 'hero-emo' }, '🤫'), h('h2', null, 'Choisis le mot en secret'), h('p', { class: 'muted' }, 'Les autres devront le deviner lettre par lettre.'), form));
+          } else {
+            form = null;
+            main.replaceChildren(head, h('div', { class: 'big-center' }, h('div', { class: 'hero-emo' }, '🤫'), h('h2', null, `${g.nameOf(v.chooser)} choisit un mot en secret…`)));
+          }
+          if (lastKey !== key && me) { sfx.go(); buzz([40, 30, 80]); }
+          lastKey = key;
+          return;
+        }
+        form = null;
+        const over = v.phase === 'over';
+        const keys = PENDU_KEYS.map((k) => {
+          const tried = v.tried.includes(k);
+          return h('button', { class: 'kb-key' + (tried ? (v.good.includes(k) ? ' good' : ' bad') : ''), disabled: tried || !myTurn(), onclick: () => send(k) }, k);
+        });
+        let status;
+        if (over) status = v.won ? h('b', null, `🎉 ${v.won === g.me ? 'Tu as trouvé' : g.nameOf(v.won) + ' a trouvé'} le mot ! +2`) : h('b', null, `💀 Pendu ! ${v.chooser ? `${v.chooser === g.me ? 'Tu gagnes' : g.nameOf(v.chooser) + ' gagne'} 3 points.` : `Tout le monde prend ${sip(1)}.`}`);
+        else if (v.chooser === g.me) status = `🤫 C'est ton mot ! ${g.nameOf(v.cur)} propose une lettre…`;
+        else status = myTurn() ? '👉 À toi : propose une lettre !' : `${g.nameOf(v.cur)} propose une lettre…`;
+        const L = v.last;
+        main.replaceChildren(head,
+          h('div', { class: 'pendu-svg', html: drawing(v.errors) }),
+          h('div', { class: 'pendu-word' }, v.slots.map((x) => (x.sp != null ? h('span', { class: 'sp' }, x.sp === ' ' ? '\u00a0' : x.sp) : h('span', { class: 'ltr' + (x.miss ? ' miss' : '') }, x.c)))),
+          L && !over ? h('p', { class: 'center small muted' }, L.good ? `✅ ${L.by === g.me ? 'Tu as' : g.nameOf(L.by) + ' a'} trouvé le ${L.k} (+1)` : `❌ Pas de ${L.k} dans le mot`) : null,
+          h('p', { class: 'center' }, status),
+          h('div', { class: 'kb' + (over ? ' done' : '') }, keys),
+          over && (g.isHost || v.chooser === g.me) ? actBtn(g, v.round < v.rounds ? 'Mot suivant →' : '🏆 Classement final', 'next', 'btn-primary btn-big') : null,
+          over && !(g.isHost || v.chooser === g.me) ? h('p', { class: 'status-line' }, '⏳ En attente de l\'hôte…') : null);
+        if (key !== lastKey) {
+          if (over) { v.won ? (sfx.fanfare(), buzz([40, 30, 40, 30, 120])) : (sfx.boom(), buzz([300, 100, 300])); }
+          else if (L) { L.good ? (sfx.ok(), buzz(15)) : (sfx.bad(), buzz([80, 40, 80])); }
+          if (myTurn() && (!L || !L.good || L.by !== g.me)) buzz(30);
+        }
+        lastKey = key;
+        unbind();
+        if (myTurn()) { onKey = (e) => { if (e.ctrlKey || e.metaKey || e.altKey) return; const k = normWord(e.key).toUpperCase(); if (k.length === 1) send(k); }; document.addEventListener('keydown', onKey); }
+      },
+      destroy() { unbind(); },
+    };
+  },
+};
+function penduNext(room, s, from) {
+  let p = nextOn(room, s.order, from);
+  if (p === s.chooser) p = nextOn(room, s.order, p);
+  return p;
+}
+function penduRound(room, s) {
+  s.round++;
+  if (s.round > s.st.rounds) { s.phase = 'end'; return; }
+  s.tried = []; s.errors = 0; s.won = null; s.last = null; s.msg = null;
+  if (s.st.mode === 'secret') {
+    s.chooser = s.chooser ? nextOn(room, s.order, s.chooser) : s.order[0];
+    s.word = null;
+    s.phase = 'choose';
+    return;
+  }
+  const [a, b] = PENDU_LEN[s.st.len] || PENDU_LEN.moyen;
+  const all = dico.playable(a, b);
+  const list = all.slice(60, 5000).filter((x) => !s.recent.includes(x.n));
+  const w = pick(list.length ? list : all).w;
+  s.recent.push(normWord(w)); if (s.recent.length > 40) s.recent.shift();
+  penduStart(room, s, w);
+}
+function penduStart(room, s, w) {
+  s.word = w;
+  s.target = normWord(w);
+  s.phase = 'play';
+  s.cur = penduNext(room, s, s.cur || s.chooser || s.order[s.order.length - 1]);
+}

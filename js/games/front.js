@@ -1,5 +1,6 @@
 // Sur le front : téléphone sur le front, on incline pour valider ou passer.
 import { h, topbar, seg, shuffle, countdown } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, makeDeck } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -16,6 +17,8 @@ export function start(ctx) {
     if (!alive) return;
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'front', { text: 'Ton mot s\'affiche sur le téléphone des autres, pas sur le tien : plus besoin de le poser sur ton front !' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('label', { class: 'field' }, 'Durée', seg([45, 60, 90].map((v) => ({ value: v, label: v + ' s' })), opts.time, (v) => { opts.time = v; set('front', opts); })),
       h('div', { class: 'section-title' }, 'Choisis une catégorie'),

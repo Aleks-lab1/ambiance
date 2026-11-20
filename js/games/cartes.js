@@ -60,7 +60,7 @@ export function cardGame(cfg) {
           cfg.online ? h('button', {
             class: 'btn btn-soft btn-block',
             onclick: () => ctx.open('online', { create: true, game: cfg.online, levels: [...selected].filter((l) => l !== 'perso') }),
-          }, '🌐 Jouer en ligne — chacun vote sur son tél') : null,
+          }, cfg.onlineLabel || '🌐 Jouer en ligne — chacun vote sur son tél') : null,
         );
       }
 
@@ -233,12 +233,10 @@ export const opinions = cardGame({
 
 // ---------------- Et si… ? ----------------
 export const etsi = cardGame({
-  levels: [
-    { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Des situations complètement folles.' },
-    { id: 'deep', name: 'Réflexion', emoji: '🧠', desc: 'Pour refaire le monde.' },
-    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
-  ],
+  levels: LEVELS.etsi,
   data: () => import('../data/etsi.js'),
+  online: 'etsi',
+  onlineLabel: '🌐 Jouer en ligne — la carte s\'affiche sur tous les téléphones',
   perPlayer: true,
   kicker: 'Et si…',
   customHelp: 'Une situation par ligne, sans « Et si ». Exemple : tu devenais un chat pendant une journée ?',
@@ -250,13 +248,10 @@ export const etsi = cardGame({
 
 // ---------------- Confidences ----------------
 export const confidences = cardGame({
-  levels: [
-    { id: 'fun', name: 'Pour rire', emoji: '😂', desc: 'Hontes et anecdotes.' },
-    { id: 'deep', name: 'Profond', emoji: '🌙', desc: 'Pour se livrer vraiment.' },
-    { id: 'love', name: 'Amour', emoji: '💕', desc: 'Cœur, couple et rendez-vous.' },
-    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Intime, réservé aux adultes.', adult: true },
-  ],
+  levels: LEVELS.confidences,
   data: () => import('../data/confidences.js'),
+  online: 'confidences',
+  onlineLabel: '🌐 Jouer en ligne — la carte s\'affiche sur tous les téléphones',
   perPlayer: true,
   kicker: '💬 Confidence',
   customHelp: 'Une question par ligne.',
@@ -283,12 +278,10 @@ export const deuxverites = cardGame({
 
 // ---------------- Cap ou pas cap ? ----------------
 export const cap = cardGame({
-  levels: [
-    { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des défis gentils pour tout le monde.' },
-    { id: 'fun', name: 'Délire', emoji: '🤪', desc: 'Téléphone, réseaux sociaux et grosses hontes.' },
-    { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes. Chacun peut refuser.', adult: true },
-  ],
+  levels: LEVELS.cap,
   data: () => import('../data/cap.js'),
+  online: 'cap',
+  onlineLabel: '🌐 Jouer en ligne — la carte s\'affiche sur tous les téléphones',
   perPlayer: true,
   kicker: '🎯 Cap ou pas cap ?',
   customHelp: 'Un défi par ligne. Exemple : Cap de chanter sous la douche… tout habillé ?',

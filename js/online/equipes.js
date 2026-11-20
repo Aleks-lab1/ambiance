@@ -1,9 +1,11 @@
-// Jeux en ligne par équipes (Mots interdits, Mime express, Fredonne !, Dis-le comme…) et Loup-garou (rôles secrets).
+// Jeux en ligne par équipes (Mots interdits, Mime express, Fredonne !, Dis-le comme…, Le Chapeau) et Loup-garou (rôles secrets).
 import { h, uid, shuffle, seg, chip } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { activePids, isOn, timerPill, actBtn } from './kit.js';
 import { ROLES } from '../games/loup.js';
+import { ROUNDS as CH_ROUNDS } from '../games/chapeau.js';
+import CHAPEAU from '../data/chapeau.js';
 import MI from '../data/motsinterdits.js';
 import MIME from '../data/mime.js';
 import CHANSONS from '../data/chansons.js';
@@ -90,10 +92,7 @@ function makeTeamGame(type) {
       return {
         update(r, v) {
           const key = `${v.gid}:${v.turn}:${v.phase}:${v.found}:${v.results ? v.results.length : 0}`;
-          const teamsBar = h('div', { class: 'eq-teams' }, v.teams.map((t, i) => h('div', { class: 'eq-team' + (v.team === i && v.phase !== 'end' ? ' cur' : ''), style: { '--c': TEAMS[i].c } },
-            h('div', { class: 'eq-head' }, h('b', null, `${TEAMS[i].emo} ${TEAMS[i].name}`), h('span', { class: 'eq-score' }, String(v.score[i]))),
-            h('div', { class: 'eq-mem' }, t.map((p) => (p === g.me ? 'Toi' : g.nameOf(p))).join(', ')))));
-          const parts = [teamsBar];
+          const parts = [teamsBar(g, v)];
           tp.set(v.phase === 'play' ? v.deadline : 0);
           const T0 = TEAMS[v.team];
           if (v.phase === 'end') {
@@ -139,6 +138,11 @@ function makeTeamGame(type) {
     },
   };
 }
+function teamsBar(g, v) {
+  return h('div', { class: 'eq-teams' }, v.teams.map((t, i) => h('div', { class: 'eq-team' + (v.team === i && v.phase !== 'end' ? ' cur' : ''), style: { '--c': TEAMS[i].c } },
+    h('div', { class: 'eq-head' }, h('b', null, `${TEAMS[i].emo} ${TEAMS[i].name}`), h('span', { class: 'eq-score' }, String(v.score[i]))),
+    h('div', { class: 'eq-mem' }, t.map((p) => (p === g.me ? 'Toi' : g.nameOf(p))).join(', ')))));
+}
 function giverOf(room, s) {
   const t = s.teams[s.team].filter((p) => isOn(room, p));
   const list = t.length ? t : s.teams[s.team];
@@ -148,6 +152,128 @@ function drawWord(s, T) {
   if (!s.deck.length) s.deck = shuffle(T.items().slice());
   s.word = s.deck.pop();
 }
+
+// =====================================================================
+// LE CHAPEAU : 3 manches avec les mêmes cartes (décrire, un seul mot, mimer).
+// =====================================================================
+export const chapeauOnline = {
+  id: 'chapeau', name: 'Le Chapeau', short: 'Par équipes : décrire, un mot, puis mimer', emoji: '🎩', minPlayers: 4,
+  defaults: { time: 30, cards: 30 },
+  settingsForm(st, set) {
+    return h('div', { class: 'col' },
+      h('p', { class: 'muted small' }, 'Les joueurs sont répartis au hasard en 2 équipes. Les mêmes cartes reviennent aux 3 manches : retenez bien !'),
+      h('label', { class: 'field' }, 'Durée d\'un tour', seg([30, 45, 60].map((n) => ({ value: n, label: n + ' s' })), st.time, (v) => set({ time: v }))),
+      h('label', { class: 'field' }, 'Nombre de cartes', seg([20, 30, 40].map((n) => ({ value: n, label: String(n) })), st.cards, (v) => set({ cards: v }))));
+  },
+  init(room, st) {
+    const pids = shuffle(activePids(room));
+    const teams = [[], []];
+    pids.forEach((p, i) => teams[i % 2].push(p));
+    const cards = shuffle(CHAPEAU.slice()).slice(0, st.cards || 30);
+    return { gid: uid(), st, teams, team: 0, giverIdx: [0, 0], score: [0, 0], turn: 0, manche: 0, cards, left: shuffle(cards.slice()), phase: 'ready', results: [], word: null };
+  },
+  action(room, s, pid, a) {
+    const giver = giverOf(room, s);
+    if (a.type === 'start' && s.phase === 'ready' && (pid === giver || pid === room.host)) {
+      s.phase = 'play'; s.deadline = Date.now() + s.st.time * 1000; s.results = []; s.word = s.left.pop(); return true;
+    }
+    if (s.phase === 'play' && pid === giver && (a.type === 'ok' || a.type === 'pass')) {
+      s.results.push({ label: s.word, r: a.type });
+      if (a.type === 'ok') s.score[s.team]++;
+      else s.left.unshift(s.word); // la carte passée retourne au fond du chapeau
+      s.word = s.left.pop() || null;
+      if (!s.word) s.phase = 'recap';
+      return true;
+    }
+    if (a.type === 'next' && s.phase === 'recap' && (pid === giver || pid === room.host)) {
+      if (!s.left.length) {
+        s.manche++;
+        if (s.manche >= 3) { s.phase = 'end'; return true; }
+        s.left = shuffle(s.cards.slice());
+      }
+      s.turn++;
+      s.giverIdx[s.team]++;
+      s.team = 1 - s.team;
+      s.phase = 'ready';
+      return true;
+    }
+    return false;
+  },
+  tick(room, s) {
+    if (s.phase === 'play' && Date.now() >= s.deadline) {
+      if (s.word) { s.results.push({ label: s.word, r: 'time' }); s.left.push(s.word); s.word = null; }
+      s.phase = 'recap';
+      return true;
+    }
+    return false;
+  },
+  onJoin(room, s, pid) { if (!s.teams.flat().includes(pid)) s.teams[s.teams[0].length <= s.teams[1].length ? 0 : 1].push(pid); },
+  onLeave(room, s, pid) {
+    if (s.phase === 'play' && pid === giverOf(room, s)) { if (s.word) { s.left.push(s.word); s.word = null; } s.phase = 'recap'; }
+  },
+  view(room, s, pid) {
+    const giver = giverOf(room, s);
+    const role = pid === giver ? 'giver' : s.teams[s.team].includes(pid) ? 'mate' : 'opp';
+    return { gid: s.gid, phase: s.phase, teams: s.teams, team: s.team, score: s.score, giver, role, myTeam: s.teams[0].includes(pid) ? 0 : 1,
+      deadline: s.deadline, manche: s.manche, left: s.left.length + (s.word ? 1 : 0), total: s.cards.length,
+      word: s.phase === 'play' && role !== 'mate' ? s.word : null, found: s.results.filter((x) => x.r === 'ok').length,
+      results: s.phase === 'recap' ? s.results : null, turn: s.turn };
+  },
+  mount(root, g) {
+    const main = h('div', { class: 'col' });
+    const tp = timerPill(g);
+    root.append(main);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        const key = `${v.gid}:${v.turn}:${v.phase}:${v.found}:${v.results ? v.results.length : 0}:${v.manche}`;
+        const parts = [teamsBar(g, v)];
+        tp.set(v.phase === 'play' ? v.deadline : 0);
+        if (v.phase === 'end') {
+          const w = v.score[0] === v.score[1] ? -1 : v.score[0] > v.score[1] ? 0 : 1;
+          parts.push(h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, w < 0 ? 'Égalité !' : `${TEAMS[w].emo} ${TEAMS[w].name} gagne !`)),
+            w >= 0 ? h('p', { class: 'center' }, v.myTeam === w ? 'Bravo ! 🎉' : `Ton équipe perd : ${sip(1)} chacun !`) : null, g.hostBar());
+          if (lastKey !== 'end') sfx.fanfare();
+          lastKey = 'end';
+          main.replaceChildren(...parts);
+          return;
+        }
+        const R = CH_ROUNDS[v.manche];
+        const T0 = TEAMS[v.team];
+        parts.push(h('div', { class: 'row' }, h('span', { class: 'pill' }, `${R.emoji} Manche ${v.manche + 1}/3`), h('span', { class: 'pill' }, `🎩 ${v.left}`), h('div', { class: 'grow' }),
+          v.phase === 'play' ? h('span', { class: 'pill' }, `✅ ${v.found}`) : null, tp.el));
+        if (v.phase === 'ready') {
+          parts.push(h('div', { class: 'big-center', style: { padding: '8px 0' } },
+            h('h2', null, `${T0.emo} ${v.role === 'giver' ? 'C\'est à toi !' : `Au tour de ${g.nameOf(v.giver)}`}`),
+            h('p', null, h('b', null, R.name), ' — ', R.rule),
+            h('p', { class: 'muted' }, v.role === 'giver' ? 'Les noms s\'afficheront sur TON téléphone. Fais-les deviner à ton équipe !' : v.role === 'mate' ? `${g.nameOf(v.giver)} fait deviner : devinez à voix haute !` : 'L\'autre équipe joue. Tu verras les noms pour suivre.')));
+          if (v.role === 'giver' || g.isHost) parts.push(actBtn(g, '▶ C\'est parti !', 'start', 'btn-primary btn-big'));
+        } else if (v.phase === 'play') {
+          if (v.role === 'giver') {
+            parts.push(wordCard({ top: `${R.emoji} ${R.name.split(': ')[1]}`, w: v.word, sub: `${v.left} dans le chapeau` }), h('div', { class: 'answer-btns' },
+              h('button', { class: 'btn btn-soft btn-big', onclick: () => { g.send({ type: 'pass' }); sfx.swoosh(); } }, '⏭ Passer'),
+              h('button', { class: 'btn btn-ok btn-big', onclick: () => { g.send({ type: 'ok' }); sfx.ok(); buzz(20); } }, '✅ Trouvé')));
+          } else if (v.role === 'mate') {
+            parts.push(h('div', { class: 'big-center' }, h('div', { class: 'hero-emo' }, R.emoji), h('h2', null, 'Devinez !'), h('p', { class: 'muted' }, `${g.nameOf(v.giver)} fait deviner… ${R.rule}`), h('div', { class: 'countdown-num', style: { fontSize: '72px' } }, String(v.found))));
+          } else {
+            parts.push(h('p', { class: 'center muted' }, `${T0.emo} ${g.nameOf(v.giver)} fait deviner… Surveillez !`), wordCard({ top: `${R.emoji} ${R.name.split(': ')[1]}`, w: v.word }));
+          }
+        } else if (v.phase === 'recap') {
+          parts.push(h('h2', { class: 'center' }, v.left ? `⏰ Fin du tour : ${v.found} trouvé${v.found > 1 ? 's' : ''}` : `🎩 Le chapeau est vide ! ${v.manche < 2 ? 'Fin de la manche.' : 'Fin de la partie.'}`),
+            h('div', { class: 'result-list' }, v.results.map((x) => h('div', { class: 'result-item' + (x.r === 'ok' ? '' : ' pass') }, h('span', { class: 't' }, x.label), h('span', { class: 'r' }, x.r === 'ok' ? '✅' : x.r === 'time' ? '⏰' : '⏭')))));
+          if (v.role === 'giver' || g.isHost) parts.push(actBtn(g, v.left ? 'Équipe suivante →' : v.manche < 2 ? `Manche ${v.manche + 2} →` : '🏆 Résultats', 'next', 'btn-primary btn-big'));
+        }
+        if (key !== lastKey) {
+          if (v.phase === 'play' && lastKey && !lastKey.includes(':play:')) { sfx.go(); if (v.role !== 'opp') buzz([40, 30, 80]); }
+          if (v.phase === 'recap') { sfx.end(); buzz(200); }
+        }
+        lastKey = key;
+        main.replaceChildren(...parts);
+      },
+      destroy() { tp.stop(); },
+    };
+  },
+};
 
 export const eqMI = makeTeamGame('mi');
 export const eqMime = makeTeamGame('mime');

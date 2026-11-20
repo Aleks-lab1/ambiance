@@ -1,5 +1,6 @@
 // Histoire folle : on invente une histoire à tour de rôle en plaçant des mots imposés.
 import { h, topbar, seg, pick, countdown, timerView, confirmBox } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, makeDeck, sip } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
@@ -15,6 +16,8 @@ export function start(ctx) {
     ctx.setGuard(null);
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'histoire', { text: 'Le mot imposé et le chrono s\'affichent sur tous les téléphones, chacun son tour.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(2),
       h('label', { class: 'field' }, 'Temps par joueur', seg([20, 30, 45].map((v) => ({ value: v, label: v + ' s' })), opts.time, (v) => { opts.time = v; set('histoire', opts); })),

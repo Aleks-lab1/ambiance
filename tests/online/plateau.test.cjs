@@ -25,8 +25,10 @@ run(async () => {
   const j = deck.indexOf(deck[0], 1);
   await t.at('A').locator('.mem-card').nth(0).click(); await W(60); await t.at('A').locator('.mem-card').nth(j).click(); await W(150);
   check((await t.get(() => window.__h.s.cur)) === 'A', 'paire trouvée : A rejoue');
-  const k = deck.findIndex((e, i) => i > 1 && i !== j && e !== deck[1]);
-  await t.at('A').locator('.mem-card').nth(1).click(); await W(60); await t.at('A').locator('.mem-card').nth(k).click(); await W(1700);
+  // Deux cartes encore cachées qui ne vont pas ensemble (la paire de la carte 0 peut être la carte 1).
+  const a = deck.findIndex((e, i) => i > 0 && i !== j);
+  const k = deck.findIndex((e, i) => i > a && i !== j && e !== deck[a]);
+  await t.at('A').locator('.mem-card').nth(a).click(); await W(60); await t.at('A').locator('.mem-card').nth(k).click(); await W(1700);
   check((await t.get(() => window.__h.s.cur)) === 'B', 'raté : au tour de B');
   await clean(t, 'Memory'); await t.browser.close();
 

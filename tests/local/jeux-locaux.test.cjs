@@ -1,5 +1,5 @@
-// Jeux sur un seul téléphone, dans un iPhone simulé : Curseur, Dans l'ordre, Chifoumi, Bataille, Memory, Yam's,
-// les jeux uniquement en ligne (bandeau) et le filtre « Nouveaux ».
+// Jeux sur un seul téléphone, dans un iPhone simulé : Quiz (réponse en touchant), Curseur, Dans l'ordre, Chifoumi,
+// Bataille, Memory, Yam's, le bandeau « en ligne » sur tous les jeux et le filtre « Nouveaux ».
 const { open, shot } = require('../lib/pw-helper.cjs');
 const { check, wait: W, run } = require('../lib/check.cjs');
 
@@ -9,6 +9,15 @@ run(async () => {
   const go = async (id) => { await page.goto('http://app.test/#/' + id); await W(700); };
   const big = () => page.locator('.btn-big').last();
   const scr = async () => (await page.locator('.screen').innerText()).replace(/\n+/g, ' | ');
+
+  await go('quiz'); await big().click(); await W(300);
+  check(!(await page.getByRole('button', { name: /Révéler/ }).count()), 'Quiz : plus de bouton « Révéler la réponse »');
+  check(await page.locator('button.quiz-opt').count() === 4 && /Au tour de Alice/.test(await scr()), 'Quiz : 4 réponses à toucher, au tour d\'Alice');
+  await page.locator('button.quiz-opt').first().click(); await W(200);
+  check(await page.locator('.quiz-opt.good').count() === 1 && /Bien joué|Raté/.test(await scr()), 'Quiz : la bonne réponse s\'affiche, point compté', await scr());
+  await page.getByRole('button', { name: /Question suivante/ }).click(); await W(200);
+  check(/Au tour de Bob/.test(await scr()), 'Quiz : au tour de Bob');
+  await shot(page, 'local-quiz');
 
   await go('curseur'); await big().click(); await W(200); await page.getByRole('button', { name: /Voir la cible/ }).click(); await W(150);
   await page.getByRole('button', { name: /cacher/ }).click(); await W(150); await page.locator('.scale-range').fill('40'); await page.getByRole('button', { name: /Révéler/ }).click(); await W(200);
@@ -37,6 +46,21 @@ run(async () => {
   check(/Bob/.test(await scr()), 'Yam\'s : au tour de Bob');
 
   for (const id of ['quiaecrit', 'danssatete', 'quisuisje']) { await go(id); check(/en ligne/i.test(await scr()), `${id} : propose le jeu en ligne`); }
+  // Tous les jeux se jouent en ligne : chaque écran de réglages propose de créer une partie.
+  const ids = await page.evaluate(async () => (await import('/js/games/index.js')).GAMES.map((g) => g.id));
+  const games = await page.evaluate(async () => (await import('/js/online/games.js')).ONLINE_GAMES.length);
+  check(games === ids.length, `autant de jeux en ligne que de jeux (${games}/${ids.length})`);
+  const missing = [];
+  for (const id of ids) {
+    await go(id);
+    const ok = (await page.getByRole('button', { name: /Créer une partie|Jouer en ligne/ }).count()) > 0;
+    if (!ok) missing.push(id);
+  }
+  check(!missing.length, 'chaque jeu propose le mode en ligne', missing);
+
+  await go('');
+  check(!(await page.locator('.chip', { hasText: /En ligne/ }).count()), 'plus de filtre « En ligne »');
+  check(!(await page.locator('.tile .badge', { hasText: /En ligne/ }).count()), 'plus de badge « En ligne » sur les jeux');
 
   await go(''); await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
   const n = await page.locator('.tile').count();

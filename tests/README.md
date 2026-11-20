@@ -42,7 +42,10 @@ et sort avec le code 1 en cas d'échec.
 | `online/plateau.test.cjs` | Bataille navale (le gagnant reste), Memory, Yam's en ligne. |
 | `online/tour.test.cjs` | Paranoïa, Pour ou contre, Deux vérités un mensonge. |
 | `online/mots.test.cjs` | Petit bac, Mot mystère, Morpion. |
-| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé), bandeau « en ligne », filtre « Nouveaux ». |
+| `online/cartes.test.cjs` | Et si, Confidences, Cap ou pas cap, Action ou vérité, Le Roi, Plus ou moins, Le Bus. |
+| `online/hasard.test.cjs` | La Bouteille, La roue des gages, Qui commence ?, Boîte à outils. |
+| `online/oral.test.cjs` | Sur le front, Ni oui ni non, Histoire folle, Le Pendu, La Séquence, Le Chapeau (4 joueurs). |
+| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant), bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux ». |
 | `local/sequence.test.cjs` | La Séquence : un seul « Je suis prêt », puis compte à rebours. |
 | `relay/lobby-relay.test.cjs` | 3 téléphones, PeerJS bloqué, **faux relais MQTT** : vrai salon, lancement de 2 jeux. `DOWN=shiftr` simule la panne du 1er serveur. |
 | `relay/relay-real.manual.cjs` | **Manuel**, avec Internet : les vrais serveurs relais publics. Pas lancé par `run-all`. |

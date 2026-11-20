@@ -1,9 +1,10 @@
 // Le Chapeau : 3 manches avec les mêmes cartes (décrire, un mot, mimer).
 import { h, topbar, seg, confirmBox, shuffle, toast } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, getCustom, setCustom } from '../store.js';
 import { teamsSetup, readyScreen, playTurn, reviewTurn, scoresScreen, finalScreen } from '../turn.js';
 
-const ROUNDS = [
+export const ROUNDS = [
   { name: 'Manche 1 : Décris !', emoji: '🗣️', rule: 'Fais deviner avec autant de mots que tu veux, sans dire le nom.' },
   { name: 'Manche 2 : Un seul mot !', emoji: '☝️', rule: 'Un seul mot pour faire deviner. Pas de geste !' },
   { name: 'Manche 3 : Mime !', emoji: '🤸', rule: 'Uniquement en mimant, sans un bruit.' },
@@ -21,6 +22,8 @@ export function start(ctx) {
     const ta = h('textarea', { class: 'input', placeholder: 'Un nom par ligne (personnes de la soirée, célébrités…)', value: getCustom('chapeau') });
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'chapeau', { text: 'Les noms s\'affichent sur le téléphone de celui qui fait deviner, et l\'équipe adverse suit sur le sien.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('div', { class: 'section-title' }, 'Équipes'), ts.el,
       h('div', { class: 'section-title' }, 'Durée d\'un tour'),

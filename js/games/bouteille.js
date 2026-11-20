@@ -2,11 +2,11 @@
 import { h, topbar, seg, pick } from '../ui.js';
 import { get, set, sip } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
-import { ensureAdult } from '../common.js';
+import { ensureAdult, onlineBanner } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 
 // {a} = celui qui a fait tourner la bouteille, {b} = celui qu'elle désigne.
-const DEFIS = {
+export const DEFIS = {
   soft: [
     '{a} fait un compliment sincère à {b}.', '{a} et {b} échangent un accessoire jusqu\'au prochain tour.', '{b} pose une question à {a}, qui doit répondre honnêtement.',
     '{a} imite {b} pendant 20 secondes.', '{a} et {b} font un concours de regard : le premier qui rit prend {sip}.', '{b} choisit une chanson que {a} doit fredonner.',
@@ -48,6 +48,8 @@ export function start(ctx) {
     clear();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'bouteille', { text: 'La bouteille tourne sur tous les téléphones en même temps, et c\'est la personne désignée qui la relance.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(2),
       h('label', { class: 'field' }, 'Défis', seg(LEVELS, opts.level, async (v) => {
@@ -130,7 +132,7 @@ export function start(ctx) {
   return clear;
 }
 
-const BOTTLE_SVG = `<svg viewBox="0 0 40 120" width="100%" height="100%" aria-hidden="true">
+export const BOTTLE_SVG = `<svg viewBox="0 0 40 120" width="100%" height="100%" aria-hidden="true">
   <defs><linearGradient id="btg" x1="0" x2="1"><stop offset="0" stop-color="#1f7a3a"/><stop offset=".45" stop-color="#3fc46b"/><stop offset="1" stop-color="#145a2a"/></linearGradient></defs>
   <rect x="15" y="2" width="10" height="8" rx="2" fill="#d4a017"/>
   <path d="M15 10 h10 v22 c0 6 11 10 11 22 v56 a8 8 0 0 1 -8 8 h-16 a8 8 0 0 1 -8 -8 v-56 c0 -12 11 -16 11 -22z" fill="url(#btg)" stroke="rgba(0,0,0,.25)"/>

@@ -1,11 +1,12 @@
-// Jeux en ligne en temps réel : Patate chaude, Réflexes, Couleurs pièges.
+// Jeux en ligne en temps réel : Patate chaude, Réflexes, Couleurs pièges, La Séquence.
 import { h, uid, shuffle, seg, pick, rand } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, actBtn } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, actBtn, timerPill } from './kit.js';
 import PATATE from '../data/patate.js';
 import { COLORS } from '../games/couleurs.js';
+import { PADS } from '../games/sequence.js';
 
 const name = (g, pid) => (pid === g.me ? 'Toi' : g.nameOf(pid));
 const roundsSeg = (st, set, vals = [3, 5, 8]) => h('label', { class: 'field' }, 'Nombre de manches', seg(vals.map((n) => ({ value: n, label: String(n) })), st.rounds, (v) => set({ rounds: v })));
@@ -305,4 +306,170 @@ function colorRound(s) {
   s.phase = 'ready'; s.scores = {};
   s.startAt = Date.now() + 3500;
   s.endAt = s.startAt + s.st.time * 1000;
+}
+
+// =====================================================================
+// LA SÉQUENCE : tout le monde retient la même suite, en même temps.
+// Une erreur = éliminé. Le dernier en lice gagne.
+// =====================================================================
+const seqStep = (len) => Math.max(260, 620 - len * 22);
+
+export const sequenceOnline = {
+  id: 'sequence', name: 'La Séquence', short: 'Retiens la suite de couleurs, le dernier en lice gagne', emoji: '🔴', minPlayers: 1,
+  defaults: {},
+  settingsForm: () => h('p', { class: 'muted small' }, 'Tout le monde voit la même suite de couleurs et la reproduit sur son téléphone. Elle s\'allonge à chaque manche : une erreur et tu es éliminé. +1 point par manche réussie, +3 pour le dernier en lice.'),
+  init(room, st) {
+    const s = { gid: uid(), st, seq: [], alive: activePids(room), solo: activePids(room).length < 2, round: 0 };
+    seqRound(s);
+    return s;
+  },
+  action(room, s, pid, a) {
+    if (a.type !== 'answer' || s.phase === 'result' || s.phase === 'end' || !s.alive.includes(pid) || s.ans[pid] || !Array.isArray(a.seq)) return false;
+    const ok = a.seq.length === s.seq.length && a.seq.every((x, i) => x === s.seq[i]);
+    s.ans[pid] = { ok, n: ok ? s.seq.length : Math.max(0, a.seq.length - 1) };
+    if (s.alive.filter((p) => room.players.some((x) => x.pid === p && x.on)).every((p) => s.ans[p])) seqResult(room, s);
+    return true;
+  },
+  tick(room, s) {
+    const now = Date.now();
+    if (s.phase === 'show' && now >= s.showEnd) { s.phase = 'input'; s.deadline = now + 4000 + s.seq.length * 900; return true; }
+    if (s.phase === 'input' && now >= s.deadline) { seqResult(room, s); return true; }
+    if (s.phase === 'result' && now >= s.until) { if (s.over) s.phase = 'end'; else seqRound(s); return true; }
+    return false;
+  },
+  onLeave(room, s) {
+    if (s.phase === 'input' && s.alive.filter((p) => room.players.some((x) => x.pid === p && x.on)).every((p) => s.ans[p])) seqResult(room, s);
+  },
+  view(room, s, pid) {
+    return { gid: s.gid, round: s.round, phase: s.phase, seq: s.seq, startAt: s.startAt, showEnd: s.showEnd, deadline: s.deadline, alive: s.alive,
+      answered: Object.keys(s.ans), mine: s.ans[pid] || null, res: s.phase === 'result' ? s.res : null, over: s.over, solo: s.solo };
+  },
+  mount(root, g) {
+    const status = h('h2', { class: 'center' });
+    const sub = h('p', { class: 'center muted' });
+    const count = h('div', { class: 'seq-count', 'aria-live': 'assertive' });
+    const tp = timerPill(g);
+    const pill = h('span', { class: 'pill' });
+    let v = null, input = false, pos = 0, entered = [], timers = [], lastKey = null;
+    const later = (fn, ms) => timers.push(setTimeout(fn, Math.max(0, ms)));
+    const clear = () => { timers.forEach(clearTimeout); timers = []; };
+    const pads = PADS.map((p, i) => {
+      const b = h('button', { class: 'seq-pad', style: { '--c': p.c }, 'aria-label': p.n });
+      b.addEventListener('pointerdown', (e) => { e.preventDefault(); press(i); });
+      return b;
+    });
+    const grid = h('div', { class: 'seq-grid' }, pads);
+    const extra = h('div', { class: 'col' });
+    const play = h('div', { class: 'col' }, h('div', { class: 'row' }, pill, h('div', { class: 'grow' }), tp.el), status, sub, h('div', { class: 'seq-wrap' }, grid, count), extra);
+    const endWrap = h('div', { class: 'col' });
+    root.append(play, endWrap);
+    const light = (i, ms = 320) => { pads[i].classList.add('lit'); sfx.note(PADS[i].f, ms / 1000); later(() => pads[i].classList.remove('lit'), ms); };
+    const amAlive = () => v && v.alive.includes(g.me);
+
+    function press(i) {
+      if (!input) return;
+      light(i, 220);
+      buzz(10);
+      entered.push(i);
+      // Le texte d'abord : chez l'hôte, l'envoi met l'écran à jour tout de suite (résultat de la manche).
+      if (i !== v.seq[pos]) {
+        input = false;
+        status.textContent = '❌ Raté !';
+        sfx.bad(); buzz([200, 80, 200]);
+        grid.classList.add('shake'); later(() => grid.classList.remove('shake'), 500);
+        g.send({ type: 'answer', seq: entered });
+        return;
+      }
+      pos++;
+      if (pos === v.seq.length) { input = false; status.textContent = '✅ Parfait !'; sub.textContent = 'On attend les autres…'; sfx.ok(); g.send({ type: 'answer', seq: entered }); }
+    }
+
+    function showRound() {
+      clear();
+      input = false; pos = 0; entered = [];
+      grid.classList.add('dim');
+      pads.forEach((b) => b.classList.remove('lit'));
+      status.textContent = amAlive() ? 'Regarde bien…' : '👀 Tu regardes les autres';
+      sub.textContent = `Suite de ${v.seq.length} couleur${v.seq.length > 1 ? 's' : ''}`;
+      // Compte à rebours 3, 2, 1 puis la suite, calés sur l'horloge de l'hôte.
+      for (let n = 3; n >= 1; n--) {
+        const at = v.startAt - n * 1000 - g.now();
+        if (at < -900) continue;
+        later(() => { count.textContent = String(n); count.classList.remove('pop'); void count.offsetWidth; count.classList.add('pop'); sfx.beep(); buzz(15); }, at);
+      }
+      later(() => { count.textContent = ''; grid.classList.remove('dim'); }, v.startAt - g.now());
+      const step = seqStep(v.seq.length);
+      v.seq.forEach((c, k) => later(() => light(c, step * 0.7), v.startAt + 450 + k * step - g.now()));
+    }
+
+    return {
+      update(r, view) {
+        v = view;
+        if (v.phase === 'end') {
+          clear(); tp.set(0); play.classList.add('hidden');
+          endWrap.replaceChildren(...endScreen(r, g, v.alive.length === 1 && !v.solo ? `${v.alive[0] === g.me ? 'Tu gagnes' : g.nameOf(v.alive[0]) + ' gagne'} !` : 'Fin de la partie !',
+            h('p', { class: 'center muted' }, `Dernière suite : ${v.seq.length} couleurs. +1 point par manche réussie.`)));
+          if (lastKey !== 'end') sfx.fanfare();
+          lastKey = 'end';
+          return;
+        }
+        play.classList.remove('hidden'); endWrap.replaceChildren();
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        pill.textContent = `🔴 Manche ${v.round} · ${v.alive.length} en lice`;
+        tp.set(v.phase === 'input' ? v.deadline : 0);
+        if (key !== lastKey) {
+          if (v.phase === 'show') showRound();
+          if (v.phase === 'input') {
+            count.textContent = ''; grid.classList.remove('dim');
+            if (amAlive() && !v.mine) { input = true; pos = 0; entered = []; status.textContent = 'À toi !'; sub.textContent = `Reproduis la suite (${v.seq.length})`; sfx.go(); }
+            else if (!amAlive()) { status.textContent = '👀 Les autres reproduisent la suite…'; sub.textContent = ''; }
+          }
+          if (v.phase === 'result') {
+            clear(); input = false;
+            const mine = v.res[g.me];
+            status.textContent = mine == null ? '👀 Résultats de la manche' : mine ? '✅ Manche réussie !' : amAlive() ? '❌ Tout le monde a raté : on rejoue !' : `❌ Éliminé ! ${sip(1)}`;
+            sub.textContent = '';
+            // Montre la bonne suite à ceux qui ont raté.
+            if (mine === false) v.seq.forEach((c, k) => later(() => light(c, 200), 500 + k * 260));
+            mine ? sfx.ok() : mine === false ? sfx.bad() : null;
+          }
+        }
+        const total = v.alive.filter((p) => r.players.some((x) => x.pid === p && x.on)).length;
+        if (v.phase === 'result') {
+          extra.replaceChildren(h('div', { class: 'chips', style: { justifyContent: 'center' } }, Object.entries(v.res).map(([p, ok]) => h('span', { class: 'chip' + (ok ? ' on' : '') }, `${ok ? '✅' : '❌'} ${p === g.me ? 'Toi' : g.nameOf(p)}`))),
+            h('p', { class: 'status-line' }, v.over ? 'Fin de la partie…' : 'Manche suivante, la suite s\'allonge…'));
+        } else if (v.phase === 'input') {
+          extra.replaceChildren(h('p', { class: 'status-line' }, `${v.answered.length}/${total} ont répondu`));
+          if (v.mine && amAlive()) { status.textContent = v.mine.ok ? '✅ Parfait !' : '❌ Raté…'; sub.textContent = 'On attend les autres…'; }
+        } else extra.replaceChildren(amAlive() ? null : h('p', { class: 'status-line' }, '😵 Tu es éliminé : regarde les autres jouer.'));
+        lastKey = key;
+      },
+      destroy() { clear(); tp.stop(); },
+    };
+  },
+};
+function seqRound(s) {
+  s.round++;
+  // Tout le monde a raté : nouvelle suite de la même longueur. Sinon, elle s'allonge d'une couleur.
+  if (s.retry) s.seq = s.seq.map(() => Math.floor(Math.random() * 4));
+  else s.seq.push(Math.floor(Math.random() * 4));
+  s.ans = {};
+  s.res = null;
+  s.phase = 'show';
+  s.startAt = Date.now() + 3200;
+  s.showEnd = s.startAt + 450 + s.seq.length * seqStep(s.seq.length) + 150;
+}
+function seqResult(room, s) {
+  s.res = {};
+  for (const p of s.alive) s.res[p] = !!(s.ans[p] && s.ans[p].ok);
+  const still = s.alive.filter((p) => s.res[p]);
+  still.forEach((p) => addScore(room, p, 1));
+  // Tout le monde rate en même temps : personne n'est éliminé, sauf en solo.
+  s.retry = !still.length && !s.solo;
+  if (!s.retry) s.alive = still;
+  if (s.solo) s.over = !still.length;
+  else if (s.alive.length <= 1) { s.over = true; if (s.alive.length === 1) addScore(room, s.alive[0], 3); }
+  else s.over = false;
+  s.phase = 'result';
+  s.until = Date.now() + 2600;
 }

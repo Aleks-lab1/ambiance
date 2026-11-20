@@ -1,18 +1,18 @@
 // La roue des gages.
 import { h, topbar, pick } from '../ui.js';
 import { get, set, makeDeck, getPlayers, sip } from '../store.js';
-import { levelPicker } from '../common.js';
+import { levelPicker, onlineBanner } from '../common.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const LEVELS = [
+export const LEVELS = [
   { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Des gages gentils.' },
   { id: 'fun', name: 'Ridicule', emoji: '🤡', desc: 'La honte, mais pour rire.' },
   { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
   { id: 'hotpp', name: 'Hot++', emoji: '😈', desc: 'Très explicite, sans filtre. Adultes consentants uniquement : chacun peut refuser sans se justifier.', adult: true, extreme: true },
 ];
 
-const SEGMENTS = [
+export const SEGMENTS = [
   { label: 'Gage', emoji: '🎯', color: '#ff4d8d', kind: 'gage' },
   { label: 'Joker', emoji: '🍀', color: '#22d39a', kind: 'joker' },
   { label: 'Gage', emoji: '🎯', color: '#7c5cff', kind: 'gage' },
@@ -25,7 +25,7 @@ const SEGMENTS = [
   { label: 'Pénalité', emoji: '🍹', color: '#e53935', kind: 'sip' },
 ];
 
-function drawWheel(cv) {
+export function drawWheel(cv) {
   const g = cv.getContext('2d');
   const W = cv.width, R = W / 2;
   const n = SEGMENTS.length;
@@ -60,6 +60,8 @@ export function start(ctx) {
   function setup() {
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'roue', { text: 'La roue tourne sur tous les téléphones en même temps, chacun son tour.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(0),
       h('div', { class: 'section-title' }, 'Niveaux des gages'),

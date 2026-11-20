@@ -1,12 +1,13 @@
 // Le Pendu : devinez le mot lettre par lettre avant que le dessin soit complet.
 import { h, topbar, seg, pick, toast } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, sip, getPlayers } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 import { loadDico, normWord } from '../bonmot-core.js';
 
-const MAX = 7; // nombre d'erreurs autorisées (étapes du dessin)
-const KEYS = 'AZERTYUIOPQSDFGHJKLMWXCVBN'.split('');
+export const MAX = 7; // nombre d'erreurs autorisées (étapes du dessin)
+export const KEYS = 'AZERTYUIOPQSDFGHJKLMWXCVBN'.split('');
 
 export function start(ctx) {
   const { root, meta } = ctx;
@@ -21,6 +22,8 @@ export function start(ctx) {
     unbind();
     const btn = h('button', { class: 'btn btn-primary btn-big btn-block', disabled: true }, '⏳ Chargement des mots…');
     root.replaceChildren(topbar(ctx),
+      onlineBanner(ctx, 'pendu', { text: 'Chacun propose ses lettres sur son téléphone, à tour de rôle. Les points sont comptés automatiquement.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       h('label', { class: 'field' }, 'Le mot', seg([
         { value: 'hasard', label: '🎲 Au hasard' }, { value: 'secret', label: '🤫 Un joueur choisit' },
@@ -130,7 +133,7 @@ export function start(ctx) {
 }
 
 // Dessin du pendu, étape par étape (0 à 7).
-function drawing(n) {
+export function drawing(n) {
   const parts = [
     '<path d="M10 115 H70 M30 115 V10 H80 V22" />',
     '<circle cx="80" cy="32" r="10" />',

@@ -1,5 +1,6 @@
 // Ni oui ni non : tenir sans dire « oui » ni « non ».
 import { h, topbar, seg, countdown, timerView } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { get, set, makeDeck, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
@@ -14,6 +15,8 @@ export function start(ctx) {
     timer && timer.stop();
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'nioui', { text: 'Les questions arrivent sur le téléphone de celui qui interroge, et tous les autres ont un buzzer.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r })), h('p', null, 'Mots interdits : oui, non, ouais, nan, si, ok… et les hochements de tête !')),
       playersPanel(0),
       h('label', { class: 'field' }, 'Temps à tenir', seg([30, 45, 60, 90].map((v) => ({ value: v, label: v + ' s' })), opts.time, (v) => { opts.time = v; set('nioui', opts); })),

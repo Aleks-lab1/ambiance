@@ -1,8 +1,8 @@
 # Ambiance : mémo pour Claude
 
 ## Le projet
-**Ambiance** est une appli web installable (PWA) de jeux de soirée en français : 61 jeux, dont 44 jouables en
-ligne (chacun sur son téléphone). Elle est écrite en JavaScript simple (modules ES), **sans compilation ni dépendance
+**Ambiance** est une appli web installable (PWA) de jeux de soirée en français : 61 jeux, **tous jouables en
+ligne** (chacun sur son téléphone) et aussi sur un seul téléphone. Elle est écrite en JavaScript simple (modules ES), **sans compilation ni dépendance
 npm**. Il suffit d'ouvrir `index.html`. Elle est publiée sur **GitHub Pages depuis la branche `gh-pages`**.
 Le nom reste « Ambiance » : ne pas renommer l'appli.
 
@@ -13,7 +13,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `js/` | Cœur : `app.js` (accueil, routes `#/…`, réglages), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
-| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `relay.js` (relais MQTT), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`…) |
+| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `relay.js` (relais MQTT), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
 | `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main) |
 | `css/style.css` | Toute la feuille de style |
@@ -21,10 +21,18 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 
 ## Règles obligatoires après chaque modification
 1. **`node scripts/gen-sw.mjs`** : régénère `sw.js` (liste des fichiers + version). Sans ça, les téléphones gardent l'ancienne version.
-2. Si un jeu est ajouté ou retiré, **mettre à jour les nombres** (total et en ligne) dans `README.md`, `index.html` (meta description),
-   `manifest.webmanifest` (description) et `js/app.js` (deux textes sur le jeu en ligne). Vérifier avec `grep -n "61\|44"` (anciens nombres).
+2. Si un jeu est ajouté ou retiré, **mettre à jour le nombre de jeux** dans `README.md`, `index.html` (meta description) et
+   `manifest.webmanifest` (description). `js/app.js` utilise `GAMES.length`. Vérifier avec `grep -n "61"` (ancien nombre).
 3. **Tester** (`cd tests && node run-all.cjs`), puis **publier sur les trois branches** : `main`, `gh-pages` et la branche de travail
    de la session (`claude/…`). Les trois pointent sur le même commit, par exemple : `git push origin HEAD:main HEAD:gh-pages HEAD:<branche-de-travail>`.
+
+## Tous les jeux se jouent en ligne
+- **Chaque jeu doit exister aussi en ligne** : plus de badge « En ligne », plus de tag `'online'` ni de filtre « En ligne » (tous les jeux le sont).
+  Le test `local/jeux-locaux.test.cjs` vérifie qu'il y a autant de jeux en ligne que de jeux et que chaque écran propose « Créer une partie ».
+- Quand tous les joueurs ne peuvent pas participer (Et si…, La Bouteille, Le Roi…), **le joueur dont c'est le tour (ou l'hôte) agit et les autres
+  regardent** en direct sur leur téléphone. Ne jamais afficher les boutons d'action aux spectateurs.
+- Jeux à choix (Quiz, Vrai ou faux…) : **on touche directement la réponse**, pas de bouton « Révéler la réponse ». La bonne réponse s'affiche
+  en vert (en rouge si raté) et le point est compté au joueur dont c'est le tour.
 
 ## Ajouter un jeu en ligne
 Créer un objet dans un fichier de `js/online/`, puis l'ajouter à `ONLINE_GAMES` dans `js/online/games.js`.
@@ -51,11 +59,12 @@ export const monJeuOnline = {
 - Fin de partie : `phase: 'end'` + `endScreen(room, g)`. Ajouter le jeu dans `tests/online/` (simulateur `mp.cjs`).
 
 ## Ajouter un jeu sur un seul téléphone
-- Ajouter une entrée dans `GAMES` de `js/games/index.js` : `id`, `name`, `emoji`, `colors`, `desc`, `tags` (`'online'` s'il existe en ligne),
+- Ajouter une entrée dans `GAMES` de `js/games/index.js` : `id`, `name`, `emoji`, `colors`, `desc`, `tags` (`'cartes'`, `'equipes'`, `'rapide'`…),
   `players`, `badges`, `rules`, `load: () => import('./fichier.js').then((m) => m.monjeu)`. Le module exporte `{ start(ctx) }`
   (`ctx.root`, `ctx.meta`, `ctx.open(...)`).
 - **Badge « Nouveau »** (`new: true` + `'Nouveau'` dans `badges`) : **uniquement sur le dernier lot ajouté**. Il faut l'enlever du lot précédent.
-- Si le jeu existe aussi en ligne : mettre `onlineBanner(ctx, 'idEnLigne')` (`js/common.js`) sur l'écran de réglages (bandeau « 🌐 En ligne (recommandé) »).
+- Mettre `onlineBanner(ctx, 'idEnLigne')` (`js/common.js`) sur l'écran de réglages (bandeau « 🌐 En ligne (recommandé) »). Jeux de cartes
+  (`cardGame` dans `js/games/cartes.js`) : `online: 'idEnLigne'` (+ `onlineLabel` pour le texte du bouton). Ajouter une règle « <b>En ligne :</b> … ».
   S'il n'existe **qu'en ligne** : `load: () => import('./enligne.js').then((m) => m.launcher('idEnLigne'))`.
 - Mode « on se passe le téléphone » : `hotseat(ctx, moduleEnLigne, réglages, onExit)` dans `js/games/plateau.js` fait tourner un module en ligne
   localement, `g.me` = joueur dont c'est le tour, `g.hotseat = true` (exemples : Memory, Yam's).
@@ -90,6 +99,9 @@ export const monJeuOnline = {
 - `#theme-fx span { top: 0 }` écrasait les animations (particules bloquées en haut) : attention à la spécificité CSS.
 - Filtres sur des mots normalisés (sans accents) : écrire les regex sans accents (`ee`, pas `ée`).
 - Ne pas supprimer des clés d'un objet pendant qu'on le parcourt (bug du Petit bac).
+- Chez l'hôte, `g.send()` met l'écran à jour **tout de suite** (sans réseau) : modifier le texte affiché **avant** `g.send()`, sinon il écrase
+  l'écran suivant (bug de La Séquence).
+- Animations partagées (bouteille, roue) : garder les mêmes éléments d'un `update` à l'autre, sinon la rotation CSS repart de zéro.
 - Oublier `gen-sw.mjs` = les utilisateurs ne voient pas la mise à jour.
 - Environnement cloud : ne pas réinstaller Playwright (Chromium est préinstallé). Ne pas exécuter de code téléchargé : extraire avec grep/sed.
 

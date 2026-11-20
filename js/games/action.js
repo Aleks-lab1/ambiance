@@ -1,11 +1,11 @@
 // Action ou vérité.
 import { h, topbar, pick, toast } from '../ui.js';
 import { get, set, makeDeck, sip, getPlayers } from '../store.js';
-import { levelPicker } from '../common.js';
+import { levelPicker, onlineBanner } from '../common.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const LEVELS = [
+export const LEVELS = [
   { id: 'soft', name: 'Tranquille', emoji: '😇', desc: 'Gentil, pour tous.' },
   { id: 'fun', name: 'Fun', emoji: '🤪', desc: 'Gênant et drôle.' },
   { id: 'hot', name: 'Hot', emoji: '🔥', desc: 'Coquin, réservé aux adultes.', adult: true },
@@ -21,6 +21,8 @@ export function start(ctx) {
   function setup() {
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'action', { text: 'Le joueur désigné choisit Action ou Vérité sur son téléphone, et la carte s\'affiche chez tout le monde.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(2),
       h('div', { class: 'section-title' }, 'Niveaux'),

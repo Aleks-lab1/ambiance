@@ -1,13 +1,14 @@
 // Le Roi : jeu de cartes de soirée, une règle par valeur.
 import { h, topbar, shuffle } from '../ui.js';
+import { onlineBanner } from '../common.js';
 import { settings, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
-const SUITS = [['♠', false], ['♥', true], ['♦', true], ['♣', false]];
-const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'V', 'D', 'R'];
+export const SUITS = [['♠', false], ['♥', true], ['♦', true], ['♣', false]];
+export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'V', 'D', 'R'];
 
-function rule(rank) {
+export function rule(rank) {
   const d = settings.drink;
   switch (rank) {
     case 'A': return { t: 'Cascade', emoji: '🌊', d: d ? 'Tout le monde commence à boire en même temps. Personne ne peut s\'arrêter avant son voisin de gauche, en commençant par celui qui a tiré la carte.' : 'Tout le monde se lève et fait une ola, en commençant par celui qui a tiré la carte. Le dernier à réagir prend 1 point de gage.' };
@@ -33,6 +34,8 @@ export function start(ctx) {
   function setup() {
     root.replaceChildren(
       topbar(ctx),
+      onlineBanner(ctx, 'roi', { text: 'Chacun pioche sa carte sur son téléphone, et tout le monde voit la règle.' }),
+      h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
       h('div', { class: 'panel rules' }, meta.rules.map((r) => h('p', { html: r }))),
       playersPanel(0),
       h('details', { class: 'panel' }, h('summary', null, '📜 Voir toutes les règles des cartes'),

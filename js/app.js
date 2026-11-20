@@ -12,7 +12,8 @@ const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
   rules: [
     'Un joueur <b>crée la partie</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre</b> et entrent ce code : chacun joue sur son propre téléphone.',
-    'L\'hôte choisit parmi 44 jeux : dessin, quiz, bluff, votes, Qui a écrit ça ?, Le Curseur, Qui suis-je ?, Bataille navale, Yam\'s, jeux d\'écriture, jeux en équipes (Mots interdits, Mime, Fredonne…), Petit bac, Patate chaude, Réflexes, Le Mot mystère, Morpion, Loup-garou avec rôles secrets, et bien d\'autres.',
+    `Tous les jeux d'Ambiance se jouent en ligne : l'hôte choisit parmi les ${GAMES.length} jeux (dessin, quiz, bluff, votes, jeux en équipes, Loup-garou avec rôles secrets, Bataille navale, Yam's, Action ou vérité, La Bouteille…).`,
+    'Dans certains jeux, un seul joueur agit à la fois (celui dont c\'est le tour, ou l\'hôte) : les autres suivent la partie en direct sur leur téléphone.',
     'Astuce : l\'hôte doit garder l\'appli ouverte pendant la partie. Ça marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.',
   ],
   load: () => import('./online/room.js'),
@@ -138,6 +139,7 @@ const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platfo
 function renderHome() {
   document.title = 'Ambiance — jeux de soirée';
   let filter = get('filter', 'all');
+  if (!FILTERS.some((f) => f.id === filter)) filter = 'all'; // ancien filtre supprimé (ex. « En ligne »)
   const grid = h('div', { class: 'grid' });
   const filters = h('div', { class: 'scroll-x', role: 'tablist' });
 
@@ -228,7 +230,7 @@ function renderHome() {
     h('div', { class: 'online-banner' },
       h('div', { class: 'deco' }, '📱'),
       h('h2', null, '🌐 Jouer en ligne'),
-      h('p', null, '44 jeux où chacun joue sur son téléphone : quiz, dessin, équipes, bluff…'),
+      h('p', null, `Les ${GAMES.length} jeux se jouent aussi en ligne, chacun sur son téléphone : quiz, dessin, équipes, bluff…`),
       h('div', { class: 'row' },
         h('button', { class: 'btn grow', onclick: () => openScreen('online', { create: true }) }, 'Créer une partie'),
         h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre'))),

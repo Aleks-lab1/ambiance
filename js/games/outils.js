@@ -2,7 +2,7 @@
 import { h, topbar, seg, shuffle, randInt, countdown, timerView, stepper, toast } from '../ui.js';
 import { get, set, getPlayers } from '../store.js';
 import { editPlayers } from '../players.js';
-import { TEAM_COLORS, dieFace } from '../common.js';
+import { TEAM_COLORS, dieFace, onlineBanner } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 
 const die = (v) => dieFace(v, 'roll');
@@ -123,7 +123,8 @@ export function start(ctx) {
         h('button', { class: 'btn btn-soft grow', onclick: () => { const pl = getPlayers(); if (!pl.length) { toast('Aucun joueur dans la liste'); return; } data = pl.map((n) => ({ n, s: data.find((d) => d.n === n)?.s || 0 })); save(); render(); } }, '👥 Reprendre les joueurs')));
   }
 
-  root.replaceChildren(topbar(ctx), tabs, body);
+  root.replaceChildren(topbar(ctx), tabs, body,
+    onlineBanner(ctx, 'outils', { title: '🌐 Outils partagés en ligne', text: 'L\'hôte choisit l\'outil : dés, pièce, équipes, chrono et points s\'affichent sur tous les téléphones.' }));
   renderTabs();
   show();
   return () => cleanupTab && cleanupTab();
