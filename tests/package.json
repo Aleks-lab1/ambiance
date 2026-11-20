@@ -1,0 +1,15 @@
+{
+  "name": "ambiance-tests",
+  "private": true,
+  "description": "Outils de test d'Ambiance (non publiés dans l'appli, ignorés par le service worker).",
+  "scripts": {
+    "test": "node run-all.cjs",
+    "test:unit": "node run-all.cjs unit",
+    "test:online": "node run-all.cjs online",
+    "test:local": "node run-all.cjs local",
+    "test:relay": "node run-all.cjs relay"
+  },
+  "dependencies": {
+    "mqtt-packet": "^9.0.2"
+  }
+}
