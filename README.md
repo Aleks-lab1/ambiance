@@ -13,16 +13,16 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 |---|---|---|
 | 🎨 | **Je dessine, tu devines** | Un joueur dessine, les autres tapent leurs réponses ; points selon la vitesse, indices progressifs. Aussi jouable sur un seul écran. |
 | 🕵️ | **L'Imposteur** | Tout le monde a le même mot sauf l'imposteur ; vote pour le démasquer. Aussi en se passant le téléphone. |
-| 🧠 | **Le Quiz** | 170 questions (QCM) dans 9 thèmes ; le plus rapide marque le plus. Aussi sur un seul téléphone. |
+| 🧠 | **Le Quiz** | Plus de 600 questions (QCM) dans 9 thèmes ; le plus rapide marque le plus. Mode ∞ sans limite. Aussi sur un seul téléphone. |
 | ✍️ | **Punchlines** | Complète la phrase de la façon la plus drôle, votes anonymes. Niveaux Fun, Trash, Hot++. |
 | 📞 | **Téléphone dessiné** | Écrire → dessiner → deviner → dessiner… puis révélation des chaînes. |
 | 📖 | **Dico bluff** | Invente une fausse définition pour un mot rare et piège les autres (100 mots). |
 | 🎲 | **Menteur !** | Dés secrets sur chaque téléphone, enchères et bluff. |
 | 🧩 | **Émojis mystères** | Films, séries et expressions cachés derrière des émojis (réponses libres tolérantes). |
 | 🔀 | **Anagrammes** | Remets les lettres dans l'ordre le plus vite possible. |
-| 📏 | **À vue de nez** | Estimations : le plus proche gagne. |
+| 📏 | **À vue de nez** | Plus de 200 estimations : le plus proche gagne. Mode ∞ sans limite. |
 | 🔠 | **Le Bon Mot** | Chacun son tour, tout le monde voit le mot s'écrire en direct ; l'hôte vérifie les mots. |
-| ✅ | **Vrai ou faux** | 100 affirmations étonnantes (« Les pieuvres ont trois cœurs ») avec explication. |
+| ✅ | **Vrai ou faux** | Plus de 200 affirmations étonnantes (« Les pieuvres ont trois cœurs ») avec explication. |
 | 🧮 | **Calcul express** | Calcul mental chronométré, 3 niveaux. |
 | 🤝 | **À l'unisson** | Tout le monde doit écrire la même réponse que les autres. Aussi sur un seul téléphone. |
 | 🚫 🤸 🎵 🎭 | **Jeux en équipes** | Mots interdits, Mime express, Fredonne !, Dis-le comme… : le mot s'affiche sur le téléphone de celui qui fait deviner, l'équipe adverse surveille sur le sien. |

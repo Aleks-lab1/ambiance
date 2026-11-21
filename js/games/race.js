@@ -5,7 +5,7 @@ import { get, set, getPlayers } from '../store.js';
 import { levelPicker, onlineBanner, podium } from '../common.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
-import { RACE_MODES, buildQuestions, isQcm, CALC_LEVELS } from '../race-core.js';
+import { RACE_MODES, questionSource, isQcm, CALC_LEVELS, COUNT_LABEL } from '../race-core.js';
 
 export function cardFor(mode, q) {
   const M = RACE_MODES[mode];
@@ -38,10 +38,11 @@ function raceLocal(mode, load, onlineId) {
           topbar(ctx),
           onlineBanner(ctx, onlineId),
           h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
-          h('div', { class: 'panel rules' }, h('p', { html: meta.rules[meta.rules.length - 1] })),
+          h('div', { class: 'panel rules' }, h('p', { html: meta.rules.find((r) => r.includes('seul téléphone')) || meta.rules[0] })),
           themes,
           mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, opts.level, (v) => { opts.level = v; save(); })) : null,
-          h('label', { class: 'field' }, 'Nombre de questions', seg([10, 15, 20, 30].map((v) => ({ value: v, label: String(v) })), opts.count, (v) => { opts.count = v; save(); })),
+          h('label', { class: 'field' }, 'Nombre de questions', seg([10, 15, 20, 30, 0].map((v) => ({ value: v, label: COUNT_LABEL(v) })), opts.count, (v) => { opts.count = v; save(); })),
+          h('p', { class: 'muted small' }, '∞ = sans limite : les questions s\'enchaînent jusqu\'à ce que tu touches « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.'),
           playersPanel(0),
           h('p', { class: 'muted small' }, isQcm(mode) ? 'Avec une liste de joueurs, chacun répond à son tour et les points sont comptés automatiquement.' : 'Avec une liste de joueurs, touche le prénom de ceux qui ont trouvé pour compter les points.'),
           h('div', { class: 'grow' }),
@@ -49,15 +50,21 @@ function raceLocal(mode, load, onlineId) {
       }
 
       function play(data) {
-        const list = buildQuestions(mode, data, opts.count, { themes: opts.themes, level: opts.level });
+        // Questions tirées au fur et à mesure, sans répétition d'une partie à l'autre ; count = 0 : sans limite.
+        const src = questionSource(mode, data, { themes: opts.themes, level: opts.level });
+        const total = opts.count || Infinity;
+        const list = [];
+        const counter = () => (total === Infinity ? `${meta.emoji} ${i + 1} · ∞` : `${meta.emoji} ${i + 1}/${total}`);
+        const nextLabel = () => (i + 1 < total ? 'Question suivante →' : '🏆 Voir les résultats');
+        const stopBtn = () => (i + 1 < total ? h('button', { class: 'btn btn-ghost btn-sm', onclick: end }, '🏁 Terminer la partie') : null);
         const players = getPlayers();
         const scores = Object.fromEntries(players.map((p) => [p, 0]));
         let i = 0;
         const top = topbar(ctx, { onBack: setup });
 
         function show() {
-          if (i >= list.length) { end(); return; }
-          const Q = list[i];
+          if (i >= total) { end(); return; }
+          const Q = list[i] || (list[i] = src.next());
           let revealed = false;
           const card = cardFor(mode, Q.pub);
           if (isQcm(mode)) { showQcm(Q); return; }
@@ -78,15 +85,15 @@ function raceLocal(mode, load, onlineId) {
               revealed = true;
               answer.classList.remove('hidden');
               whoBox && whoBox.classList.remove('hidden');
-              btn.textContent = i + 1 < list.length ? 'Question suivante →' : '🏆 Voir les résultats';
+              btn.textContent = nextLabel();
               sfx.ok(); buzz(30);
             } else { i++; show(); }
           };
           root.replaceChildren(top,
-            h('div', { class: 'row' }, h('span', { class: 'pill' }, `${meta.emoji} ${i + 1}/${list.length}`)),
+            h('div', { class: 'row' }, h('span', { class: 'pill' }, counter())),
             card, answer,
             whoBox,
-            h('div', { class: 'grow' }), btn);
+            h('div', { class: 'grow' }), btn, stopBtn());
           sfx.swoosh();
         }
 
@@ -94,7 +101,7 @@ function raceLocal(mode, load, onlineId) {
         // la bonne réponse s'affiche et le point est compté automatiquement.
         function showQcm(Q) {
           const who = players.length ? players[i % players.length] : null;
-          const next = h('button', { class: 'btn btn-primary btn-big btn-block hidden' }, i + 1 < list.length ? 'Question suivante →' : '🏆 Voir les résultats');
+          const next = h('button', { class: 'btn btn-primary btn-big btn-block hidden' }, nextLabel());
           next.onclick = () => { i++; show(); };
           const answer = h('div', { class: 'answer-reveal hidden' }, h('span', { class: 'muted small' }, 'La réponse'), h('b', null, Q.ans.text), Q.ans.note ? h('span', { class: 'small muted' }, Q.ans.note) : null);
           const result = h('p', { class: 'center hidden', style: { fontWeight: '800', margin: '0' } });
@@ -114,10 +121,10 @@ function raceLocal(mode, load, onlineId) {
           }
           root.replaceChildren(top,
             h('div', { class: 'row' },
-              h('span', { class: 'pill' }, `${meta.emoji} ${i + 1}/${list.length}`),
+              h('span', { class: 'pill' }, counter()),
               who ? h('span', { class: 'pill' }, `🎯 Au tour de ${who} · ${scores[who]} pt${scores[who] > 1 ? 's' : ''}`) : null),
             cardFor(mode, Q.pub), h('div', { class: 'quiz-opts' + (mode === 'vf' ? ' vf' : '') }, btns), result, answer,
-            h('div', { class: 'grow' }), next);
+            h('div', { class: 'grow' }), next, stopBtn());
           sfx.swoosh();
         }
 
@@ -125,7 +132,7 @@ function raceLocal(mode, load, onlineId) {
           sfx.fanfare();
           root.replaceChildren(topbar(ctx, { onBack: setup }),
             h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
-            players.length ? podium(players.map((p) => ({ name: p, score: scores[p] }))) : h('p', { class: 'center muted' }, `${list.length} questions jouées.`),
+            players.length ? podium(players.map((p) => ({ name: p, score: scores[p] }))) : h('p', { class: 'center muted' }, `${list.length} question${list.length > 1 ? 's' : ''} jouée${list.length > 1 ? 's' : ''}.`),
             h('div', { class: 'grow' }),
             h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => play(data) }, '🔁 Rejouer'),
             h('button', { class: 'btn btn-soft btn-block', onclick: setup }, 'Réglages'));

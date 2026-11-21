@@ -38,16 +38,18 @@ et sort avec le code 1 en cas d'échec.
 |---|---|
 | `unit/dico.test.mjs` | Dictionnaire du Bon Mot (sans navigateur) : mots courants, accents, prénoms, argot/verlan, tirage de lettres, enchaînement. |
 | `unit/plateau-core.test.mjs` | Bataille navale (flottes, tirs, IA), Memory, scores du Yam's. |
+| `unit/race-core.test.mjs` | Jeux de rapidité : contenu (600+ questions de Quiz, 200+ estimations, Vrai ou faux, Émojis, Anagrammes : formats, pas de doublon), pas de question répétée d'une partie à l'autre, mode sans limite. |
 | `online/soiree.test.cjs` | Qui a écrit ça ?, Le Curseur, Dans sa tête, Dans l'ordre !, Qui suis-je ?, Chifoumi, à 3 joueurs simulés. |
 | `online/plateau.test.cjs` | Bataille navale (le gagnant reste), Memory, Yam's en ligne. |
 | `online/tour.test.cjs` | Paranoïa, Pour ou contre, Deux vérités un mensonge. |
 | `online/mots.test.cjs` | Petit bac, Mot mystère, Morpion. |
+| `online/race.test.cjs` | Quiz en mode ∞ (13 questions sans répétition, « Terminer » réservé à l'hôte), À vue de nez en 5 questions. |
 | `online/cartes.test.cjs` | Et si, Confidences, Cap ou pas cap, Action ou vérité, Le Roi, Plus ou moins, Le Bus. |
 | `online/hasard.test.cjs` | La Bouteille, La roue des gages, Qui commence ?, Boîte à outils. |
 | `online/oral.test.cjs` | Sur le front, Ni oui ni non, Histoire folle, Le Pendu, La Séquence, Le Chapeau (4 joueurs). |
-| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant), bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux ». |
+| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant, mode ∞), bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux ». |
 | `local/sequence.test.cjs` | La Séquence : un seul « Je suis prêt », puis compte à rebours. |
-| `relay/lobby-relay.test.cjs` | 3 téléphones, PeerJS bloqué, **faux relais MQTT** : vrai salon, lancement de 2 jeux. `DOWN=shiftr` simule la panne du 1er serveur. |
+| `relay/lobby-relay.test.cjs` | 3 téléphones, PeerJS bloqué, **faux relais MQTT** : vrai salon, lancement de 2 jeux (le 2e par double appui sur le jeu). `DOWN=shiftr` simule la panne du 1er serveur. |
 | `relay/relay-real.manual.cjs` | **Manuel**, avec Internet : les vrais serveurs relais publics. Pas lancé par `run-all`. |
 
 ## Outils réutilisables (`lib/`)

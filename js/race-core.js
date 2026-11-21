@@ -1,6 +1,7 @@
 // Logique commune aux jeux de rapidité (Quiz, Émojis mystères, Anagrammes, À vue de nez),
 // utilisée à la fois par la version un seul téléphone et par la version en ligne.
 import { shuffle, norm, levenshtein } from './ui.js';
+import { makeDeck } from './store.js';
 
 export const RACE_MODES = {
   quiz: { name: 'Le Quiz', emoji: '🧠', short: 'QCM, le plus rapide gagne', colors: ['#5f2c82', '#49a09d'], kicker: 'Question' },
@@ -81,40 +82,62 @@ export function formatNumber(n) {
   return Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 3 });
 }
 
-/**
- * Construit une liste de questions.
- * Renvoie [{ pub, ans }] : pub = ce que voient les joueurs, ans = la solution (gardée par l'hôte).
- */
-export function buildQuestions(mode, data, count, opts = {}) {
-  let pool;
+/** Entrées brutes du jeu (filtrées par thème pour le Quiz). */
+function rawPool(mode, data, opts) {
   if (mode === 'quiz') {
     const themes = new Set(opts.themes && opts.themes.length ? opts.themes : data.themes.map((t) => t.id));
-    const tById = Object.fromEntries(data.themes.map((t) => [t.id, t]));
-    pool = data.q.filter((q) => themes.has(q[0])).map(([t, q, good, ...bad]) => {
-      const opts4 = shuffle([good, ...bad.slice(0, 3)]);
-      const th = tById[t];
-      return { pub: { q, opts: opts4, theme: th ? `${th.emoji} ${th.name}` : '' }, ans: { i: opts4.indexOf(good), text: good } };
-    });
-  } else if (mode === 'emoji') {
-    pool = data.map(([e, a, cat, alts, keys]) => ({ pub: { e, cat }, ans: { text: a, alts: alts || [], keys: keys || null } }));
-  } else if (mode === 'vf') {
-    pool = data.map(([q, ok, note]) => ({ pub: { q, opts: ['Vrai', 'Faux'], theme: '✅ Vrai ou faux' }, ans: { i: ok ? 0 : 1, text: ok ? 'Vrai' : 'Faux', note: note || '' } }));
-  } else if (mode === 'calc') {
-    const seen = new Set();
-    pool = [];
-    for (let k = 0; pool.length < count && k < count * 20; k++) {
-      const c = makeCalc(opts.level);
-      if (seen.has(c.q)) continue;
-      seen.add(c.q);
-      pool.push({ pub: { q: c.q }, ans: { text: String(c.n), alts: [] } });
-    }
-  } else if (mode === 'anag') {
-    pool = data.map((w) => ({ pub: { s: scramble(w), len: norm(w).replace(/ /g, '').length }, ans: { text: w } }));
-  } else {
-    pool = data.map(([q, n, unit, note]) => ({ pub: { q, unit }, ans: { n, text: unit ? `${formatNumber(n)} ${unit}` : String(n), note: note || '' } }));
+    const pool = data.q.filter((q) => themes.has(q[0]));
+    return pool.length ? pool : data.q;
   }
-  return shuffle(pool).slice(0, Math.max(1, count));
+  return data;
 }
+
+/** Transforme une entrée brute en question : pub = ce que voient les joueurs, ans = la solution (gardée par l'hôte). */
+function toQuestion(mode, data, raw) {
+  if (mode === 'quiz') {
+    const [t, q, good, ...bad] = raw;
+    const opts4 = shuffle([good, ...bad.slice(0, 3)]);
+    const th = data.themes.find((x) => x.id === t);
+    return { pub: { q, opts: opts4, theme: th ? `${th.emoji} ${th.name}` : '' }, ans: { i: opts4.indexOf(good), text: good } };
+  }
+  if (mode === 'emoji') { const [e, a, cat, alts, keys] = raw; return { pub: { e, cat }, ans: { text: a, alts: alts || [], keys: keys || null } }; }
+  if (mode === 'vf') { const [q, ok, note] = raw; return { pub: { q, opts: ['Vrai', 'Faux'], theme: '✅ Vrai ou faux' }, ans: { i: ok ? 0 : 1, text: ok ? 'Vrai' : 'Faux', note: note || '' } }; }
+  if (mode === 'anag') return { pub: { s: scramble(raw), len: norm(raw).replace(/ /g, '').length }, ans: { text: raw } };
+  const [q, n, unit, note] = raw;
+  return { pub: { q, unit }, ans: { n, text: unit ? `${formatNumber(n)} ${unit}` : String(n), note: note || '' } };
+}
+
+/**
+ * Source de questions sans répétition, même d'une partie à l'autre : les questions déjà posées sont
+ * mémorisées dans le téléphone (celui de l'hôte en ligne). Quand toutes ont été vues, on recommence.
+ * next() → { pub, ans }. Sert aussi pour le mode « sans limite ».
+ */
+export function questionSource(mode, data, opts = {}) {
+  if (mode === 'calc') {
+    const seen = new Set();
+    return {
+      total: Infinity,
+      next() {
+        let c = makeCalc(opts.level);
+        for (let k = 0; k < 40 && seen.has(c.q); k++) c = makeCalc(opts.level);
+        seen.add(c.q);
+        return { pub: { q: c.q }, ans: { text: String(c.n), alts: [] } };
+      },
+    };
+  }
+  const raw = rawPool(mode, data, opts);
+  const deck = makeDeck('race:' + mode, raw);
+  return { total: raw.length, next: () => toQuestion(mode, data, deck.next()) };
+}
+
+/** Liste de `count` questions (sans répétition d'une partie à l'autre). */
+export function buildQuestions(mode, data, count, opts = {}) {
+  const src = questionSource(mode, data, opts);
+  return Array.from({ length: Math.max(1, count) }, () => src.next());
+}
+
+/** Choix du nombre de questions : 0 = sans limite. */
+export const COUNT_LABEL = (n) => (n ? String(n) : '∞');
 
 /** Points de l'estimation : le plus proche 300 (+200 si pile), puis 150, puis 75 (ex æquo = mêmes points). */
 export function estimPoints(answers, target) {

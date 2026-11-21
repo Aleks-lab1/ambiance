@@ -643,6 +643,7 @@ export function start(ctx) {
 
   // ---------- Salon ----------
   let lobbyPick = null;
+  let lobbyArmed = null; // jeu déjà touché une fois par l'hôte : un 2e appui le lance
   const lobbySettings = {};
   function renderLobby(prevCount) {
     if (!lobby) {
@@ -674,6 +675,7 @@ export function start(ctx) {
         isHost ? pickWrap : waiting,
       ].filter(Boolean));
       lobby = { players, pickWrap, waiting, codeCard };
+      lobbyArmed = null;
       if (isHost) renderPicker();
     }
     // joueurs
@@ -698,18 +700,28 @@ export function start(ctx) {
     if (!lobbyPick) lobbyPick = room.pick || ONLINE_GAMES[0].id;
     const mod = onlineGame(lobbyPick);
     const st = lobbySettings[lobbyPick] || (lobbySettings[lobbyPick] = { ...mod.defaults });
-    const grid = h('div', { class: 'game-pick' }, ONLINE_GAMES.map((g) => h('button', {
-      class: g.id === lobbyPick ? 'on' : '',
-      onclick: () => { lobbyPick = g.id; send({ type: 'lobby:pick', game: g.id }); renderPicker(); },
-    }, h('span', { class: 'emo' }, g.emoji), h('span', { class: 'nm' }, g.name), h('span', { class: 'muted tiny' }, g.short))));
+    const launch = () => send({ type: 'lobby:start', game: lobbyPick, settings: st });
+    // 1er appui : on choisit le jeu (et ses réglages s'affichent) ; 2e appui sur le même jeu : il se lance.
+    const grid = h('div', { class: 'game-pick' }, ONLINE_GAMES.map((g) => {
+      const armed = g.id === lobbyPick && lobbyArmed === g.id;
+      return h('button', {
+        class: (g.id === lobbyPick ? 'on' : '') + (armed ? ' armed' : ''),
+        onclick: () => {
+          if (armed) { sfx.go(); launch(); return; }
+          lobbyPick = g.id; lobbyArmed = g.id;
+          send({ type: 'lobby:pick', game: g.id });
+          sfx.pop();
+          renderPicker();
+        },
+      }, h('span', { class: 'emo' }, g.emoji), h('span', { class: 'nm' }, g.name), h('span', { class: 'muted tiny' }, g.short),
+      armed ? h('span', { class: 'go' }, '▶ Touche encore pour lancer') : null);
+    }));
     wrap.replaceChildren(
       h('div', { class: 'section-title' }, 'Choisis le jeu'),
+      h('p', { class: 'muted small' }, '👆👆 Touche deux fois un jeu pour le lancer directement.'),
       grid,
       h('div', { class: 'panel col' }, h('h3', null, `${mod.emoji} Réglages`), mod.settingsForm(st, (ns) => { Object.assign(st, ns); })),
-      h('button', {
-        class: 'btn btn-primary btn-big btn-block',
-        onclick: () => send({ type: 'lobby:start', game: lobbyPick, settings: st }),
-      }, `▶ Lancer ${mod.name}`),
+      h('button', { class: 'btn btn-primary btn-big btn-block', onclick: launch }, `▶ Lancer ${mod.name}`),
       h('p', { class: 'muted small center' }, `Minimum ${mod.minPlayers} joueurs connectés.`));
   }
 

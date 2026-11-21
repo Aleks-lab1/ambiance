@@ -1,5 +1,5 @@
 // De bout en bout : 3 téléphones, PeerJS bloqué → connexion par le faux relais MQTT, vrai salon,
-// lancement de « Qui a écrit ça ? » puis retour au salon et « Bataille navale ».
+// lancement de « Qui a écrit ça ? » puis retour au salon et « Bataille navale » (double appui sur le jeu).
 // DOWN=shiftr node relay/lobby-relay.test.cjs : simule la panne du 1er serveur relais.
 const { relayWorld } = require('../lib/mock-relay.cjs');
 const { check, run } = require('../lib/check.cjs');
@@ -31,10 +31,12 @@ run(async () => {
   check(true, 'Qui a écrit ça : les réponses circulent');
   await host.locator('.icon-btn[aria-label="Menu de la partie"]').click(); await host.waitForTimeout(250);
   await host.locator('.modal .btn', { hasText: /Retour au salon/ }).click(); await host.waitForTimeout(500);
+  // Double appui sur un jeu : il se lance sans passer par le bouton « Lancer ».
   await host.locator('.game-pick button', { hasText: 'Bataille navale' }).click(); await host.waitForTimeout(300);
-  await host.getByRole('button', { name: /Lancer Bataille navale/ }).click();
+  check(/Touche encore pour lancer/.test(await host.locator('.game-pick button.on').innerText()), '1er appui : le jeu est choisi, « touche encore pour lancer »');
+  await host.locator('.game-pick button', { hasText: 'Bataille navale' }).click();
   await c1.waitForSelector('.bn-grid', { timeout: 15000 });
-  check(true, 'Bataille navale lancée chez les joueurs');
+  check(true, '2e appui : Bataille navale lancée chez les joueurs');
   check(broker.stats.published > 0, 'des messages sont passés par le relais', broker.stats.published);
   const real = errors.filter((e) => !/PeerJS|ERR_FAILED/.test(e)); // PeerJS est bloqué exprès
   check(!real.length, 'aucune erreur JS (hors PeerJS bloqué exprès)', real);

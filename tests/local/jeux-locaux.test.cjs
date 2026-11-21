@@ -19,6 +19,15 @@ run(async () => {
   check(/Au tour de Bob/.test(await scr()), 'Quiz : au tour de Bob');
   await shot(page, 'local-quiz');
 
+  // Quiz sans limite : le compteur affiche ∞ et « Terminer la partie » mène au classement.
+  await page.evaluate(() => localStorage.setItem('ambiance:race:quiz', JSON.stringify({ count: 0 })));
+  await go('quiz'); await big().click(); await W(300);
+  check(/1 · ∞/.test(await scr()), 'Quiz ∞ : compteur sans limite', await scr());
+  for (let k = 0; k < 3; k++) { await page.locator('button.quiz-opt').first().click(); await W(100); await page.getByRole('button', { name: /Question suivante/ }).click(); await W(150); }
+  check(/4 · ∞/.test(await scr()), 'Quiz ∞ : la partie continue après 3 questions');
+  await page.getByRole('button', { name: /Terminer la partie/ }).click(); await W(200);
+  check(/Fin de la partie/.test(await scr()), 'Quiz ∞ : « Terminer » affiche le classement');
+
   await go('curseur'); await big().click(); await W(200); await page.getByRole('button', { name: /Voir la cible/ }).click(); await W(150);
   await page.getByRole('button', { name: /cacher/ }).click(); await W(150); await page.locator('.scale-range').fill('40'); await page.getByRole('button', { name: /Révéler/ }).click(); await W(200);
   check(/Tour suivant|Fin/.test(await scr()), 'Curseur : révélation puis tour suivant', await scr()); await shot(page, 'local-curseur');

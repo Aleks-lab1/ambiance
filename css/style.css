@@ -842,3 +842,7 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .hold-pad.win { border-style: solid; border-color: #ffd23f; background: #ffd23f; color: #3a2a00; animation: pulse .45s ease-in-out infinite alternate; }
 .hold-pad.lose { opacity: .35; }
 .hold-pad .n { font-size: 72px; line-height: 1; }
+
+/* Salon : jeu touché une fois, un 2e appui le lance */
+.game-pick button.armed { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(34, 211, 154, .25); }
+.game-pick .go { font-size: 12px; font-weight: 800; color: var(--ok); }

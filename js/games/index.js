@@ -124,10 +124,11 @@ export const GAMES = [
   },
   {
     id: 'quiz', name: 'Le Quiz', emoji: '🧠', colors: ['#5f2c82', '#49a09d'],
-    desc: '170 questions dans 9 thèmes. Le plus rapide marque le plus de points.',
+    desc: 'Plus de 600 questions dans 9 thèmes, sans répétition d\'une partie à l\'autre. Mode sans limite !',
     tags: ['rapide'], players: '2-16', rules: [
       '<b>En ligne :</b> la question s\'affiche sur tous les téléphones avec 4 réponses. Plus tu réponds vite (et juste), plus tu gagnes de points. Choisis les thèmes : culture G, géo, histoire, sciences, cinéma, musique, sport, gastronomie, insolite.',
       '<b>Sur un seul téléphone :</b> chacun son tour, le joueur désigné touche directement sa réponse. La bonne réponse s\'affiche en vert (en rouge si c\'est raté) et le point est compté automatiquement.',
+      'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],
     load: () => import('./race.js').then((m) => m.quiz),
   },
@@ -174,6 +175,7 @@ export const GAMES = [
     tags: ['rapide'], players: '2-16', rules: [
       '<b>En ligne :</b> une suite d\'émojis s\'affiche (🦁👑…). Tape ta réponse : le premier qui trouve gagne un bonus. Les fautes de frappe et les accents sont tolérés.',
       '<b>Sur un seul téléphone :</b> montre les émojis, le premier qui crie la bonne réponse gagne le point.',
+      'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],
     load: () => import('./race.js').then((m) => m.emojis),
   },
@@ -183,6 +185,7 @@ export const GAMES = [
     tags: ['rapide'], players: '2-16', rules: [
       '<b>En ligne :</b> les lettres d\'un mot sont mélangées. Tape le mot dès que tu l\'as trouvé : plus tu es rapide, plus tu marques. Un indice (la première lettre) apparaît à mi-temps.',
       '<b>Sur un seul téléphone :</b> le premier qui trouve le mot à voix haute gagne le point.',
+      'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],
     load: () => import('./race.js').then((m) => m.anagrammes),
   },
@@ -192,6 +195,7 @@ export const GAMES = [
     tags: ['rapide'], players: '2-16', rules: [
       '<b>En ligne :</b> chacun propose un nombre. Le plus proche de la vraie réponse gagne 300 points (+200 s\'il tombe pile), le deuxième 150, le troisième 75.',
       '<b>Sur un seul téléphone :</b> chacun annonce son estimation à voix haute, puis on révèle. Le plus proche gagne le point.',
+      'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],
     load: () => import('./race.js').then((m) => m.estimations),
   },
@@ -206,11 +210,12 @@ export const GAMES = [
   },
   {
     id: 'vraifaux', name: 'Vrai ou faux', emoji: '✅', colors: ['#11998e', '#e94057'],
-    desc: 'Info ou intox ? 100 affirmations étonnantes, le plus rapide gagne.',
+    desc: 'Info ou intox ? Plus de 200 affirmations étonnantes, le plus rapide gagne.',
     tags: ['rapide'], players: '2-16',
     rules: [
       '<b>En ligne :</b> une affirmation s\'affiche (« Les pieuvres ont trois cœurs »). Vrai ou faux ? Plus tu réponds vite et juste, plus tu gagnes de points. L\'explication s\'affiche ensuite.',
       '<b>Sur un seul téléphone :</b> chacun son tour, le joueur désigné touche « Vrai » ou « Faux ». La bonne réponse s\'affiche en vert (en rouge si c\'est raté) avec son explication, et le point est compté automatiquement.',
+      'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],
     load: () => import('./race.js').then((m) => m.vraifaux),
   },
@@ -221,6 +226,7 @@ export const GAMES = [
     rules: [
       '<b>En ligne :</b> un calcul s\'affiche sur tous les téléphones. Tape le résultat le plus vite possible : le plus rapide marque le plus de points, avec un bonus pour le premier.',
       '<b>Sur un seul téléphone :</b> le premier qui crie le bon résultat gagne le point. Trois niveaux : facile, moyen, difficile.',
+      'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],
     load: () => import('./race.js').then((m) => m.calcul),
   },

@@ -3,7 +3,7 @@ import { h, uid, seg } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
-import { RACE_MODES, buildQuestions, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS } from '../race-core.js';
+import { RACE_MODES, questionSource, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS, COUNT_LABEL } from '../race-core.js';
 import VF from '../data/vraifaux.js';
 import QUIZ from '../data/quiz.js';
 import EMOJIS from '../data/emojis.js';
@@ -14,6 +14,8 @@ const DATA = { quiz: QUIZ, emoji: EMOJIS, anag: ANAG, estim: ESTIM, vf: VF, calc
 const REVEAL_MS = 9000;
 const player = (room, pid) => room.players.find((p) => p.pid === pid);
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
+// Source de questions de chaque partie (gardée chez l'hôte, hors de l'état envoyé aux joueurs).
+const SOURCES = new WeakMap();
 
 function makeRace(mode) {
   const M = RACE_MODES[mode];
@@ -22,7 +24,9 @@ function makeRace(mode) {
 
   function nextQ(s) {
     s.i++;
-    if (s.i >= s.list.length) { s.phase = 'end'; return; }
+    // count = 0 : sans limite, on tire une nouvelle question tant que l'hôte n'arrête pas.
+    if (s.st.count && s.i >= s.st.count) { s.phase = 'end'; return; }
+    if (!s.list[s.i]) s.list.push(SOURCES.get(s).next());
     s.phase = 'q';
     s.start = Date.now();
     s.deadline = s.start + s.st.time * 1000;
@@ -57,7 +61,8 @@ function makeRace(mode) {
 
     settingsForm(st, set) {
       const parts = [
-        h('label', { class: 'field' }, 'Nombre de questions', seg([5, 10, 15, 20].map((n) => ({ value: n, label: String(n) })), st.count, (v) => set({ count: v }))),
+        h('label', { class: 'field' }, 'Nombre de questions', seg([5, 10, 15, 20, 0].map((n) => ({ value: n, label: COUNT_LABEL(n) })), st.count, (v) => set({ count: v }))),
+        st.count === 0 ? h('p', { class: 'muted small' }, '∞ Sans limite : les questions s\'enchaînent jusqu\'à ce que l\'hôte touche « Terminer ».') : null,
         h('label', { class: 'field' }, 'Temps par question', seg((mode === 'vf' ? [10, 15, 20] : mode === 'calc' ? [10, 20, 30] : text ? [30, 40, 60] : [15, 20, 30]).map((n) => ({ value: n, label: n + ' s' })), st.time, (v) => set({ time: v }))),
         mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, st.level || 'moyen', (v) => set({ level: v }))) : null,
       ];
@@ -70,12 +75,18 @@ function makeRace(mode) {
     },
 
     init(room, st) {
-      const s = { gid: uid(), st, list: buildQuestions(mode, DATA[mode], st.count, st), i: -1 };
+      const s = { gid: uid(), st, list: [], i: -1 };
+      SOURCES.set(s, questionSource(mode, DATA[mode], st));
       nextQ(s);
       return s;
     },
 
     action(room, s, pid, a) {
+      if (a.type === 'stop' && pid === room.host && s.phase !== 'end') {
+        if (s.phase === 'q') reveal(room, s);
+        s.phase = 'end';
+        return true;
+      }
       if (a.type === 'next' && pid === room.host) {
         if (s.phase === 'q') { reveal(room, s); return true; }
         if (s.phase === 'reveal') { nextQ(s); return true; }
@@ -124,7 +135,7 @@ function makeRace(mode) {
       const Q = s.list[s.i];
       const mine = s.answers[pid];
       return {
-        gid: s.gid, mode, i: s.i, n: s.list.length, phase: s.phase, deadline: s.deadline, revealUntil: s.revealUntil,
+        gid: s.gid, mode, i: s.i, n: s.st.count || 0, phase: s.phase, deadline: s.deadline, revealUntil: s.revealUntil,
         q: Q ? Q.pub : null,
         hint: mode === 'anag' && s.hinted && Q ? Q.ans.text.charAt(0).toUpperCase() : null,
         answered: Object.keys(s.answers).filter((p) => !text || s.answers[p].ok),
@@ -224,7 +235,7 @@ function makeRace(mode) {
             lastKey = key;
             return;
           }
-          head.replaceChildren(h('span', { class: 'pill' }, `${M.emoji} ${v.i + 1}/${v.n}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, '🏆 ' + (me ? me.score : 0)), timer);
+          head.replaceChildren(h('span', { class: 'pill' }, v.n ? `${M.emoji} ${v.i + 1}/${v.n}` : `${M.emoji} ${v.i + 1} · ∞`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, '🏆 ' + (me ? me.score : 0)), timer);
           const qKey = v.gid + ':' + v.i;
           if (cardSlot.dataset.k !== qKey) { cardSlot.dataset.k = qKey; cardSlot.replaceChildren(cardFor(v.q)); }
           if (v.hint && !cardSlot.querySelector('.hint-line')) { const c = cardSlot.querySelector('.qcard'); c && c.append(h('div', { class: 'foot hint-line' }, `💡 Indice : commence par « ${v.hint} »`)); }
@@ -251,9 +262,11 @@ function makeRace(mode) {
           if (v.phase === 'q' && text && v.mine && v.mine.ok && lastKey === key && !answerSlot.dataset.ok) { sfx.fanfare(); buzz([40, 30, 80]); }
           answerSlot.dataset.ok = v.mine && v.mine.ok ? '1' : '';
           lastKey = key;
-          hostSlot.replaceChildren(g.isHost
-            ? h('button', { class: 'btn ' + (v.phase === 'reveal' ? 'btn-primary btn-big' : 'btn-soft') + ' btn-block', onclick: () => g.send({ type: 'next' }) }, v.phase === 'reveal' ? 'Question suivante →' : '⏭ Révéler maintenant')
-            : null);
+          const last = v.n && v.i + 1 >= v.n;
+          hostSlot.replaceChildren(...(g.isHost ? [
+            h('button', { class: 'btn ' + (v.phase === 'reveal' ? 'btn-primary btn-big' : 'btn-soft') + ' btn-block', onclick: () => g.send({ type: 'next' }) }, v.phase === 'reveal' ? (last ? '🏆 Voir le classement' : 'Question suivante →') : '⏭ Révéler maintenant'),
+            !last ? h('button', { class: 'btn btn-ghost btn-sm', onclick: () => g.send({ type: 'stop' }) }, '🏁 Terminer la partie') : null,
+          ].filter(Boolean) : []));
           updTimer();
         },
         destroy() { clearInterval(iv); },
