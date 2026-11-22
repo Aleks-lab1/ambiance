@@ -1,6 +1,8 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = '672ac8c1c1';
+const VERSION = 'fe4b801ea4';
 const CACHE = 'ambiance-' + VERSION;
+// Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
+const IMG_CACHE = 'ambiance-img-667213e9b3';
 const ASSETS = [
   "./",
   "./css/style.css",
@@ -129,19 +131,87 @@ const ASSETS = [
   "./vendor/peerjs.min.js",
   "./vendor/qrcode.js"
 ];
+const IMAGES = [
+  "./img/jeux/action.webp",
+  "./img/jeux/anagrammes.webp",
+  "./img/jeux/bataille.webp",
+  "./img/jeux/bingo.webp",
+  "./img/jeux/bonmot.webp",
+  "./img/jeux/bouteille.webp",
+  "./img/jeux/bus.webp",
+  "./img/jeux/calcul.webp",
+  "./img/jeux/cap.webp",
+  "./img/jeux/chapeau.webp",
+  "./img/jeux/chifoumi.webp",
+  "./img/jeux/cinq.webp",
+  "./img/jeux/confidences.webp",
+  "./img/jeux/couleurs.webp",
+  "./img/jeux/curseur.webp",
+  "./img/jeux/danssatete.webp",
+  "./img/jeux/debats.webp",
+  "./img/jeux/dessin.webp",
+  "./img/jeux/deuxverites.webp",
+  "./img/jeux/dico.webp",
+  "./img/jeux/disle.webp",
+  "./img/jeux/dix.webp",
+  "./img/jeux/doigt.webp",
+  "./img/jeux/duel.webp",
+  "./img/jeux/emojis.webp",
+  "./img/jeux/estimations.webp",
+  "./img/jeux/etsi.webp",
+  "./img/jeux/fredonne.webp",
+  "./img/jeux/front.webp",
+  "./img/jeux/histoire.webp",
+  "./img/jeux/imposteur.webp",
+  "./img/jeux/jamais.webp",
+  "./img/jeux/loup.webp",
+  "./img/jeux/memory.webp",
+  "./img/jeux/menteur.webp",
+  "./img/jeux/mime.webp",
+  "./img/jeux/morpion.webp",
+  "./img/jeux/motmystere.webp",
+  "./img/jeux/motsinterdits.webp",
+  "./img/jeux/nioui.webp",
+  "./img/jeux/opinions.webp",
+  "./img/jeux/ordre.webp",
+  "./img/jeux/outils.webp",
+  "./img/jeux/paranoia.webp",
+  "./img/jeux/patate.webp",
+  "./img/jeux/pendu.webp",
+  "./img/jeux/petitbac.webp",
+  "./img/jeux/plusmoins.webp",
+  "./img/jeux/punchlines.webp",
+  "./img/jeux/qui.webp",
+  "./img/jeux/quiaecrit.webp",
+  "./img/jeux/quisuisje.webp",
+  "./img/jeux/quiz.webp",
+  "./img/jeux/roi.webp",
+  "./img/jeux/roue.webp",
+  "./img/jeux/sequence.webp",
+  "./img/jeux/telephone.webp",
+  "./img/jeux/tupreferes.webp",
+  "./img/jeux/unisson.webp",
+  "./img/jeux/vraifaux.webp",
+  "./img/jeux/yams.webp"
+];
 
 self.addEventListener('install', (event) => {
   // cache: 'reload' : on télécharge les fichiers neufs, sans passer par le cache HTTP du navigateur
   // (sinon la nouvelle version pouvait embarquer d'anciens fichiers). Puis on s'active tout de suite.
-  event.waitUntil(caches.open(CACHE)
-    .then((cache) => cache.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' }))))
-    .then(() => self.skipWaiting()));
+  const fresh = (u) => new Request(u, { cache: 'reload' });
+  event.waitUntil(Promise.all([
+    caches.open(CACHE).then((cache) => cache.addAll(ASSETS.map(fresh))),
+    caches.open(IMG_CACHE).then(async (cache) => {
+      const have = new Set((await cache.keys()).map((r) => r.url));
+      await cache.addAll(IMAGES.filter((u) => !have.has(new URL(u, self.location.href).href)).map(fresh));
+    }),
+  ]).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('ambiance-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('ambiance-') && k !== CACHE && k !== IMG_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });

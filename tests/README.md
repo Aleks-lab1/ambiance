@@ -47,8 +47,10 @@ et sort avec le code 1 en cas d'échec.
 | `online/cartes.test.cjs` | Et si, Confidences, Cap ou pas cap, Action ou vérité, Le Roi, Plus ou moins, Le Bus. |
 | `online/hasard.test.cjs` | La Bouteille, La roue des gages, Qui commence ?, Boîte à outils. |
 | `online/oral.test.cjs` | Sur le front, Ni oui ni non, Histoire folle, Le Pendu, La Séquence, Le Chapeau (4 joueurs). |
-| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant, mode ∞), bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux ». |
+| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant, mode ∞), bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux », accueil (image de chaque jeu affichée, cases rectangulaires sans description, nom en bas à gauche, favoris illustrés). |
 | `local/sequence.test.cjs` | La Séquence : un seul « Je suis prêt », puis compte à rebours. |
+| `local/sw.test.cjs` | Service worker, avec un **vrai petit serveur web sur localhost** (le service worker exige https ou localhost) : tout est en cache à l'installation, les images des jeux dans un cache à part **non retéléchargé** lors d'une mise à jour, accueil complet **hors ligne**. |
+| `unit/images.test.mjs` | Images des jeux : une composition (`scripts/images/scenes.mjs`) et une image `img/jeux/<id>.webp` (WebP transparent 540 × 360) par jeu, emojis sources présents, poids total raisonnable. |
 | `relay/lobby-relay.test.cjs` | 3 téléphones, PeerJS bloqué, **faux relais MQTT** : vrai salon, lancement de 2 jeux (le 2e par double appui sur le jeu). `DOWN=shiftr` simule la panne du 1er serveur. |
 | `relay/relay-real.manual.cjs` | **Manuel**, avec Internet : les vrais serveurs relais publics. Pas lancé par `run-all`. |
 

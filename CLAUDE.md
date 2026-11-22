@@ -15,7 +15,8 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
 | `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `relay.js` (relais MQTT), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
-| `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main) |
+| `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
+| `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main), `gen-images.mjs` (images des jeux, compositions dans `images/scenes.mjs`, emojis 3D dans `images/emoji/`) |
 | `css/style.css` | Toute la feuille de style |
 | `tests/` | Outils de test, hors appli (voir plus bas et `tests/README.md`) |
 
@@ -23,6 +24,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 1. **`node scripts/gen-sw.mjs`** : régénère `sw.js` (liste des fichiers + version). Sans ça, les téléphones gardent l'ancienne version.
 2. Si un jeu est ajouté ou retiré, **mettre à jour le nombre de jeux** dans `README.md`, `index.html` (meta description) et
    `manifest.webmanifest` (description). `js/app.js` utilise `GAMES.length`. Vérifier avec `grep -n "61"` (ancien nombre).
+   Un jeu ajouté a besoin de **son image** (voir « Accueil : images des jeux »).
 3. **Tester** (`cd tests && node run-all.cjs`), puis **publier sur les trois branches** : `main`, `gh-pages` et la branche de travail
    de la session (`claude/…`). Les trois pointent sur le même commit, par exemple : `git push origin HEAD:main HEAD:gh-pages HEAD:<branche-de-travail>`.
 
@@ -42,6 +44,21 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 - Contenu dans `js/data/quiz.js`, `estimations.js`, `vraifaux.js`, `emojis.js`, `anagrammes.js` (« Lot 2 » = ajouts de novembre 2026).
   Après un ajout, `unit/race-core.test.mjs` vérifie le format et l'absence de doublons. Anagrammes : éviter les mots qui forment un autre
   mot courant (« voilier/olivier », « serpent/présent ») : le script de vérification compare avec `COMMUNS` de `js/data/mots.js`.
+
+## Accueil : images des jeux
+- Chaque case (`.tile`, `renderGrid` dans `js/app.js`) : l'image `img/jeux/<id>.webp` (fond transparent, 540 × 360) posée sur le
+  dégradé du jeu (`gameColors`, donc le thème) avec un halo de lumière en CSS, un voile sombre en bas et le **nom incrusté en bas
+  à gauche**. **Pas de description.** Case rectangulaire (3:2), pastilles (« Nouveau », joueurs) en haut à gauche, étoile en haut
+  à droite. Mêmes images dans les favoris (`.mini-tile`). Si l'image manque, l'emoji du jeu la remplace (`gameArt`).
+- Composition de chaque image dans `scripts/images/scenes.mjs` (repère 300 × 200, élément principal vers (206, 90), garder dégagés
+  le bas à gauche et les coins du haut) : emojis 3D Fluent Emoji (Microsoft, MIT, copiés dans `scripts/images/emoji/`), lettres
+  en relief, cartes à jouer, boules de bingo, roue, mots, anneau. Puis `node scripts/gen-images.mjs <id>` : dessin dans Chromium
+  (Playwright), compression WebP par Pillow (Python), deux fois plus léger que l'encodeur de Chromium (~15 Ko par image).
+- Emoji pas encore copié : récupérer le paquet `@lobehub/fluent-emoji-3d` (commande en tête de `gen-images.mjs`) et relancer
+  avec `EMOJI_DIR=…` : le fichier manquant est copié dans `scripts/images/emoji/`.
+- **Regarder le résultat** (capture d'écran de l'accueil) avant de publier. `unit/images.test.mjs` vérifie une image par jeu.
+- Service worker : `img/` a son propre cache (`IMG_CACHE`, versionné sur les images seulement), les images ne sont donc pas
+  retéléchargées à chaque mise à jour de l'appli. Testé par `local/sw.test.cjs`.
 
 ## Salon en ligne
 - L'hôte touche un jeu une fois pour le choisir (réglages affichés), **une 2e fois pour le lancer** (`lobbyArmed` dans `room.js`).
@@ -79,6 +96,7 @@ export const monJeuOnline = {
 - Mettre `onlineBanner(ctx, 'idEnLigne')` (`js/common.js`) sur l'écran de réglages (bandeau « 🌐 En ligne (recommandé) »). Jeux de cartes
   (`cardGame` dans `js/games/cartes.js`) : `online: 'idEnLigne'` (+ `onlineLabel` pour le texte du bouton). Ajouter une règle « <b>En ligne :</b> … ».
   S'il n'existe **qu'en ligne** : `load: () => import('./enligne.js').then((m) => m.launcher('idEnLigne'))`.
+- **Image de la case** : composition dans `scripts/images/scenes.mjs`, puis `node scripts/gen-images.mjs <id>`.
 - Mode « on se passe le téléphone » : `hotseat(ctx, moduleEnLigne, réglages, onExit)` dans `js/games/plateau.js` fait tourner un module en ligne
   localement, `g.me` = joueur dont c'est le tour, `g.hotseat = true` (exemples : Memory, Yam's).
 
@@ -117,6 +135,8 @@ export const monJeuOnline = {
 - Animations partagées (bouteille, roue) : garder les mêmes éléments d'un `update` à l'autre, sinon la rotation CSS repart de zéro.
 - Oublier `gen-sw.mjs` = les utilisateurs ne voient pas la mise à jour.
 - Environnement cloud : ne pas réinstaller Playwright (Chromium est préinstallé). Ne pas exécuter de code téléchargé : extraire avec grep/sed.
+- Playwright : `page.waitForFunction(async () => …)` n'attend pas la promesse (toujours « vraie ») : boucler sur `page.evaluate`.
+- Le service worker ne s'installe pas sur `http://app.test/` (il faut https ou localhost) : `local/sw.test.cjs` lance un vrai serveur.
 
 ## Tests (`tests/`, détails dans `tests/README.md`)
 - Installation : `cd tests && npm install` (mqtt-packet). Playwright/Chromium sont déjà là dans l'environnement cloud.
@@ -125,6 +145,8 @@ export const monJeuOnline = {
 - `tests/lib/mp.cjs` : simulateur multijoueur, n joueurs côte à côte branchés sur la logique de l'hôte. C'est l'outil pour tester un jeu en ligne.
 - `tests/lib/mock-relay.cjs` : faux serveur relais MQTT + PeerJS bloqué. `relay/lobby-relay.test.cjs` fait une vraie partie par le salon.
 - `tests/relay/relay-real.manual.cjs` : manuel, avec les vrais serveurs relais (Internet, utilise `HTTPS_PROXY` si présent).
+- `tests/local/sw.test.cjs` : service worker et mode hors ligne, avec un vrai serveur web sur localhost.
+- `tests/unit/images.test.mjs` : une image (et une composition) par jeu.
 - `tests/` est exclu du service worker (`SKIP` dans `scripts/gen-sw.mjs`).
 
 ## Préférences de l'utilisateur

@@ -71,6 +71,24 @@ run(async () => {
   check(!(await page.locator('.chip', { hasText: /En ligne/ }).count()), 'plus de filtre « En ligne »');
   check(!(await page.locator('.tile .badge', { hasText: /En ligne/ }).count()), 'plus de badge « En ligne » sur les jeux');
 
+  // Accueil : chaque case montre l'image du jeu et son nom (en bas à gauche), sans la description.
+  const tiles = await page.locator('.tile').count();
+  check(tiles === ids.length && !(await page.locator('.tile .desc').count()), `accueil : ${tiles} cases, sans description`);
+  for (let y = 0; y < 15000; y += 700) { await page.evaluate((v) => window.scrollTo(0, v), y); await W(30); }
+  await W(400);
+  const art = await page.evaluate(() => {
+    const l = [...document.querySelectorAll('.tile img.tile-art')];
+    return { n: l.length, ok: l.filter((i) => i.complete && i.naturalWidth > 0).length, emo: document.querySelectorAll('.tile .tile-emo').length };
+  });
+  check(art.n === tiles && art.ok === tiles && !art.emo, `accueil : l'image de chaque jeu s'affiche (${art.ok}/${tiles})`, art);
+  const box = await page.locator('.tile').first().boundingBox();
+  const name = await page.locator('.tile .name').first().boundingBox();
+  check(box.width / box.height > 1.4, `accueil : cases rectangulaires (${Math.round(box.width)} × ${Math.round(box.height)})`);
+  check(name.x - box.x < 20 && box.y + box.height - (name.y + name.height) < 20, 'accueil : nom du jeu en bas à gauche de la case');
+  await page.evaluate(() => localStorage.setItem('ambiance:favs', JSON.stringify(['quiz', 'roi'])));
+  await go(''); await page.reload(); await W(500);
+  check(await page.locator('.mini-tile img.tile-art').count() === 2, 'favoris : les mini-cases ont aussi leur image');
+
   await go(''); await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
   const n = await page.locator('.tile').count();
   check(n > 0 && n <= 12, 'filtre Nouveaux : uniquement le dernier lot', n);
