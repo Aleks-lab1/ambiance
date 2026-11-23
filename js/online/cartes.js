@@ -7,7 +7,7 @@ import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { LEVELS } from '../data/levels.js';
 import { LEVELS as ACTION_LEVELS } from '../games/action.js';
-import { activePids, addScore, nextOn, playerOf, actBtn } from './kit.js';
+import { activePids, addScore, nextOn, playerOf, actBtn, drawNew } from './kit.js';
 import ETSI from '../data/etsi.js';
 import CONF from '../data/confidences.js';
 import CAP from '../data/cap.js';
@@ -52,9 +52,10 @@ function makeCardGame(id) {
   const pool = (s, kind) => validLevels(s.st.levels).flatMap((l) => ((kind ? ACTION[kind] : M.data)[l] || []).map((t) => ({ l, t })));
 
   function draw(room, s) {
-    const key = s.kind || 'all';
-    if (!s.decks[key] || !s.decks[key].length) s.decks[key] = shuffle(pool(s, s.kind));
-    const c = s.decks[key].pop() || { l: M.levels[0].id, t: '…' };
+    // Action ou vérité : mêmes clés que la version locale (action.js), mémoire partagée.
+    const lv = validLevels(s.st.levels).slice().sort();
+    const key = id === 'action' ? `action:${s.kind === 'action' ? 'a' : 'v'}:${lv}` : `on:${id}:${lv.join(',')}`;
+    const c = drawNew(s, key, () => pool(s, s.kind)) || { l: M.levels[0].id, t: '…' };
     // Action ou vérité : {joueur} = un autre joueur au hasard.
     const others = activePids(room).filter((p) => p !== s.who);
     s.card = { l: c.l, t: c.t.replace(/\{joueur\}/g, () => (others.length ? playerOf(room, pick(others)).name : 'quelqu\'un')) };
@@ -77,7 +78,7 @@ function makeCardGame(id) {
     settingsForm: (st, set) => levelsForm(M.levels, st, set),
     init(room, st) {
       const order = shuffle(activePids(room));
-      const s = { gid: uid(), st, order, who: order[0], n: 0, decks: {} };
+      const s = { gid: uid(), st, order, who: order[0], n: 0 };
       turn(room, s, true);
       return s;
     },

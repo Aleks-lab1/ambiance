@@ -1,6 +1,7 @@
 // À l'unisson (en ligne) : un thème s'affiche, chacun écrit UNE réponse en secret.
 // On marque autant de points que de joueurs qui ont écrit la même chose. Les « moutons noirs » sont seuls.
-import { h, uid, shuffle, seg, levenshtein } from '../ui.js';
+import { h, uid, seg, levenshtein } from '../ui.js';
+import { drawNew } from './kit.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -49,8 +50,8 @@ const unisson = {
 
   init(room, st) {
     const lv = (st.levels || ['fun']).filter((l) => DATA[l]);
-    const deck = shuffle((lv.length ? lv : ['fun']).flatMap((l) => DATA[l]));
-    const s = { gid: uid(), st, deck, round: 0, phase: 'write' };
+    const lvs = (lv.length ? lv : ['fun']).slice().sort();
+    const s = { gid: uid(), st, all: lvs.flatMap((l) => DATA[l]), key: 'on:unisson:' + lvs, round: 0, phase: 'write' };
     next(room, s);
     return s;
   },
@@ -171,8 +172,7 @@ const unisson = {
 function next(room, s) {
   s.round++;
   if (s.round > s.st.rounds) { s.phase = 'end'; return; }
-  if (!s.deck.length) s.deck = shuffle(DATA.fun.slice());
-  s.prompt = s.deck.pop();
+  s.prompt = drawNew(s, s.key, s.all);
   s.answers = {};
   s.phase = 'write';
   s.deadline = Date.now() + s.st.time * 1000;

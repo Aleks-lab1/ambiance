@@ -2,7 +2,7 @@
 import { h, uid, shuffle, seg, chip } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, isOn, timerPill, actBtn } from './kit.js';
+import { activePids, isOn, timerPill, actBtn, drawNew } from './kit.js';
 import { ROLES } from '../games/loup.js';
 import { ROUNDS as CH_ROUNDS } from '../games/chapeau.js';
 import CHAPEAU from '../data/chapeau.js';
@@ -14,10 +14,10 @@ import DISLE from '../data/disle.js';
 const TEAMS = [{ name: 'Équipe rouge', emo: '🔴', c: '#ff4d6d' }, { name: 'Équipe bleue', emo: '🔵', c: '#2ec5ff' }];
 
 const TYPES = {
-  mi: { name: 'Mots interdits', emoji: '🚫', short: 'Par équipes, sans les mots interdits', verb: 'fait deviner', tu: 'fais deviner', buzz: true, items: () => MI, card: (it) => ({ w: it[0], forbid: it.slice(1), hint: 'Mots interdits' }), label: (it) => it[0] },
-  mime: { name: 'Mime express', emoji: '🤸', short: 'Par équipes, mimer sans parler', verb: 'mime', tu: 'mimes', items: () => MIME, card: (it) => ({ w: it, top: '🤫 Mime' }), label: (it) => it },
-  fredonne: { name: 'Fredonne !', emoji: '🎵', short: 'Par équipes, fredonner sans les paroles', verb: 'fredonne', tu: 'fredonnes', items: () => CHANSONS, card: (it) => ({ w: it[0], sub: it[1], top: '🎵 Fredonne' }), label: (it) => `${it[0]} — ${it[1]}` },
-  disle: { name: 'Dis-le comme…', emoji: '🎭', short: 'Par équipes, deviner la manière', verb: 'joue la comédie', tu: 'joues la comédie', items: () => DISLE.manieres.map((m) => ({ m, p: DISLE.phrases[Math.floor(Math.random() * DISLE.phrases.length)] })), card: (it) => ({ top: 'Dis cette phrase…', w: `« ${it.p} »`, forbid: [it.m], hint: '…de cette manière (secret !)' }), label: (it) => it.m },
+  mi: { key: 'motsinterdits', name: 'Mots interdits', emoji: '🚫', short: 'Par équipes, sans les mots interdits', verb: 'fait deviner', tu: 'fais deviner', buzz: true, items: () => MI, card: (it) => ({ w: it[0], forbid: it.slice(1), hint: 'Mots interdits' }), label: (it) => it[0] },
+  mime: { key: 'mime', name: 'Mime express', emoji: '🤸', short: 'Par équipes, mimer sans parler', verb: 'mime', tu: 'mimes', items: () => MIME, card: (it) => ({ w: it, top: '🤫 Mime' }), label: (it) => it },
+  fredonne: { key: 'fredonne', name: 'Fredonne !', emoji: '🎵', short: 'Par équipes, fredonner sans les paroles', verb: 'fredonne', tu: 'fredonnes', items: () => CHANSONS, card: (it) => ({ w: it[0], sub: it[1], top: '🎵 Fredonne' }), label: (it) => `${it[0]} — ${it[1]}` },
+  disle: { key: 'on:disle', name: 'Dis-le comme…', emoji: '🎭', short: 'Par équipes, deviner la manière', verb: 'joue la comédie', tu: 'joues la comédie', items: () => DISLE.manieres.map((m) => ({ m, p: DISLE.phrases[Math.floor(Math.random() * DISLE.phrases.length)] })), card: (it) => ({ top: 'Dis cette phrase…', w: `« ${it.p} »`, forbid: [it.m], hint: '…de cette manière (secret !)' }), label: (it) => it.m },
 };
 
 function wordCard(c) {
@@ -43,7 +43,7 @@ function makeTeamGame(type) {
       const pids = shuffle(activePids(room));
       const teams = [[], []];
       pids.forEach((p, i) => teams[i % 2].push(p));
-      return { gid: uid(), st, teams, team: 0, giverIdx: [0, 0], score: [0, 0], turn: 0, deck: shuffle(T.items().slice()), phase: 'ready', results: [] };
+      return { gid: uid(), st, teams, team: 0, giverIdx: [0, 0], score: [0, 0], turn: 0, phase: 'ready', results: [] };
     },
     action(room, s, pid, a) {
       const giver = giverOf(room, s);
@@ -149,8 +149,7 @@ function giverOf(room, s) {
   return list[s.giverIdx[s.team] % list.length];
 }
 function drawWord(s, T) {
-  if (!s.deck.length) s.deck = shuffle(T.items().slice());
-  s.word = s.deck.pop();
+  s.word = drawNew(s, T.key, T.items);
 }
 
 // =====================================================================
@@ -169,8 +168,13 @@ export const chapeauOnline = {
     const pids = shuffle(activePids(room));
     const teams = [[], []];
     pids.forEach((p, i) => teams[i % 2].push(p));
-    const cards = shuffle(CHAPEAU.slice()).slice(0, st.cards || 30);
-    return { gid: uid(), st, teams, team: 0, giverIdx: [0, 0], score: [0, 0], turn: 0, manche: 0, cards, left: shuffle(cards.slice()), phase: 'ready', results: [], word: null };
+    const s = { gid: uid(), st, teams, team: 0, giverIdx: [0, 0], score: [0, 0], turn: 0, manche: 0, phase: 'ready', results: [], word: null };
+    // Les noms sont tirés sans répétition d'une partie à l'autre (et jamais deux fois le même dans une partie).
+    const cards = new Set();
+    for (let k = 0; cards.size < Math.min(st.cards || 30, CHAPEAU.length) && k < 500; k++) cards.add(drawNew(s, 'on:chapeau', CHAPEAU));
+    s.cards = [...cards];
+    s.left = shuffle(s.cards.slice());
+    return s;
   },
   action(room, s, pid, a) {
     const giver = giverOf(room, s);

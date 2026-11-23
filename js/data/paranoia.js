@@ -7,6 +7,12 @@ export default {
     'Qui ici dort le plus ?', 'Qui ici est le plus accro à son téléphone ?', 'Qui ici partirait en voyage avec toi demain ?', 'Qui ici est le plus mauvais perdant ?',
     'Qui ici serait le premier à mourir dans un film d\'horreur ?', 'Qui ici a les meilleurs conseils ?', 'Qui ici est le plus généreux ?', 'Qui ici est le plus râleur ?',
     'Avec qui ici voudrais-tu être coincé dans un ascenseur ?', 'Qui ici cuisine le mieux ?', 'Qui ici ment le mieux ?', 'Qui ici est le plus dans la lune ?',
+    // Lot 2
+    'Qui ici finirait en premier dans une émission de télé-réalité ?', 'Qui ici pleure le plus facilement ?', 'Qui ici a le meilleur goût musical ?', 'Qui ici serait le premier à paniquer dans un film d\'horreur ?',
+    'Qui ici ferait le meilleur prof ?', 'Qui ici a le plus de chance ?', 'Qui ici pourrait vivre sans téléphone pendant un mois ?', 'Qui ici a le meilleur cœur ?',
+    'Qui ici dépense le plus d\'argent pour rien ?', 'Qui ici ferait le meilleur espion ?', 'Qui ici est le plus fêtard ?', 'Qui ici est toujours en retard ?',
+    'Qui ici a la pire écriture ?', 'Qui ici a le plus de secrets ?', 'Qui ici te fait le plus rire ?', 'Qui ici te ressemble le plus ?',
+    'Qui ici aimerais-tu avoir comme coloc ?', 'Qui ici aurait le meilleur talent caché ?', 'Qui ici partirait vivre à l\'étranger demain ?',
   ],
   epice: [
     'Qui ici est le plus hypocrite ?', 'Qui ici a le plus mauvais goût en amour ?', 'Qui ici serait capable de tromper ?', 'Qui ici parle le plus dans le dos des autres ?',
@@ -14,12 +20,21 @@ export default {
     'Qui ici ne pourrais-tu pas garder comme ami toute ta vie ?', 'Qui ici a le pire caractère ?', 'Qui ici est le plus radin ?', 'Qui ici est le plus faux ?',
     'Qui ici finira divorcé ?', 'Qui ici ne te fais-tu pas confiance pour garder un secret ?', 'Qui ici est le plus prétentieux ?', 'Qui ici se croit plus intéressant qu\'il ne l\'est ?',
     'Qui ici a le plus changé (en mal) ?', 'Qui ici supprimerais-tu de tes réseaux ?', 'Qui ici est le plus manipulateur ?', 'Qui ici serait le pire patron ?',
+    // Lot 2
+    'Qui ici pourrait te trahir pour 1 000 euros ?', 'Qui ici a le plus de chance de se marier en premier ?', 'Qui ici stalke le plus ses ex ?', 'Qui ici est secrètement amoureux de quelqu\'un ?',
+    'Qui ici parle le plus dans ton dos ?', 'Qui ici sortirait avec ton ex ?', 'Qui ici a le plus changé depuis que tu le connais ?', 'Qui ici a le plus de mauvaises fréquentations ?',
+    'Qui ici serait le pire partenaire de couple ?', 'Qui ici te cache quelque chose ?', 'Qui ici a le plus d\'ego ?', 'Qui ici aurait pu être ton crush ?',
+    'Qui ici a déjà menti à tout le groupe ?', 'Qui ici devrait arrêter de draguer ?', 'Qui ici est le plus collant en couple ?', 'Qui ici a le pire goût en amour ?',
   ],
   hot: [
     'Qui ici embrasserais-tu ce soir ?', 'Qui ici est le plus sexy ?', 'Qui ici a le plus d\'expérience au lit selon toi ?', 'Avec qui ici passerais-tu une nuit ?',
     'Qui ici a le plus de fantasmes bizarres ?', 'Qui ici est le plus coquin en secret ?', 'Qui ici a les plus belles fesses ?', 'Qui ici serait le meilleur amant ?',
     'Qui ici a déjà fait l\'amour dans un endroit insolite ?', 'Qui ici a le plus de partenaires à son actif ?', 'Qui ici a le plus beau sourire ?', 'Qui ici aimerais-tu voir danser de façon sensuelle ?',
     'Qui ici serait le meilleur coup d\'un soir ?', 'Qui ici t\'a déjà fait de l\'effet ?', 'Qui ici embrasse le mieux à ton avis ?',
+    // Lot 2
+    'Qui ici embrasse le mieux, selon toi ?', 'Qui ici a la plus grosse libido ?', 'Qui ici est le plus sexy ce soir ?', 'Qui ici a déjà envoyé le plus de nudes ?',
+    'Qui ici serait le meilleur coup ?', 'Qui ici serait partant pour un plan à trois ?', 'Qui ici fait le plus de bruit au lit, selon toi ?', 'Qui ici aimerais-tu voir danser sur une table ?',
+    'Qui ici aurait la meilleure sextape ?',
   ],
   hotpp: [
     "Qui ici a le plus de chances d'avoir déjà couché avec quelqu'un ici ?",
@@ -41,6 +56,10 @@ export default {
     "Qui ici aimerais-tu voir faire un strip-tease ?",
     "Qui ici t'a déjà excité(e) ?",
     "Avec qui ici irais-tu dans un club libertin ?",
-    "Qui ici a le plus gros appétit sexuel ?"
+    "Qui ici a le plus gros appétit sexuel ?",
+    // Lot 2
+    'Qui ici as-tu déjà imaginé nu(e) ?', 'Avec qui ici réaliserais-tu ton pire fantasme ?', 'Qui ici serait le plus dominant au lit ?', 'Qui ici aimerais-tu attacher ?',
+    'Qui ici a sûrement couché avec le plus de monde ?', 'Qui ici a déjà fait l\'amour dans un lieu public ?', 'Qui ici te fait le plus d\'effet ?', 'Qui ici choisirais-tu pour une nuit sans lendemain ?',
+    'Avec qui ici prendrais-tu une douche ?',
   ],
 };

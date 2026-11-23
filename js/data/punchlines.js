@@ -24,6 +24,18 @@ export default {
     'Le plat signature de ton ex : ___', 'Le pire titre de film d\'horreur : ___', 'L\'ingrédient secret le plus inquiétant de mamie : ___',
     'Le pire slogan pour une agence de voyages : ___', 'Ce que tu dirais en croisant ton sosie : ___', 'La pire excuse pour quitter une soirée : ___',
     'La dernière invention qui va changer le monde : ___', 'Ce que ton répondeur devrait vraiment dire : ___', 'La pire chose à dire en rencontrant la reine d\'Angleterre (enfin, le roi) : ___',
+    // Lot 2
+    'Le pire nom pour un restaurant : ___', 'Ce que les chats pensent vraiment de nous : ___', 'La pire chose à dire à un mariage : ___', 'Le nouveau parfum de chips que personne n\'achètera : ___',
+    'Le titre de mon autobiographie : ___', 'La première chose que ferait un extraterrestre sur Terre : ___', 'Ce que j\'ai trouvé sous mon lit : ___', 'Le pire slogan pour une compagnie aérienne : ___',
+    'La vraie raison du retard du train : ___', 'Le pire cadeau d\'anniversaire pour sa belle-mère : ___', 'Ce qu\'il ne faut jamais écrire sur un CV : ___', 'Le prochain métier à la mode : ___',
+    'La pire chose à entendre chez le dentiste : ___', 'Le nom de mon futur groupe de rock : ___', 'Ce que mon chien fait quand je ne suis pas là : ___', 'La règle secrète de la colocation : ___',
+    'Le pire jeu de société : ___', 'La phrase à ne pas dire à un policier : ___', 'Ce que le Père Noël fait le reste de l\'année : ___', 'La pire excuse pour ne pas venir à une soirée : ___',
+    'Le film qui n\'aurait jamais dû avoir de suite : ___', 'Le pire nom pour une boulangerie : ___', 'Ce que les plantes pensent quand on leur parle : ___', 'La chose la plus nulle à gagner au loto : ___',
+    'Le pire plat de la cantine : ___', 'Le pire endroit pour un premier rendez-vous : ___', 'La recette secrète de mamie : ___', 'Le pire tatouage possible : ___',
+    'Ce que les pigeons complotent : ___', 'Le nouveau sport olympique : ___', 'Le pire conseil de développement personnel : ___', 'La raison pour laquelle les dinosaures ont disparu : ___',
+    'Le pire nom pour un chat : ___', 'Le message vocal que personne ne veut recevoir : ___', 'La chose qu\'on ne devrait pas emporter en vacances : ___', 'La pire chanson pour un enterrement : ___',
+    'Ce que les profs font vraiment pendant les vacances : ___', 'Le pire défi TikTok : ___', 'Le pire parfum de glace : ___', 'La pire application inventée : ___',
+    'Ce que mes voisins pensent de moi : ___', 'La nouvelle émission de télé-réalité : ___',
   ],
   trash: [
     'Ce que ton ex raconte sur toi à ses potes : ___', 'La pire chose à dire juste après un premier baiser : ___', 'Le truc le plus honteux que tu aies fait bourré : ___',
@@ -39,6 +51,12 @@ export default {
     'Ce que tu dis à ton reflet après la cinquième vodka : ___', 'La pire question à poser à un premier date : ___', 'Le pire nom de groupe WhatsApp entre potes : ___',
     'La pire photo à envoyer par erreur à sa mère : ___', 'Ce que ton téléphone dirait de toi s\'il pouvait parler : ___', 'La vraie raison de ta dernière rupture : ___',
     'La pire phrase pour conclure une soirée : ___', 'Ce que ton médecin a noté en secret dans ton dossier : ___', 'Le pire endroit pour se réveiller après une soirée : ___',
+    // Lot 2
+    'La pire chose à dire après un premier bisou : ___', 'Ce que mon ex raconte sur moi : ___', 'La pire odeur dans un ascenseur : ___', 'Ce qu\'on ne doit jamais googler au travail : ___',
+    'La vraie raison de ma gueule de bois : ___', 'Ce que j\'ai fait de pire en soirée : ___', 'Ce que cache le tiroir de la table de nuit : ___', 'La pire chose à trouver dans son lit : ___',
+    'Le pire surnom de couple : ___', 'Ce qui s\'est vraiment passé à Las Vegas : ___', 'Ce que mon historique de recherche dit de moi : ___', 'Le pire cadeau de Saint-Valentin : ___',
+    'La pire excuse pour un suçon : ___', 'La raison de mon dernier blocage sur Instagram : ___', 'Ce que je ne dirai jamais à mes parents : ___', 'La pire chose à crier au milieu d\'un rendez-vous : ___',
+    'Le pire prénom pour un sextoy : ___',
   ],
   hotpp: [
     'Le pire mot à crier au moment de jouir : ___', 'Une position du Kamasutra que tu viens d\'inventer : ___', 'Le nom de ton futur sextoy : ___',

@@ -12,6 +12,15 @@ export default {
     'Cap de faire la planche (gainage) pendant 45 secondes ?', 'Cap de tenir une conversation de 1 minute avec un objet de la pièce ?', 'Cap de jongler avec 2 objets choisis par le groupe ?',
     'Cap de faire le présentateur météo pour la soirée ?', 'Cap de laisser le groupe choisir ta photo de profil pendant 1 heure ?', 'Cap de répondre à toutes les questions par une question jusqu\'au prochain tour ?',
     'Cap de faire un discours de remerciement comme si tu avais gagné un Oscar ?', 'Cap de rester sans cligner des yeux pendant 20 secondes ?',
+    // Lot 2
+    'Cap de dire l\'alphabet à l\'envers en moins de 30 secondes ?', 'Cap de tenir 1 minute sans rire pendant que les autres te font des grimaces ?', 'Cap de parler comme un robot jusqu\'à ton prochain tour ?', 'Cap de faire une imitation d\'un animal choisi par le groupe ?',
+    'Cap de dire 5 compliments en 30 secondes à la personne à ta droite ?', 'Cap de faire la planche pendant 45 secondes ?', 'Cap de mimer un film jusqu\'à ce que quelqu\'un trouve ?', 'Cap de chanter « Joyeux anniversaire » avec la voix d\'un ogre ?',
+    'Cap de garder une cuillère sur ton nez pendant 20 secondes ?', 'Cap de faire un discours de 30 secondes sur une cuillère ?', 'Cap de parler sans dire « euh » pendant une minute ?', 'Cap de faire 10 squats en chantant ?',
+    'Cap de danser le « moonwalk » ?', 'Cap de dire une phrase sans la lettre « e » ?', 'Cap de deviner le prénom de la mère de quelqu\'un ici ?', 'Cap de faire rire quelqu\'un en moins d\'une minute ?',
+    'Cap de parler uniquement en questions pendant 2 minutes ?', 'Cap de réciter une poésie apprise à l\'école ?', 'Cap de faire le tour de la pièce à quatre pattes ?', 'Cap de manger une cuillère de moutarde ?',
+    'Cap de faire une déclaration d\'amour à un objet de la pièce ?', 'Cap de t\'auto-interviewer comme une star pendant 1 minute ?', 'Cap de faire une pyramide de 5 verres en plastique… avec une main dans le dos ?', 'Cap d\'imiter la personne à ta gauche ?',
+    'Cap de chanter le refrain d\'une chanson de Disney en entier ?', 'Cap de faire une roue (ou d\'essayer) ?', 'Cap de répondre à la prochaine question uniquement en mimant ?', 'Cap de tenir en équilibre sur un pied jusqu\'au prochain tour ?',
+    'Cap de dire « je t\'aime » à la troisième personne de ton répertoire ?', 'Cap de faire un beatbox de 20 secondes ?',
   ],
   fun: [
     'Cap d\'envoyer « Je pense à toi 😘 » au 8e contact de ton téléphone ?', 'Cap de laisser le groupe écrire ta prochaine story ?', 'Cap d\'appeler un ami et de lui chanter joyeux anniversaire ?',
@@ -25,6 +34,14 @@ export default {
     'Cap de garder une cuillère sur le nez pendant 30 secondes ?', 'Cap de boire ton prochain verre sans les mains ?', 'Cap d\'appeler tes parents pour leur dire que tu les aimes, en haut-parleur ?',
     'Cap de te faire maquiller les yeux fermés par quelqu\'un ?', 'Cap d\'échanger un vêtement avec le joueur à ta droite jusqu\'à la fin du jeu ?', 'Cap de raconter ce que tu as pensé de chaque joueur la première fois que tu l\'as vu ?',
     'Cap de faire 30 secondes de stand-up sur ta vie amoureuse ?', 'Cap de manger une cuillère de moutarde (ou de ketchup) ?',
+    // Lot 2
+    'Cap de liker la photo la plus ancienne du profil de quelqu\'un ?', 'Cap d\'envoyer « Tu me manques » à ton ex… avec un émoji poulet ?', 'Cap de laisser le groupe écrire ton prochain statut ?', 'Cap de mettre en photo de profil la photo choisie par le groupe pendant 24 h ?',
+    'Cap d\'appeler un ami et de lui chanter une chanson sans explication ?', 'Cap de montrer ta dernière photo de galerie ?', 'Cap de laisser quelqu\'un fouiller ta galerie pendant 30 secondes ?', 'Cap d\'appeler un numéro au hasard de ton répertoire et de dire « J\'ai gagné ! » ?',
+    'Cap de poster une story en chantant ?', 'Cap de commander une pizza avec un accent italien ?', 'Cap d\'envoyer un vocal où tu imites un animal à ton boss ?', 'Cap de te laisser maquiller par le groupe les yeux fermés ?',
+    'Cap de faire un tuto beauté en direct avec ce qu\'il y a dans la cuisine ?', 'Cap de changer ton fond d\'écran par la pire photo de toi ?', 'Cap d\'envoyer « Il faut qu\'on parle » à ta mère ?', 'Cap de faire un live de 30 secondes en dansant ?',
+    'Cap de lire ta dernière recherche Google à voix haute ?', 'Cap de mettre un commentaire d\'amour sous une photo d\'un(e) ami(e) ?', 'Cap de demander à ton dernier contact WhatsApp sa recette préférée ?', 'Cap d\'appeler ta grand-mère pour lui dire qu\'elle est géniale ?',
+    'Cap de faire un compliment très exagéré au prochain inconnu que tu croises ?', 'Cap de laisser quelqu\'un envoyer un message de ton téléphone ?', 'Cap de chanter une chanson d\'amour à quelqu\'un ici, à genoux ?', 'Cap de manger un mélange choisi par le groupe ?',
+    'Cap de faire une danse TikTok devant tout le monde ?', 'Cap de dire ton mot de passe… le plus nul que tu aies eu ?',
   ],
   hot: [
     'Cap d\'embrasser le joueur de ton choix sur la joue ?', 'Cap de faire un massage des épaules de 30 secondes au joueur à ta gauche ?', 'Cap de murmurer une phrase sexy à l\'oreille de quelqu\'un ?',
@@ -35,5 +52,10 @@ export default {
     'Cap de décrire ton fantasme le plus avouable ?', 'Cap de faire un bisou dans le cou de quelqu\'un ?', 'Cap de t\'asseoir sur les genoux de quelqu\'un jusqu\'à ton prochain tour ?',
     'Cap de noter de 1 à 10 le physique de chaque joueur ?', 'Cap de faire un strip-tease de 30 secondes sans rien enlever ?', 'Cap d\'embrasser quelqu\'un les yeux bandés, sans savoir qui ?',
     'Cap de raconter l\'endroit le plus insolite où tu as fait l\'amour ?', 'Cap de mordiller l\'oreille du joueur de ton choix ?', 'Cap de jouer à « 7 minutes au paradis » avec quelqu\'un tiré au sort ?',
+    // Lot 2
+    'Cap de faire un bisou dans le cou de la personne de ton choix ?', 'Cap de faire un mini strip-tease (une pièce de vêtement) ?', 'Cap de murmurer quelque chose de sexy à l\'oreille de quelqu\'un ?', 'Cap de danser un slow collé-serré avec quelqu\'un ici ?',
+    'Cap d\'envoyer un message coquin à ton crush ?', 'Cap de faire un massage des épaules d\'une minute à quelqu\'un ?', 'Cap de décrire ton fantasme en 3 mots ?', 'Cap de mimer une scène de film romantique avec quelqu\'un ?',
+    'Cap de passer un glaçon dans le cou de quelqu\'un ?', 'Cap de montrer ta photo la plus sexy ?', 'Cap de dire à quelqu\'un ici ce que tu trouves le plus attirant chez lui/elle ?', 'Cap d\'embrasser la main de chaque personne ici comme un(e) séducteur(rice) ?',
+    'Cap de faire une déclaration torride à un coussin ?',
   ],
 };

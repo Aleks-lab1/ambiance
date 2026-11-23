@@ -15,11 +15,28 @@ export default {
     'Un personnage de conte', 'Une chanson de Noël', 'Un métier en blouse blanche', 'Un prénom de grand-mère', 'Un prénom de grand-père', 'Une plage célèbre',
     'Le meilleur jour de la semaine', 'Un truc dans un frigo', 'Une couleur de cheveux', 'Une forme géométrique', 'Un sport de combat', 'Un appareil électroménager',
     'Une émission de télé', 'Un emoji', 'Une application', 'Une partie de la voiture', 'Un outil', 'Un arbre', 'Un champignon', 'Un fruit à coque',
+    // Lot 2
+    'Un pays où il fait chaud', 'Une ville d\'Italie', 'Un plat chinois', 'Une chose qu\'on trouve dans un cartable',
+    'Un mot qu\'on dit en se levant', 'Un objet de cuisine', 'Une chanteuse française', 'Un acteur américain',
+    'Un pays d\'Afrique', 'Une chose qui colle', 'Une marque de baskets',
+    'Un animal de compagnie', 'Un super-héros Marvel', 'Un sport de raquette', 
+    'Une chose jaune', 'Une pièce de la maison', 'Un parfum de bonbon',
+    'Un mot de 3 lettres', 'Un prénom qui commence par M', 'Une boisson sans alcool', 'Une fête de l\'année',
+    'Un personnage de Harry Potter', 'Un sport collectif', 'Une marque de chocolat',
+    'Un plat de fête', 'Un bruit d\'animal', 'Une ville du sud de la France', 'Un jeu vidéo',
+    'Un mot doux', 'Une chose qu\'on trouve à la plage', 'Une chose qu\'on oublie souvent', 'Une star de la télé-réalité',
+    'Un plat qu\'on mange avec les doigts', 'Un pays d\'Amérique du Sud', 'Un monument de Paris', 'Un champion du monde',
+    'Un mot en anglais que tout le monde connaît', 'Une chose qu\'on met sur une pizza', 'Une chose qui fait du bruit', 'Un endroit où on attend',
+    'Une chose qu\'on fait en vacances',
   ],
   hot: [
     'Une partie du corps sexy', 'Un endroit insolite pour un câlin', 'Une qualité chez un(e) partenaire', 'Un défaut rédhibitoire', 'Un prénom sexy',
     'Un sous-vêtement', 'Un accessoire coquin', 'Un film romantique', 'Une célébrité canon', 'Une phrase de drague nulle', 'Un mot doux',
     'Une activité pour un rendez-vous', 'Un parfum sexy', 'Une chanson pour un slow', 'Un endroit pour un premier baiser', 'Un truc qui excite',
     'Un truc qui refroidit direct', 'Une position (sans entrer dans les détails !)', 'Un surnom amoureux', 'Un plat aphrodisiaque',
+    // Lot 2
+    'Un lieu pour un premier rendez-vous', 'Un prénom de séducteur', 'Une chose qu\'on fait au lit (à part dormir)', 'Une célébrité sexy',
+    'Un mot doux coquin', 'Un endroit insolite pour s\'embrasser', 'Une boisson aphrodisiaque', 'Une tenue sexy',
+    'Un compliment de drague', 'Un geste romantique', 'Un parfum qui fait craquer',
   ],
 };

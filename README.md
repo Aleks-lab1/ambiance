@@ -109,7 +109,8 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 - 🍻 / 🧃 **Mode avec ou sans alcool** : les pénalités sont des gorgées ou des points de gage.
 - 🔞 Contenu 18+ verrouillé derrière une confirmation d'âge, et niveau 😈 **Hot++** (très explicite) derrière une seconde confirmation.
 - ✍️ **Cartes personnalisées** pour tous les jeux de questions et Le Chapeau.
-- 🔁 Les cartes déjà vues ne reviennent pas d'une soirée à l'autre (réinitialisable dans les réglages).
+- 📚 Plus de 9 000 cartes, questions, défis et mots au total.
+- 🔁 Les cartes déjà vues ne reviennent pas d'une soirée à l'autre, sur un seul téléphone comme en ligne (réinitialisable dans les réglages).
 - 📴 Fonctionne **hors ligne** une fois chargé (sauf le mode en ligne, évidemment).
 - 🔊 Sons synthétisés, 📳 vibrations, écran maintenu allumé pendant les parties.
 

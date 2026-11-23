@@ -46,6 +46,16 @@ export default {
     ['Avoir une queue', 'Avoir des cornes'],
     ['Toujours dire la vérité', 'Toujours mentir'],
     ['Ne plus pouvoir lire', 'Ne plus pouvoir écrire'],
+    // Lot 2
+    ['Vivre à la montagne', 'Vivre au bord de la mer'], ['Parler toutes les langues', 'Parler aux animaux'], ['Avoir un dragon', 'Avoir une licorne'], ['Toujours avoir trop chaud', 'Toujours avoir trop froid'],
+    ['Ne plus jamais regarder de films', 'Ne plus jamais écouter de musique'], ['Vivre sans Internet', 'Vivre sans eau chaude'], ['Être le plus drôle du groupe', 'Être le plus intelligent du groupe'], ['Manger pizza tous les jours', 'Manger burger tous les jours'],
+    ['Avoir un jet privé', 'Avoir une maison sur une île'], ['Respirer sous l\'eau', 'Pouvoir voler 10 minutes par jour'], ['Rencontrer ton idole', 'Rencontrer ton arrière-arrière-grand-père'], ['Ne jamais être malade', 'Ne jamais être fatigué(e)'],
+    ['Gagner 1 million d\'euros', 'Que ton meilleur ami en gagne 5'], ['Avoir un bouton « pause » pour ta vie', 'Avoir un bouton « retour arrière »'], ['Vivre en 1950', 'Vivre en 2100'], ['Ne manger que salé', 'Ne manger que sucré'],
+    ['Pouvoir te téléporter', 'Pouvoir lire dans les pensées'], ['Être toujours en avance de 20 minutes', 'Être toujours en retard de 10 minutes'], ['Avoir un chien qui parle', 'Avoir un chat qui fait le ménage'], ['Vivre une semaine dans un jeu vidéo', 'Vivre une semaine dans un dessin animé'],
+    ['Faire le tour du monde en bateau', 'Faire le tour du monde en train'], ['Ne plus jamais avoir de devoirs ou de réunions', 'Avoir 3 mois de vacances par an'], ['Être invisible', 'Être super fort'], ['Que ce soit toujours l\'été', 'Que ce soit toujours Noël'],
+    ['Ne plus jamais utiliser de téléphone', 'Ne plus jamais utiliser d\'ordinateur'], ['Vivre dans un igloo', 'Vivre dans le désert'], ['Avoir des cheveux qui poussent d\'un mètre par jour', 'Ne plus jamais avoir de cheveux'], ['Avoir un majordome', 'Avoir un chef cuisinier'],
+    ['Dormir 4 heures et être en forme', 'Dormir 12 heures et être en forme'], ['Être le héros d\'un film d\'action', 'Être le héros d\'une comédie romantique'], ['Avoir des yeux de chat', 'Avoir des oreilles de chauve-souris'], ['Ne jamais perdre tes clés', 'Ne jamais perdre ton téléphone'],
+    ['Écrire un best-seller', 'Réaliser un film culte'],
   ],
   fun: [
     ['Avoir des doigts en saucisses', 'Avoir des cheveux en spaghettis'],
@@ -93,6 +103,17 @@ export default {
     ['Danser la macarena à chaque fois qu\'on dit ton prénom', 'Chanter l\'Ave Maria à chaque fois que ton téléphone sonne'],
     ['Être allergique à l\'eau', 'Être allergique au soleil'],
     ['Avoir 3 bras', 'Avoir 3 jambes'],
+    // Lot 2
+    ['Avoir des doigts en saucisse', 'Avoir des cheveux en spaghetti'], ['Roter des bulles de savon', 'Éternuer des confettis'], ['Parler comme un pirate toute ta vie', 'Chanter tout ce que tu dis'], ['Avoir une queue de singe', 'Avoir des oreilles d\'éléphant'],
+    ['Manger un ver de terre vivant', 'Lécher une poubelle'], ['Sentir le fromage toute ta vie', 'Sentir le poisson toute ta vie'], ['Marcher comme un canard', 'Rire comme un âne'], ['Avoir des pieds à la place des mains', 'Avoir des mains à la place des pieds'],
+    ['Que ton ventre gargouille la Marseillaise', 'Que tes pets sentent la rose mais fassent un bruit de trompette'], ['Être poursuivi(e) par 100 canards de la taille d\'un chat', 'Être poursuivi(e) par 1 chat de la taille d\'un éléphant'], ['Porter des Crocs à ton mariage', 'Porter un pyjama à un entretien d\'embauche'], ['Avoir un mulet pour toujours', 'Avoir une moustache pour toujours'],
+    ['Ne te déplacer qu\'en sautant à cloche-pied', 'Ne te déplacer qu\'en marchant en crabe'], ['Avoir une voix d\'hélium', 'Avoir une voix de robot'], ['Que tous tes messages partent avec des fautes', 'Que tous tes messages partent en majuscules'], ['Prendre un bain de mayonnaise', 'Prendre un bain de ketchup'],
+    ['Ne manger que des aliments bleus', 'Ne manger que des aliments mixés'], ['Avoir un réveil qui hurle des insultes', 'Avoir un réveil qui chante de l\'opéra'], ['Être suivi(e) par une musique de film partout', 'Être suivi(e) par des rires enregistrés'], ['Avoir un nez de clown', 'Avoir des sourcils de 5 cm d\'épaisseur'],
+    ['Devoir danser à chaque fois que tu entends de la musique', 'Devoir chanter à chaque fois que quelqu\'un dit ton prénom'], ['Transpirer du sirop d\'érable', 'Pleurer de la limonade'], ['Avoir des dents de lapin', 'Avoir des oreilles de lapin'], ['Vivre avec 50 chats', 'Vivre avec 3 chèvres'],
+    ['Être un pigeon à Paris', 'Être une mouette à Marseille'], ['Manger une cuillère de wasabi', 'Boire un verre de jus de cornichon'], ['Avoir une haleine de chacal à vie', 'Avoir les pieds qui puent à vie'], ['Que ta tête soit deux fois plus grosse', 'Que tes pieds soient deux fois plus grands'],
+    ['Parler en verlan toute ta vie', 'Parler en alexandrins toute ta vie'], ['Être coincé(e) dans un ascenseur avec ton prof de maths', 'Être coincé(e) dans un ascenseur avec ton ex'], ['Avoir un troisième bras', 'Avoir un troisième œil'], ['Porter des lunettes de ski tous les jours', 'Porter des palmes tous les jours'],
+    ['Ne boire que de l\'eau gazeuse tiède', 'Ne boire que du lait chaud'], ['Ne plus jamais pouvoir t\'asseoir', 'Ne plus jamais pouvoir t\'allonger'], ['Avoir le hoquet un jour sur deux', 'Éternuer toutes les 10 minutes'], ['Être déguisé(e) en banane pour toujours', 'Être déguisé(e) en dinosaure pour toujours'],
+    ['Avoir le rire de Jean-Claude Van Damme', 'Avoir la voix de Donald Duck'], ['Être un gnome de jardin', 'Être un épouvantail'], ['Ne parler que par onomatopées', 'Ne parler qu\'en mimant'],
   ],
   epice: [
     ['Lire tous les messages de ton/ta partenaire', 'Qu\'il/elle lise tous les tiens'],
@@ -135,6 +156,14 @@ export default {
     ['Montrer ta galerie photo à tes parents', 'Montrer tes recherches Google à ton/ta partenaire'],
     ['Recevoir un « il faut qu\'on parle »', 'Recevoir un « vu » sans réponse pendant 3 jours'],
     ['Savoir qui parle mal de toi', 'Savoir qui est secrètement amoureux de toi'],
+    // Lot 2
+    ['Que tes parents lisent tous tes messages', 'Que ton patron lise tous tes messages'], ['Revivre ton pire rendez-vous', 'Revivre ta pire rupture'], ['Que ton historique Internet soit affiché au journal télé', 'Que ton journal intime soit lu à ton mariage'], ['Être en couple avec ton ex', 'Être célibataire pour 10 ans'],
+    ['Savoir ce que tout le monde pense de toi', 'Que personne ne sache ce que tu penses'], ['Avouer ton crush devant toute la classe ou le bureau', 'Le garder secret toute ta vie'], ['Lire les messages de ton/ta partenaire', 'Qu\'il/elle lise les tiens'], ['Que ton ex sorte avec ton/ta meilleur(e) ami(e)', 'Que ton ex sorte avec ton frère ou ta sœur'],
+    ['Être trop jaloux(se)', 'Être pas jaloux(se) du tout'], ['Que ton premier bisou soit filmé et diffusé', 'Que ta première déclaration soit enregistrée et rediffusée'], ['Être riche et seul(e)', 'Être fauché(e) et entouré(e)'], ['Sortir avec quelqu\'un de très beau mais ennuyeux', 'Sortir avec quelqu\'un de moche mais hilarant'],
+    ['Que ton/ta partenaire soit trop collant(e)', 'Qu\'il/elle soit trop distant(e)'], ['Faire un rendez-vous chez tes parents', 'Faire un rendez-vous chez ses parents'], ['Découvrir que ton/ta partenaire a un journal intime sur toi', 'Découvrir qu\'il/elle a un compte secret'], ['Perdre tous tes amis', 'Perdre tous tes souvenirs'],
+    ['Avoir une dispute filmée en public', 'Que tous tes vocaux énervés soient publiés'], ['Recevoir un « il faut qu\'on parle »', 'Recevoir un « vu » sans réponse'], ['Savoir combien d\'ex a eu ton/ta partenaire', 'Ne jamais le savoir'], ['Que ton/ta partenaire soit ami(e) avec tous ses ex', 'Qu\'il/elle les déteste tous'],
+    ['Lire les pensées de ton/ta partenaire une journée', 'Qu\'il/elle lise les tiennes'], ['Te faire larguer en public', 'Larguer quelqu\'un en public'], ['Avoir une belle-mère envahissante', 'Avoir un beau-père qui te déteste'], ['Être fiancé(e) à 20 ans', 'Être célibataire à 40 ans'],
+    ['Que ta photo la plus gênante soit en fond d\'écran de tous tes collègues', 'Qu\'elle soit sur un panneau publicitaire'], ['Ne plus jamais voir ton/ta meilleur(e) ami(e)', 'Ne plus jamais voir ta famille pendant 5 ans'], ['Dire tout ce que tu penses pendant 24 h', 'Ne plus parler pendant une semaine'], ['Que ton crush voie ton historique de recherche', 'Qu\'il voie ta galerie photo'],
   ],
   hot: [
     ['Faire l\'amour uniquement le matin', 'Uniquement le soir'],
@@ -172,6 +201,12 @@ export default {
     ['Avoir un partenaire qui ronfle', 'Un partenaire qui vole toute la couette'],
     ['Faire l\'amour sous la douche', 'Dans un jacuzzi'],
     ['Que ta playlist coquine soit diffusée en soirée', 'Que ton historique de navigation privée soit révélé'],
+    // Lot 2
+    ['Faire l\'amour dans un avion', 'Faire l\'amour sur une plage'], ['Un câlin de 3 heures', 'Une nuit torride de 30 minutes'], ['Embrasser parfaitement', 'Faire l\'amour parfaitement'], ['Être attaché(e)', 'Attacher'],
+    ['Un strip-tease pour toi', 'Faire un strip-tease'], ['Faire l\'amour en silence absolu', 'Faire l\'amour en criant'], ['Un massage sensuel', 'Une douche à deux'], ['Le matin', 'Le soir'],
+    ['Avoir le même partenaire toute ta vie', 'Ne jamais coucher deux fois avec la même personne'], ['Que ton/ta partenaire soit trop timide', 'Qu\'il/elle soit trop entreprenant(e)'], ['Recevoir des sextos toute la journée', 'N\'en recevoir aucun mais avoir une surprise le soir'], ['Faire l\'amour devant un miroir', 'Les yeux bandés'],
+    ['Lingerie fine', 'Rien du tout'], ['Un week-end coquin à Venise', 'Une nuit dans un hôtel de luxe à Paris'], ['Être embrassé(e) dans le cou', 'Être embrassé(e) sur les lèvres pendant une heure'], ['Un coup d\'un soir inoubliable', 'Une relation passionnée de 3 mois'],
+    ['Réaliser un fantasme de ton/ta partenaire', 'Qu\'il/elle réalise le tien'], ['Faire l\'amour sous la pluie', 'Faire l\'amour dans la neige'], ['Que ton/ta partenaire parle beaucoup', 'Qu\'il/elle ne dise rien'], ['Coucher avec ton crush de jeunesse', 'Coucher avec une célébrité de ton choix'],
   ],
   hotpp: [
     [
@@ -333,6 +368,11 @@ export default {
     [
       "Faire un 69 sur une plage bondée de nuit",
       "Faire l'amour dans un jacuzzi d'hôtel avec des inconnus autour"
-    ]
+    ],
+    // Lot 2
+    ['Faire un plan à trois', 'Regarder ton/ta partenaire avec quelqu\'un d\'autre'], ['Te faire surprendre par tes parents', 'Te faire surprendre par ton patron'], ['Une sextape qui fuite', 'Tes nudes qui fuitent'], ['Dominer', 'Être dominé(e)'],
+    ['Faire l\'amour dans un club libertin', 'Faire l\'amour dans un lieu public interdit'], ['Ne plus jamais avoir d\'orgasme', 'N\'avoir des orgasmes qu\'en public'], ['Coucher avec ton/ta meilleur(e) ami(e)', 'Coucher avec son/sa partenaire'], ['Te faire filmer', 'Filmer'],
+    ['Utiliser un sextoy devant ton/ta partenaire', 'Le regarder en utiliser un'], ['Un plan à trois avec deux inconnus', 'Un plan à trois avec deux amis'], ['Faire l\'amour 10 fois en une journée', 'Une seule fois par mois mais incroyable'], ['Ne faire que des préliminaires', 'Ne jamais faire de préliminaires'],
+    ['Un sextoy télécommandé en soirée', 'Ne porter aucun sous-vêtement en soirée'], ['Que tout le monde entende tes ébats', 'Que tout le monde voie tes ébats'], ['Coucher avec ton ex une dernière fois', 'Coucher avec l\'ex de ton/ta partenaire'],
   ],
 };

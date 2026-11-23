@@ -1,6 +1,7 @@
 // Jeux d'écriture en ligne : Punchlines (réponse la plus drôle) et Dico bluff (fausses définitions).
 // Déroulé d'une manche : écrire → voter (anonyme) → révélation des auteurs et des points.
 import { h, uid, shuffle, seg, norm } from '../ui.js';
+import { drawNew } from './kit.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 import PUNCH from '../data/punchlines.js';
@@ -22,8 +23,7 @@ function makeWrite(mode) {
   function startRound(room, s) {
     s.round++;
     if (s.round > s.st.rounds) { s.phase = 'end'; return; }
-    if (!s.deck.length) s.deck = shuffle(s.all.slice());
-    const item = s.deck.pop();
+    const item = drawNew(s, s.key, s.all);
     s.prompt = dico ? item[0] : item;
     s.real = dico ? item[1] : null;
     s.subs = {};
@@ -90,7 +90,7 @@ function makeWrite(mode) {
 
     init(room, st) {
       const all = dico ? DICO.slice() : (st.levels && st.levels.length ? st.levels : ['fun']).flatMap((l) => PUNCH[l] || []);
-      const s = { gid: uid(), st, all, deck: shuffle(all.slice()), round: 0 };
+      const s = { gid: uid(), st, all, key: dico ? 'on:dico' : 'on:punch:' + (st.levels && st.levels.length ? st.levels : ['fun']).slice().sort(), round: 0 };
       startRound(room, s);
       return s;
     },

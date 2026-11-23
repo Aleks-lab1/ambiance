@@ -1,5 +1,6 @@
 // « Je dessine, tu devines » en ligne.
-import { h, pick, shuffle, norm, levenshtein, seg, toggleRow } from '../ui.js';
+import { h, pick, norm, levenshtein, seg, toggleRow } from '../ui.js';
+import { drawNew } from './kit.js';
 import { createBoard, createTools, applyToLog, validOp } from '../canvas.js';
 import { podium } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -23,9 +24,13 @@ function pushMsg(s, m) {
 }
 
 function drawChoices(s) {
-  let pool = wordPool(s.st.diff).filter((w) => !s.used.has(w));
-  if (pool.length < 3) { s.used.clear(); pool = wordPool(s.st.diff); }
-  return shuffle(pool.slice()).slice(0, 3);
+  // 3 mots tirés sans répétition d'une partie à l'autre (mémorisés chez l'hôte).
+  const out = [];
+  for (let k = 0; out.length < 3 && k < 30; k++) {
+    const w = drawNew(s, 'on:dessin:' + s.st.diff, () => wordPool(s.st.diff));
+    if (!out.includes(w) && !s.used.has(w)) out.push(w);
+  }
+  return out;
 }
 
 function letterIdx(word) {

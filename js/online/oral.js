@@ -3,22 +3,22 @@ import { h, uid, shuffle, seg, pick } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
 import FRONT from '../data/front.js';
 import NIOUI from '../data/nioui.js';
 import HISTOIRE from '../data/histoire.js';
 
 const roundsSeg = (st, set, label = 'Tours par joueur', vals = [1, 2, 3]) => h('label', { class: 'field' }, label, seg(vals.map((n) => ({ value: n, label: String(n) })), st.rounds, (v) => set({ rounds: v })));
 const timeSeg = (st, set, vals, label) => h('label', { class: 'field' }, label, seg(vals.map((n) => ({ value: n, label: n + ' s' })), st.time, (v) => set({ time: v })));
-const draw = (s, key, refill) => { if (!s[key].length) s[key] = refill(); return s[key].pop(); };
 const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
 
 // =====================================================================
 // SUR LE FRONT : tout le monde voit le mot… sauf celui qui devine.
 // =====================================================================
+const frontCat = (cat) => (FRONT.some((c) => c.id === cat) ? cat : 'mix');
 const frontWords = (cat) => {
   const cats = FRONT.filter((c) => c.id === cat);
-  return shuffle((cats.length ? cats : FRONT).flatMap((c) => c.words));
+  return (cats.length ? cats : FRONT).flatMap((c) => c.words);
 };
 
 export const frontOnline = {
@@ -37,7 +37,7 @@ export const frontOnline = {
   },
   init(room, st) {
     const order = shuffle(activePids(room));
-    return { gid: uid(), st, order, guesser: order[0], phase: 'ready', turn: 1, total: (st.rounds || 1) * order.length, deck: frontWords(st.cat), results: [], wk: 0 };
+    return { gid: uid(), st, order, guesser: order[0], phase: 'ready', turn: 1, total: (st.rounds || 1) * order.length, results: [], wk: 0 };
   },
   action(room, s, pid, a) {
     const me = pid === s.guesser;
@@ -123,7 +123,8 @@ export const frontOnline = {
     };
   },
 };
-function frontNext(s) { s.word = draw(s, 'deck', () => frontWords(s.st.cat)); s.wk++; }
+// Même paquet que la version locale (front.js) : mots déjà vus partagés.
+function frontNext(s) { s.word = drawNew(s, 'front:' + frontCat(s.st.cat), () => frontWords(s.st.cat)); s.wk++; }
 
 // =====================================================================
 // NI OUI NI NON
@@ -139,16 +140,16 @@ export const niouiOnline = {
   },
   init(room, st) {
     const order = shuffle(activePids(room));
-    const s = { gid: uid(), st, order, victim: order[0], phase: 'ready', turn: 1, total: (st.rounds || 1) * order.length, deck: shuffle(NIOUI.slice()), qn: 0 };
+    const s = { gid: uid(), st, order, victim: order[0], phase: 'ready', turn: 1, total: (st.rounds || 1) * order.length, qn: 0 };
     s.asker = nextOn(room, order, s.victim);
     return s;
   },
   action(room, s, pid, a) {
     const host = pid === room.host;
     if (a.type === 'start' && s.phase === 'ready' && (pid === s.victim || pid === s.asker || host)) {
-      s.phase = 'play'; s.deadline = Date.now() + s.st.time * 1000; s.qn = 1; s.q = draw(s, 'deck', () => shuffle(NIOUI.slice())); s.by = null; return true;
+      s.phase = 'play'; s.deadline = Date.now() + s.st.time * 1000; s.qn = 1; s.q = drawNew(s, 'nioui', NIOUI); s.by = null; return true;
     }
-    if (a.type === 'q' && s.phase === 'play' && (pid === s.asker || host)) { s.q = draw(s, 'deck', () => shuffle(NIOUI.slice())); s.qn++; return true; }
+    if (a.type === 'q' && s.phase === 'play' && (pid === s.asker || host)) { s.q = drawNew(s, 'nioui', NIOUI); s.qn++; return true; }
     if (a.type === 'fail' && s.phase === 'play' && pid !== s.victim) { s.phase = 'result'; s.won = false; s.by = pid; return true; }
     if (a.type === 'next' && s.phase === 'result' && (pid === s.victim || pid === s.asker || host)) {
       s.turn++;
@@ -241,12 +242,14 @@ export const histoireOnline = {
   },
   init(room, st) {
     const order = shuffle(activePids(room));
-    return { gid: uid(), st, order, who: order[0], starter: pick(HISTOIRE.starters), chain: [], phase: 'intro', turn: 0, total: (st.rounds || 2) * order.length, words: shuffle(HISTOIRE.words.slice()) };
+    const s = { gid: uid(), st, order, who: order[0], chain: [], phase: 'intro', turn: 0, total: (st.rounds || 2) * order.length };
+    s.starter = drawNew(s, 'on:histoire:debuts', HISTOIRE.starters);
+    return s;
   },
   action(room, s, pid, a) {
     const can = pid === s.who || pid === room.host;
     if (a.type === 'go' && (s.phase === 'intro' || s.phase === 'ready') && can) {
-      s.word = draw(s, 'words', () => shuffle(HISTOIRE.words.slice()));
+      s.word = drawNew(s, 'histoire', HISTOIRE.words);
       s.deadline = Date.now() + s.st.time * 1000;
       s.phase = 'play';
       return true;

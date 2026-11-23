@@ -4,7 +4,7 @@ import { h, uid, shuffle, pick, randInt, seg, stepper } from '../ui.js';
 import { levelPicker, dieFace, TEAM_COLORS, podium } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, isOn, playerOf } from './kit.js';
+import { activePids, addScore, nextOn, isOn, playerOf, drawNew } from './kit.js';
 import { DEFIS, BOTTLE_SVG } from '../games/bouteille.js';
 import { LEVELS as ROUE_LEVELS, SEGMENTS, drawWheel } from '../games/roue.js';
 import GAGES from '../data/gages.js';
@@ -34,7 +34,7 @@ export const bouteilleOnline = {
   settingsForm: (st, set) => levelsForm(BT_LEVELS, st, set, 'Défis'),
   init(room, st) {
     const order = activePids(room);
-    return { gid: uid(), st, order, spinner: pick(order), from: null, target: null, angle: 0, phase: 'idle', n: 0, deck: [] };
+    return { gid: uid(), st, order, spinner: pick(order), from: null, target: null, angle: 0, phase: 'idle', n: 0 };
   },
   action(room, s, pid, a) {
     if (a.type !== 'spin' || s.phase === 'spin' || (pid !== s.spinner && pid !== room.host)) return false;
@@ -54,9 +54,9 @@ export const bouteilleOnline = {
   },
   tick(room, s) {
     if (s.phase !== 'spin' || Date.now() < s.until) return false;
-    if (!s.deck.length) s.deck = shuffle(validLevels(BT_LEVELS, s.st.levels).flatMap((l) => DEFIS[l] || []));
+    const lv = validLevels(BT_LEVELS, s.st.levels).slice().sort();
     const nm = (p) => (playerOf(room, p) || {}).name || '?';
-    s.defi = (s.deck.pop() || '').replace(/\{a\}/g, nm(s.from)).replace(/\{b\}/g, nm(s.target));
+    s.defi = (drawNew(s, 'on:bouteille:' + lv, () => lv.flatMap((l) => DEFIS[l] || [])) || '').replace(/\{a\}/g, nm(s.from)).replace(/\{b\}/g, nm(s.target));
     s.spinner = s.target; // c'est la personne désignée qui fait tourner ensuite
     s.phase = 'result';
     return true;
@@ -138,7 +138,7 @@ export const roueOnline = {
   settingsForm: (st, set) => levelsForm(ROUE_LEVELS, st, set, 'Niveaux des gages'),
   init(room, st) {
     const order = shuffle(activePids(room));
-    return { gid: uid(), st, order, who: order[0], victim: null, angle: 0, idx: 0, phase: 'idle', n: 0, deck: [], res: null };
+    return { gid: uid(), st, order, who: order[0], victim: null, angle: 0, idx: 0, phase: 'idle', n: 0, res: null };
   },
   action(room, s, pid, a) {
     if (a.type !== 'spin' || s.phase === 'spin' || (pid !== s.who && pid !== room.host)) return false;
@@ -156,8 +156,9 @@ export const roueOnline = {
   tick(room, s) {
     if (s.phase !== 'spin' || Date.now() < s.until) return false;
     const gage = () => {
-      if (!s.deck.length) s.deck = shuffle(validLevels(ROUE_LEVELS, s.st.levels).flatMap((l) => GAGES[l] || []));
-      return s.deck.pop() || '…';
+      // Même paquet que la version locale (roue.js) : gages déjà tirés partagés.
+      const lv = validLevels(ROUE_LEVELS, s.st.levels).slice().sort();
+      return drawNew(s, 'roue:' + lv, () => lv.flatMap((l) => GAGES[l] || [])) || '…';
     };
     const kind = SEGMENTS[s.idx].kind;
     s.res = { kind, g1: ['gage', 'double', 'tous', 'choisis'].includes(kind) ? gage() : null, g2: kind === 'double' ? gage() : null };

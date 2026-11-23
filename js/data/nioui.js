@@ -12,4 +12,18 @@ export default [
   'Tu veux recommencer ?', 'Tu as déjà été amoureux(se) ?', 'C\'est ta première fois ici ?', 'Tu as pensé à moi aujourd\'hui ?', 'C\'est bon pour toi ?', 'Tu as bien entendu ?',
   'Tu es concentré(e) ?', 'Tu aimes les surprises ?', 'Tu sais compter jusqu\'à dix ?', 'Tu as déjà répondu à cette question ?', 'Tu es toujours là ?', 'Ça va ?',
   'Tu as un téléphone ?', 'Tu dors avec un doudou ?', 'C\'est ton anniversaire aujourd\'hui ?', 'Tu as déjà raté un avion ?', 'Tu as hâte que ça se termine ?', 'Tu transpires ?',
+  // Lot 2
+  'Tu préfères le chocolat noir ?', 'Tu aimes les épinards ?', 'Tu as déjà triché ?', 'Tu as peur des araignées ?',
+  'Tu sais conduire ?', 'Tu bois du café ?', 'Tu as un frère ?', 'Tu as une sœur ?',
+  'Tu aimes ton prénom ?', 'Tu as déjà dansé sur une table ?', 'Tu as un compte Instagram ?', 'Tu regardes des séries ?',
+  'Tu fais du sport ?', 'Tu as mangé aujourd\'hui ?', 'Tu as un animal ?', 'Tu sais cuisiner ?',
+  'Tu t\'amuses bien ?', 'Tu aimes la pizza à l\'ananas ?', 'Tu portes des lunettes ?', 'Tu es né(e) en été ?',
+  'Tu as déjà vu un film d\'horreur ?', 'Tu crois au Père Noël ?', 'Tu sais siffler ?', 'Tu sais jongler ?',
+  'Tu as déjà fait du ski ?', 'Tu as déjà gagné quelque chose ?', 'Tu dors avec une peluche ?', 'Tu as déjà menti aujourd\'hui ?',
+  'Tu connais les règles de ce jeu ?', 'Tu veux que je répète ?', 'C\'est ton premier tour ?', 'Tu vas tenir jusqu\'au bout ?',
+  'Tu as chaud ?', 'Tu es sûr(e) de toi ?', 'Tu es stressé(e) ?', 'Tu trouves ça facile ?',
+  'Tu as envie de dire oui ?', 'Tu as besoin d\'une pause ?', 'Tu es prêt(e) pour la suite ?', 'Tu aimes les chats ?',
+  'Tu préfères les chiens ?', 'Tu as déjà cassé ton téléphone ?', 'Tu as un surnom ?', 'Tu es déjà allé(e) à Paris ?',
+  'Tu as déjà raté un train ?', 'Tu manges des légumes ?', 'Tu sais nager le crawl ?', 'Tu as un crush en ce moment ?',
+  'Tu es en couple ?',
 ];

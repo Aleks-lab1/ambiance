@@ -4,7 +4,7 @@ import { gameColors } from '../themes.js';
 import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
 import { matches } from '../race-core.js';
 import QAE from '../data/quiaecrit.js';
 import CURSEUR from '../data/curseur.js';
@@ -47,7 +47,7 @@ export const quiaecritOnline = {
       levelPicker(QAE_LEVELS, sel, (x) => set({ levels: [...x] })));
   },
   init(room, st) {
-    const s = { gid: uid(), st, round: 0, deck: shuffle((st.levels || ['fun']).flatMap((l) => QAE[l] || [])) };
+    const s = { gid: uid(), st, round: 0 };
     qaeRound(s);
     return s;
   },
@@ -136,8 +136,8 @@ export const quiaecritOnline = {
 function qaeRound(s) {
   s.round++;
   if (s.round > s.st.rounds) { s.phase = 'end'; return; }
-  if (!s.deck.length) s.deck = shuffle(QAE.fun.slice());
-  s.prompt = s.deck.pop();
+  const lv = (s.st.levels && s.st.levels.length ? s.st.levels : ['fun']).filter((l) => QAE[l]).sort();
+  s.prompt = drawNew(s, 'on:quiaecrit:' + lv, () => lv.flatMap((l) => QAE[l]));
   s.answers = {}; s.list = null; s.idx = 0; s.votes = {};
   s.phase = 'write'; s.deadline = Date.now() + s.st.time * 1000;
 }
@@ -175,7 +175,7 @@ export const curseurOnline = {
   settingsForm: (st, set) => roundsSeg(st, set, [4, 6, 10], 'Nombre de tours'),
   init(room, st) {
     const order = shuffle(activePids(room));
-    const s = { gid: uid(), st, order, giver: order[0], round: 0, deck: shuffle(CURSEUR.slice()) };
+    const s = { gid: uid(), st, order, giver: order[0], round: 0 };
     curRound(room, s, true);
     return s;
   },
@@ -241,8 +241,7 @@ function curRound(room, s, first = false) {
   s.round++;
   if (s.round > s.st.rounds) { s.phase = 'end'; return; }
   if (!first) s.giver = nextOn(room, s.order, s.giver);
-  if (!s.deck.length) s.deck = shuffle(CURSEUR.slice());
-  s.pair = s.deck.pop();
+  s.pair = drawNew(s, 'on:curseur', CURSEUR);
   s.target = Math.round(rand(6, 94));
   s.clue = ''; s.guesses = {}; s.pts = null; s.phase = 'clue';
 }
@@ -264,7 +263,7 @@ export const danssateteOnline = {
   settingsForm: (st, set) => roundsSeg(st, set, [4, 6, 10], 'Nombre de tours'),
   init(room, st) {
     const order = shuffle(activePids(room));
-    const s = { gid: uid(), st, order, judge: order[0], round: 0, deck: shuffle(CLASSEMENT.slice()) };
+    const s = { gid: uid(), st, order, judge: order[0], round: 0 };
     dstRound(room, s, true);
     return s;
   },
@@ -326,8 +325,7 @@ function dstRound(room, s, first = false) {
   s.round++;
   if (s.round > s.st.rounds) { s.phase = 'end'; return; }
   if (!first) s.judge = nextOn(room, s.order, s.judge);
-  if (!s.deck.length) s.deck = shuffle(CLASSEMENT.slice());
-  const [theme, items] = s.deck.pop();
+  const [theme, items] = drawNew(s, 'on:classement', CLASSEMENT);
   s.theme = theme; s.items = shuffle(items.slice());
   s.ranks = {}; s.pts = null; s.phase = 'rank';
 }
@@ -437,9 +435,13 @@ export const quisuisjeOnline = {
   init(room, st) {
     const cat = FRONT.find((c) => c.id === st.cat) || FRONT.find((c) => c.id === 'celebrites');
     const order = shuffle(activePids(room));
-    const words = shuffle(cat.words.slice());
-    const who = Object.fromEntries(order.map((p, i) => [p, words[i % words.length]]));
-    return { gid: uid(), st, cat: cat.name, order, who, asker: order[0], found: {}, rank: 0, wrong: {}, phase: 'play' };
+    const s = { gid: uid(), st, cat: cat.name, order, asker: order[0], found: {}, rank: 0, wrong: {}, phase: 'play' };
+    // Identités tirées sans répétition d'une partie à l'autre, et toutes différentes dans la partie.
+    const words = new Set();
+    for (let k = 0; words.size < order.length && k < 200; k++) words.add(drawNew(s, 'on:quisuisje:' + cat.id, cat.words));
+    const list = [...words];
+    s.who = Object.fromEntries(order.map((p, i) => [p, list[i % list.length]]));
+    return s;
   },
   action(room, s, pid, a) {
     if (s.phase !== 'play' || !s.who[pid]) return false;

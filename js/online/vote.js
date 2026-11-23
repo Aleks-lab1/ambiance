@@ -1,10 +1,11 @@
 // Jeux de vote en ligne : Tu préfères, C'est un 10 mais…, Qui de nous…
-import { h, shuffle } from '../ui.js';
+import { h } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { LEVELS } from '../data/levels.js';
 import { levelPicker } from '../common.js';
 import { drinks, drinkPl } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
+import { drawNew } from './kit.js';
 import TP from '../data/tupreferes.js';
 import DIX from '../data/dix.js';
 import QUI from '../data/qui.js';
@@ -19,6 +20,8 @@ const MODES = {
   qui: { name: 'Qui de nous…', emoji: '👉', short: 'Désignez quelqu\'un', data: QUI, levels: LEVELS.qui, kicker: 'Qui de nous est le plus susceptible de…', min: 3, colors: ['#00b39b', '#5a6cff'] },
 };
 
+const LOCAL_ID = { tp: 'tupreferes', dix: 'dix', qui: 'qui', op: 'opinions', jamais: 'jamais' };
+
 function makeVote(mode) {
   const M = MODES[mode];
   const binary = mode === 'tp' || mode === 'op' || mode === 'jamais';
@@ -26,8 +29,7 @@ function makeVote(mode) {
   const validLevels = (ls) => (Array.isArray(ls) ? ls.filter((l) => M.levels.some((x) => x.id === l)) : []);
 
   function next(s) {
-    if (!s.deck.length) s.deck = shuffle(s.all.slice());
-    s.q = s.deck.pop();
+    s.q = drawNew(s, s.key, s.all);
     s.n++;
     s.votes = {};
     s.phase = 'vote';
@@ -52,8 +54,10 @@ function makeVote(mode) {
 
     init(room, st) {
       const lv = validLevels(st.levels);
-      const all = (lv.length ? lv : [M.levels[0].id]).flatMap((l) => (M.data[l] || []).map((it) => ({ l, it })));
-      const s = { all, deck: shuffle(all.slice()), q: null, n: 0, votes: {}, phase: 'vote' };
+      const lvs = lv.length ? lv : [M.levels[0].id];
+      const all = lvs.flatMap((l) => (M.data[l] || []).map((it) => ({ l, it })));
+      // Même clé que la version locale (cartes.js) : les cartes déjà vues sont partagées.
+      const s = { all, key: LOCAL_ID[mode] + ':' + lvs.slice().sort().join(','), q: null, n: 0, votes: {}, phase: 'vote' };
       next(s);
       return s;
     },

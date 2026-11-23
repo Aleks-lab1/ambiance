@@ -11,4 +11,18 @@ export default [
   'Les pigeons sont des espions', 'Supprimer l\'heure d\'été', 'Les dinosaures auraient été de bons animaux de compagnie', 'Le meilleur repas est le brunch',
   'Remplacer les poignées de main par des checks', 'Les pâtes sans sauce', 'La raclette en été', 'Les plantes ont des sentiments', 'Les karaokés devraient être obligatoires en soirée',
   'Habiter chez ses parents à 30 ans', 'Les cheveux longs pour tout le monde', 'Remplacer l\'argent par des bonbons', 'Avoir un robot comme meilleur ami',
+  // Lot 2
+  'Les chiens devraient pouvoir aller au restaurant', 'Les plats surgelés sont aussi bons que les plats maison', 'Le meilleur moment de la journée est la nuit', 'Il faudrait interdire les réveils',
+  'Les gens qui marchent lentement devraient avoir leur propre trottoir', 'Les films de Noël devraient passer toute l\'année', 'Les escaliers sont mieux que les ascenseurs', 'Le camping est la meilleure façon de voyager',
+  'Les chaussons sont des chaussures de ville', 'On devrait pouvoir dormir au cinéma', 'Les pigeons sont plus intelligents que les humains', 'La musique d\'ascenseur est la meilleure musique',
+  'Les vacances d\'été devraient durer 4 mois', 'Le petit-déjeuner est le repas le plus important', 'Les vieux téléphones étaient mieux', 'Il faudrait un jour férié pour le fromage',
+  'Les chats devraient avoir leur propre réseau social', 'Le sport, c\'est surcoté', 'La pluie est meilleure que le soleil', 'Les clowns font plus peur que rire',
+  'Les jeux de société devraient remplacer les écrans', 'Le lundi devrait être un jour de repos', 'Les licornes seraient de mauvais animaux de compagnie', 'Les sièges du milieu dans l\'avion sont les meilleurs',
+  'Les écoles devraient enseigner la cuisine', 'On devrait élire le président par un concours de danse', 'Les enfants devraient choisir les menus de la cantine', 'Le pain sans croûte est meilleur',
+  'Les tongs devraient être interdites en ville', 'Il faut toujours finir son assiette', 'Les super-héros devraient payer des impôts', 'Le chocolat devrait être remboursé par la Sécu',
+  'Le dimanche soir est le pire moment de la semaine', 'Les plantes vertes sont de meilleurs colocataires que les humains', 'Les robots devraient faire le ménage obligatoirement', 'Il faudrait apprendre à parler aux animaux à l\'école',
+  'Les mangas sont mieux que les BD', 'Le foot est mieux à la télé qu\'au stade', 'Les pâtes sont meilleures que le riz', 'Les fêtes surprises sont une mauvaise idée',
+  'Les vacances à la campagne sont les meilleures', 'Il faut rendre les sandales obligatoires au travail en été', 'La télé-réalité est une forme d\'art', 'Les vocaux de plus d\'une minute devraient être interdits',
+  'Il faudrait une sieste obligatoire pour les adultes', 'Le meilleur super-pouvoir est de ne jamais avoir faim', 'Les livres audio, ce n\'est pas lire', 'Il vaut mieux être en avance qu\'à l\'heure',
+  'Les animaux de compagnie devraient avoir un passeport', 'Les bonnets sont plus utiles que les casquettes',
 ];

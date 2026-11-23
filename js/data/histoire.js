@@ -13,6 +13,14 @@ export default {
     'Le GPS a dit « tournez à gauche »… et je me suis retrouvé(e) en 1789…', 'Ma mamie a ouvert une boîte de nuit…', 'Ce soir-là, la Lune est tombée dans mon jardin…',
     'Pendant l\'entretien d\'embauche, j\'ai éternué si fort que…', 'Une licorne s\'est garée devant chez moi…', 'Le jour où la gravité a disparu pendant une heure…',
     'Le robot aspirateur a pris le contrôle de la maison…', 'Au supermarché, tous les produits se sont mis à chanter…',
+    // Lot 2
+    'Ce matin, mon réveil m\'a parlé…', 'Le jour où le chat du voisin est devenu président…', 'Dans la boîte aux lettres, il y avait une lettre écrite en 2087…', 'Au milieu du désert, une cabine téléphonique s\'est mise à sonner…',
+    'Le prof est entré en classe… sur un cheval…', 'Un pingouin a frappé à ma porte pour emprunter du sucre…', 'La nuit où toutes les lumières de la ville se sont éteintes…', 'Mon GPS m\'a envoyé dans un village qui n\'existait sur aucune carte…',
+    'Le jour où les pizzas ont commencé à voler…', 'En ouvrant le carton de mon déménagement, j\'ai trouvé un dinosaure miniature…', 'À la fête de mariage, le gâteau s\'est mis à chanter…', 'Un matin, tous les adultes se sont réveillés avec 6 ans…',
+    'Le capitaine du bateau a annoncé : « Nous ne sommes plus sur Terre »…', 'La sorcière du village avait ouvert une boulangerie…', 'Le jour où Internet a disparu…', 'Un robot aspirateur a décidé de prendre sa liberté…',
+    'Dans le métro, une vieille dame m\'a tendu une carte au trésor…', 'Le jour où mon chien a appris à parler, il m\'a avoué un secret…', 'Le Père Noël est tombé en panne de traîneau au-dessus de chez moi…', 'À l\'entretien d\'embauche, le recruteur était un perroquet…',
+    'Il était une fois une licorne qui détestait les paillettes…', 'La fusée devait aller sur Mars, mais elle a atterri à Marseille…', 'Pendant le camping, un ours est venu nous demander le wifi…', 'Le jour où j\'ai gagné une journée dans la peau d\'une célébrité…',
+    'Le fantôme du château avait peur de la nuit…',
   ],
   words: [
     'banane', 'parapluie', 'dinosaure', 'moustache', 'téléphone', 'fromage', 'astronaute', 'chaussette', 'volcan', 'licorne', 'pyjama', 'trompette',
@@ -27,5 +35,13 @@ export default {
     'nain de jardin', 'oreiller', 'sous-marin', 'panda', 'kebab', 'harmonica', 'trou noir', 'chouette', 'yoga', 'lampadaire', 'abeille', 'dragon',
     'glaçon', 'jumelles', 'tapis volant', 'machine à laver', 'hippopotame', 'fourchette', 'ex', 'belle-mère', 'Wi-Fi', 'pétanque', 'barbecue', 'bisou',
     'slip', 'cocktail', 'sandale', 'doudou', 'réveil', 'moustique', 'gendarme', 'radiateur', 'salsa', 'tuba', 'bouchon', 'raquette',
+    // Lot 2
+    'perroquet', 'pantoufle', 'trésor', 'mamie',
+    'moule-frites', 'police', 'Tour Eiffel', 'boule disco',
+    'président', 'extraterrestre', 'échelle', 'guitare',
+    'arc-en-ciel', 'carnaval', 'grille-pain', 'marmotte',
+    'cascade', 'bowling', 'bulldozer', 'patinoire',
+    'marathon', 'hérisson', 'météorite', 'tempête',
+    'laboratoire', 'diamant', 'rap',
   ],
 };

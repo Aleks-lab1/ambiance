@@ -21,6 +21,16 @@ export default [
   ['Lancement d\'Instagram', 2010], ['Sortie de Minecraft (version finale)', 2011], ['Mariage pour tous en France', 2013], ['Sortie de La Reine des neiges', 2013],
   ['Sortie de la Nintendo Switch', 2017], ['Sortie de Fortnite', 2017], ['Incendie de Notre-Dame de Paris', 2019], ['Premier confinement en France', 2020],
   ['Jeux olympiques de Paris', 2024],
+  // Lot 2
+  ['Construction du Colisée de Rome (achèvement)', 80], ['Fin de l\'Empire romain d\'Occident', 476], ['Baptême de Clovis', 496], ['Fondation de l\'université de la Sorbonne', 1257],
+  ['Début de la guerre de Cent Ans', 1337], ['Peste noire en Europe', 1347], ['Bataille de Marignan', 1515], ['Naissance de Molière', 1622],
+  ['Fondation de l\'Académie française', 1635], ['Construction du château de Versailles (installation de la cour)', 1682], ['Naissance de Mozart', 1756], ['Révolution russe', 1917],
+  ['Fin de la Première Guerre mondiale', 1918], ['Création de Mickey Mouse', 1928], ['Début de la Seconde Guerre mondiale', 1939], ['Débarquement en Normandie', 1944],
+  ['Bombe atomique sur Hiroshima', 1945], ['Lancement du satellite Spoutnik', 1957], ['Création de la Ve République', 1958], ['Assassinat de John F. Kennedy', 1963],
+  ['Festival de Woodstock', 1969], ['Premier ordinateur Apple', 1976], ['Premier téléphone portable commercialisé (Motorola)', 1983], ['Découverte de l\'épave du Titanic', 1985],
+  ['Sortie de la Nintendo NES en Europe', 1986], ['Invention du Web au CERN', 1989], ['Sortie de Windows 95', 1995], ['Coupe du monde de football en France', 1998],
+  ['Attentats du 11 septembre aux États-Unis', 2001], ['Premier film Harry Potter au cinéma', 2001], ['Lancement de Twitter', 2006], ['Sortie de l\'iPad', 2010],
+  ['Sortie de Pokémon Go', 2016], ['La France championne du monde de football pour la 2e fois', 2018], ['Sortie de la PlayStation 5', 2020], ['L\'Argentine de Messi championne du monde', 2022],
 ];
 
 export const fmtYear = (y) => (y < 0 ? `${-y} av. J.-C.` : String(y));

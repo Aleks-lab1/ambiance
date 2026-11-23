@@ -2,6 +2,21 @@
 import { h } from '../ui.js';
 import { podium } from '../common.js';
 import { sfx } from '../sfx.js';
+import { makeDeck } from '../store.js';
+
+const DECKS = new WeakMap();
+/**
+ * Pioche sans répétition, même d'une partie à l'autre : comme en local, les cartes déjà tirées sont
+ * mémorisées dans le téléphone de l'hôte (makeDeck de store.js). `key` identifie le paquet (y mettre les
+ * niveaux choisis) ; `items` = tableau, ou fonction qui le construit (appelée une fois par partie).
+ * Même clé et même forme d'éléments que la version locale = mémoire partagée entre local et en ligne.
+ */
+export function drawNew(s, key, items) {
+  let decks = DECKS.get(s);
+  if (!decks) DECKS.set(s, (decks = {}));
+  if (!decks[key]) decks[key] = makeDeck(key, typeof items === 'function' ? items() : items);
+  return decks[key].next();
+}
 
 export const activePids = (room) => room.players.filter((p) => p.on).map((p) => p.pid);
 export const playerOf = (room, pid) => room.players.find((p) => p.pid === pid);

@@ -7,6 +7,13 @@ export default {
     'Raconte un souvenir d\'enfance', 'Fais un dessin les yeux fermés', 'Parle avec un accent marseillais jusqu\'au prochain tour', 'Fais le service pour tout le monde',
     'Fais une déclaration d\'amour à ta chaussure', 'Chante tout ce que tu dis jusqu\'au prochain tour', 'Fais 10 pompes', 'Mime ton film préféré',
     'Garde un sourire figé pendant 1 minute', 'Raconte ta journée à l\'envers', 'Invente un poème sur la personne en face de toi',
+    // Lot 2
+    'Parle comme un robot pendant 2 minutes', 'Fais une déclaration d\'amour à ta chaise', 'Chante une chanson en mangeant un biscuit', 'Mime un dinosaure en train de faire ses courses',
+    'Fais 10 sauts de grenouille', 'Raconte ta journée avec la voix d\'un dessin animé', 'Danse la danse des canards', 'Fais un compliment à chaque joueur avec un accent',
+    'Imite un mannequin sur un podium', 'Fais 30 secondes de gainage', 'Dis 10 noms de fromages en 20 secondes', 'Fais une haie d\'honneur au prochain qui se lève',
+    'Joue de la guitare imaginaire pendant tout un refrain', 'Fais un tour de magie (même raté)', 'Parle avec un crayon dans la bouche jusqu\'au prochain tour', 'Fais semblant d\'être un présentateur du JT',
+    'Récite une table de multiplication en chantant', 'Imite trois animaux de suite', 'Garde un bonnet ou un chapeau jusqu\'à la fin de la partie', 'Fais une haka',
+    'Invente un poème sur la personne à ta gauche', 'Fais l\'avion dans toute la pièce',
   ],
   fun: [
     'Envoie un vocal où tu chantes à ton 5e contact', 'Mets ta photo de profil la plus moche pendant 1 heure', 'Laisse le groupe écrire ta prochaine story',
@@ -16,6 +23,13 @@ export default {
     'Garde un glaçon dans ton t-shirt jusqu\'à ce qu\'il fonde', 'Laisse le groupe regarder ta galerie photo pendant 20 secondes', 'Fais un slow avec un balai',
     'Imite un bébé qui découvre le monde pendant 1 minute', 'Fais la poule jusqu\'à ton prochain tour à chaque fois qu\'on rit', 'Parle en rimes jusqu\'au prochain tour',
     'Raconte ton pire râteau', 'Like une vieille photo de ton crush', 'Porte tes vêtements à l\'envers jusqu\'à la fin de la partie',
+    // Lot 2
+    'Envoie un vocal de toi en train de chanter à ton dernier contact', 'Laisse le groupe te dessiner une moustache', 'Mange une cuillère de sauce piquante', 'Porte tes vêtements à l\'envers jusqu\'à la fin de la soirée',
+    'Laisse quelqu\'un publier une story depuis ton téléphone', 'Fais un défilé en sous-vêtements… par-dessus tes vêtements', 'Appelle un ami et parle-lui uniquement en chantant', 'Mets ta pire photo en fond d\'écran pour 24 h',
+    'Fais un massage des pieds à la personne de ton choix', 'Bois un verre d\'eau sans les mains', 'Fais semblant de pleurer à chaudes larmes pendant 30 secondes', 'Tweete ou poste « J\'adore les pieds »',
+    'Laisse quelqu\'un renifler ton aisselle', 'Fais une demande en mariage à genoux à quelqu\'un', 'Raconte ton plus gros secret de soirée', 'Mange un aliment choisi les yeux bandés',
+    'Mets du dentifrice sur ton nez jusqu\'au prochain tour', 'Chante l\'hymne national en playback dramatique', 'Fais un selfie avec le pire visage possible et envoie-le à ta mère', 'Parle comme un bébé jusqu\'au prochain gage',
+    'Fais le poirier (ou essaie)',
   ],
   hot: [
     'Fais un massage de 1 minute à la personne de ton choix', 'Décris ton fantasme en 3 mots', 'Fais un bisou sur la joue à la personne à ta gauche',
@@ -23,6 +37,10 @@ export default {
     'Mime ta position préférée', 'Fais un suçon à un fruit', 'Raconte ton rendez-vous le plus chaud', 'Assieds-toi sur les genoux de quelqu\'un jusqu\'au prochain tour',
     'Envoie un message coquin à la personne de ton choix', 'Laisse quelqu\'un te bander les yeux pour le prochain tour', 'Fais un regard de braise à chaque joueur',
     'Dis ce qui te plaît physiquement chez la personne en face', 'Mange une banane de la façon la plus sensuelle possible',
+    // Lot 2
+    'Fais un strip-tease d\'un seul vêtement', 'Murmure ton fantasme à quelqu\'un', 'Fais un suçon sur ton propre bras', 'Danse collé-serré avec la personne de ton choix',
+    'Envoie « Tu es sexy ce soir » à quelqu\'un ici', 'Fais un bisou dans le cou de quelqu\'un', 'Fais un massage sensuel d\'une minute', 'Montre ta photo la plus sexy',
+    'Décris ta nuit idéale en détail', 'Mime une scène de film érotique (habillé(e))', 'Fais une danse sexy sur une chaise', 'Embrasse la personne de ton choix sur la joue, très lentement',
   ],
   hotpp: [
     "Fais un lap dance de 1 minute à la personne de ton choix (si elle accepte)",
@@ -40,6 +58,9 @@ export default {
     "Murmure ton fantasme le plus inavouable à l'oreille de quelqu'un",
     "Les yeux bandés, laisse quelqu'un t'embrasser dans le cou (volontaires uniquement)",
     "Montre ta dernière recherche porno",
-    "Reste en sous-vêtements jusqu'au prochain tour de roue"
+    "Reste en sous-vêtements jusqu'au prochain tour de roue",
+    // Lot 2
+    'Laisse quelqu\'un t\'enlever un vêtement avec les dents', 'Fais un lap dance de 30 secondes', 'Raconte ta nuit la plus torride', 'Embrasse quelqu\'un (avec son accord)',
+    'Passe un glaçon sur la nuque de quelqu\'un', 'Montre comment tu embrasses, sur ta main', 'Fais un bisou à quelqu\'un là où il/elle choisit',
   ],
 };

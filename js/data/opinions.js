@@ -11,6 +11,17 @@ export default {
     'La plage, c\'est surcoté.', 'Les séries étaient mieux avant.', 'Le sport, c\'est surcoté.',
     'Les montagnes russes, c\'est terrifiant, pas amusant.', 'La sieste au travail devrait être un droit.', 'Les pâtes sont meilleures sans sauce.',
     'Mettre le lait avant les céréales, c\'est normal.', 'Le brunch, c\'est juste un petit-déjeuner trop cher.', 'Les pyjamas une-pièce pour adultes, c\'est la classe.',
+    // Lot 2
+    'La pizza froide est meilleure que la pizza chaude.', 'Les céréales, c\'est meilleur sans lait.', 'Le Nutella, c\'est surcoté.', 'Les films en VO, c\'est mieux.',
+    'Les vacances à la montagne sont meilleures qu\'à la plage.', 'La musique des années 80 est la meilleure.', 'Les chats sont plus intelligents que les chiens.', 'Le café, c\'est dégoûtant.',
+    'Les dessins animés sont meilleurs que les films.', 'Les fraises Tagada sont les meilleurs bonbons.', 'Les jeux de société, c\'est plus fun que les jeux vidéo.', 'Le hiver est la meilleure saison.',
+    'On devrait pouvoir manger le dessert en premier.', 'La mayonnaise est meilleure que le ketchup.', 'Les gens qui se lèvent tôt sont des héros.', 'Les pâtes, c\'est meilleur trop cuit.',
+    'Les sièges près du hublot sont les meilleurs.', 'La choucroute est sous-estimée.', 'Les escargots, c\'est délicieux.', 'Les séries, c\'était mieux avant.',
+    'Les chaussettes de Noël, c\'est le meilleur cadeau.', 'Le chocolat blanc n\'est pas du chocolat.', 'Les selfies, c\'est ridicule.', 'Le camping, c\'est les meilleures vacances.',
+    'On devrait avoir le droit de faire la sieste au travail.', 'Les licornes sont surcotées.', 'La croûte de la pizza est la meilleure partie.', 'Les gens qui mettent du sucre dans leurs pâtes ont raison.',
+    'La pluie, c\'est relaxant.', 'Le foot, c\'est ennuyeux à regarder.', 'Les vieux téléphones à clapet étaient mieux.', 'Le lundi n\'est pas si terrible.',
+    'Les pigeons sont des animaux sympathiques.', 'Les sushis, c\'est surcoté.', 'Le pain de mie est meilleur que la baguette.', 'Il faut mettre le lait avant les céréales.',
+    'Les karaokés devraient être obligatoires en soirée.', 'Le Père Noël devrait passer deux fois par an.',
   ],
   epice: [
     'On peut rester ami avec son ex.', 'Lire les messages de son/sa partenaire, c\'est parfois justifié.', 'L\'argent fait le bonheur.',
@@ -21,6 +32,12 @@ export default {
     'Ghoster quelqu\'un, c\'est acceptable.', 'On ne peut pas être vraiment ami avec son patron.', 'Les tatouages vieillissent mal.',
     'Il faut tout dire à ses amis, même ce qui fait mal.', 'Un peu de jalousie, c\'est une preuve d\'amour.', 'Emménager ensemble avant un an de relation, c\'est trop tôt.',
     'On peut pardonner une infidélité.', 'Les influenceurs ne servent à rien.', 'On a le droit de ne pas aimer sa famille.', 'Les animaux de compagnie, c\'est mieux que les enfants.',
+    // Lot 2
+    'On peut rester ami(e) avec son ex.', 'Lire les messages de son/sa partenaire, c\'est normal.', 'La jalousie est une preuve d\'amour.', 'Le mariage, c\'est dépassé.',
+    'Il vaut mieux être célibataire à 30 ans qu\'en couple malheureux.', 'On devrait pouvoir choisir ses collègues.', 'Les applis de rencontre ont tué le romantisme.', 'Avoir des enfants n\'est pas indispensable pour être heureux.',
+    'On peut tomber amoureux(se) de deux personnes à la fois.', 'Le premier rendez-vous, c\'est celui qui invite qui paie.', 'On devrait toujours dire la vérité, même si elle fait mal.', 'Partager son mot de passe avec son/sa partenaire, c\'est normal.',
+    'Les meilleurs amis ne devraient jamais sortir ensemble.', 'Travailler 4 jours par semaine devrait être la règle.', 'Le ghosting est parfois justifié.', 'On devrait pouvoir divorcer par SMS.',
+    'Vivre chez ses parents à 30 ans, ce n\'est pas un problème.', 'On peut mentir sur son âge.', 'Habiter ensemble au bout de 3 mois, c\'est bien.', 'Les surprises, c\'est surcoté.',
   ],
   hot: [
     'Coucher le premier soir, il n\'y a aucun problème.', 'La taille, ça compte.', 'Simuler, c\'est parfois nécessaire.',
@@ -29,5 +46,9 @@ export default {
     'Les préliminaires comptent plus que l\'acte.', 'Le couple libre, ça peut marcher.', 'Embrasser quelqu\'un en soirée, ce n\'est pas tromper.',
     'Un sextoy, c\'est un super cadeau.', 'Le sexe du matin est le meilleur.', 'Un sexfriend, c\'est la relation idéale.',
     'Mieux vaut un mauvais coup qui fait rire qu\'un bon coup ennuyeux.', 'Les fantasmes doivent rester des fantasmes.', 'On devrait parler plus librement de sexe en famille.',
+    // Lot 2
+    'La fidélité, c\'est dépassé.', 'On peut coucher le premier soir sans problème.', 'Le nombre de partenaires passés ne compte pas.', 'Les préliminaires sont plus importants que le reste.',
+    'On devrait parler de sexe plus librement en famille.', 'Le matin, c\'est le meilleur moment.', 'Regarder du porno à deux, c\'est une bonne idée.', 'Un bon baiser vaut mieux qu\'une nuit entière.',
+    'Les sextoys devraient être offerts en cadeau de mariage.', 'Coucher avec un(e) ex, ce n\'est pas grave.',
   ],
 };

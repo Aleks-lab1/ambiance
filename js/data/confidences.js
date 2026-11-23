@@ -9,6 +9,14 @@ export default {
     'Quel est ton record de sommeil ?', 'Quelle émission regardes-tu en cachette ?', 'Quel est le petit mensonge que tu racontes le plus souvent ?',
     'Quelle mode as-tu suivie et que tu regrettes amèrement ?', 'Si ta vie était une série, quel en serait le titre ?', 'Quel est le message le plus gênant que tu aies envoyé ?',
     'À quel personnage de dessin animé ressembles-tu ?', 'Quelle est ta manie la plus étrange ?', 'Quel est le pire petit boulot que tu aies fait ?', 'Qu\'est-ce qui te fait rire à tous les coups ?',
+    // Lot 2
+    'Quel est le pire cadeau que tu aies reçu ?', 'Quelle est ta plus grosse bêtise d\'enfant ?', 'Quel est le métier le plus bizarre que tu as voulu faire ?', 'Quelle chanson te rend honteusement heureux(se) ?',
+    'Quelle est la pire coupe de cheveux que tu aies eue ?', 'Quel film as-tu regardé le plus de fois ?', 'Quel est ton pire souvenir de vacances ?', 'Quel mensonge as-tu raconté pendant des années ?',
+    'Quel aliment refuses-tu de manger, même pour 100 euros ?', 'Quel est le message le plus gênant que tu as envoyé ?', 'Quelle célébrité aimerais-tu avoir comme meilleur(e) ami(e) ?', 'Qu\'est-ce qui te fait rire à coup sûr ?',
+    'Quelle est la chose la plus folle que tu aies faite pour un concert ou un match ?', 'Quel surnom aimerais-tu qu\'on te donne ?', 'Quel est ton plus gros fou rire ?', 'Quelle tenue regrettes-tu d\'avoir portée ?',
+    'Quel est le pire travail que tu aies fait ?', 'Quel est ton plaisir coupable à la télé ?', 'De quoi avais-tu peur quand tu étais petit(e) ?', 'Quelle est la pire excuse que tu aies inventée ?',
+    'Quel objet garderais-tu en cas d\'incendie ?', 'Quel est le dernier mensonge que tu as dit ?', 'Quelle appli utilises-tu en cachette ?', 'Quelle est ta plus grosse peur ridicule ?',
+    'Quel est ton pire moment de solitude en public ?', 'Quel jeu te rend mauvais(e) perdant(e) ?', 'Quel est le truc le plus bizarre que tu aies mangé ?',
   ],
   deep: [
     'De quoi es-tu le plus fier ou la plus fière dans ta vie ?', 'Quel conseil donnerais-tu à toi-même il y a 10 ans ?', 'Quelle est la plus grande leçon que la vie t\'ait apprise ?',
@@ -19,6 +27,13 @@ export default {
     'Qu\'est-ce qui t\'a le plus fait grandir ?', 'Quelle qualité admires-tu le plus chez quelqu\'un dans cette pièce ?', 'Si tu pouvais changer une chose en toi, ce serait laquelle ?',
     'Quelle est ta définition d\'une vie réussie ?', 'Qu\'est-ce que tu n\'as jamais osé dire à quelqu\'un ?', 'Quel est le plus beau compliment qu\'on t\'ait fait ?',
     'Quand as-tu pleuré pour la dernière fois, et pourquoi ?', 'Qu\'est-ce qui te redonne de l\'énergie quand tout va mal ?', 'Quel est ton souvenir d\'enfance le plus heureux ?',
+    // Lot 2
+    'Qu\'est-ce qui te rend vraiment fier/fière de toi ?', 'Quelle est la leçon la plus importante que la vie t\'a apprise ?', 'Quand as-tu pleuré pour la dernière fois ?', 'Qu\'est-ce que tu aimerais que les gens comprennent mieux chez toi ?',
+    'Quelle personne a changé ta vie ?', 'De quoi as-tu le plus peur pour l\'avenir ?', 'Qu\'est-ce qui te manque le plus de ton enfance ?', 'Quel conseil donnerais-tu à ton toi de 15 ans ?',
+    'Qu\'est-ce qui te donne de l\'énergie quand tout va mal ?', 'Quel rêve as-tu abandonné ?', 'Quelle est la chose la plus difficile que tu aies faite ?', 'Qu\'est-ce que tu n\'as jamais osé dire à tes parents ?',
+    'Qu\'est-ce qui te rend jaloux(se) chez les autres ?', 'Quelle est ta définition du bonheur ?', 'Quel moment de ta vie revivrais-tu sans hésiter ?', 'Qu\'est-ce qui te fait te sentir seul(e) ?',
+    'Quelle qualité admires-tu le plus chez quelqu\'un ici ?', 'Qu\'est-ce que tu voudrais avoir accompli dans 10 ans ?', 'Quelle est la plus belle chose qu\'on ait faite pour toi ?', 'Quel est ton plus grand complexe ?',
+    'Pour quoi aimerais-tu qu\'on se souvienne de toi ?', 'Qu\'est-ce que tu as appris d\'une rupture ou d\'une dispute ?', 'Qu\'est-ce que tu changerais chez toi si tu pouvais ?', 'Qui appelles-tu en premier quand ça ne va pas ?',
   ],
   love: [
     'Comment s\'est passé ton premier baiser ?', 'Quel est ton pire rendez-vous amoureux ?', 'Quelle est la chose la plus romantique qu\'on ait faite pour toi ?',
@@ -29,6 +44,13 @@ export default {
     'Peut-on rester ami avec un ex ?', 'Quel défaut acceptes-tu le plus facilement chez un(e) partenaire ?', 'As-tu déjà été jaloux(se) d\'une façon dont tu n\'es pas fier(ère) ?',
     'Quelle est la chose la plus mignonne que tu fais en couple ?', 'Qu\'as-tu appris de ta dernière relation ?', 'Crois-tu à l\'âme sœur ?',
     'Plutôt passion ou tendresse ?', 'Au bout de combien de temps peut-on dire « je t\'aime » ?', 'Quelle est ta plus grosse erreur en amour ?',
+    // Lot 2
+    'Quel a été ton tout premier crush ?', 'Comment s\'est passé ton premier bisou ?', 'Quel est le plus beau geste romantique que tu aies reçu ?', 'Qu\'est-ce qui te fait craquer chez quelqu\'un dès le premier regard ?',
+    'Quel est ton pire rendez-vous ?', 'As-tu déjà eu le cœur brisé ? Comment t\'en es-tu remis(e) ?', 'Quel est ton rendez-vous idéal ?', 'Qu\'est-ce qui est rédhibitoire pour toi chez un(e) partenaire ?',
+    'Crois-tu au coup de foudre ?', 'As-tu déjà été amoureux(se) sans le dire ?', 'Quelle est la chanson qui te fait penser à l\'amour ?', 'Qu\'est-ce que tu as appris de ta dernière relation ?',
+    'Quelle est la chose la plus folle que tu aies faite par amour ?', 'Préfères-tu déclarer ta flamme ou qu\'on te la déclare ?', 'Quel est ton langage de l\'amour : mots, cadeaux, temps, gestes ou services ?', 'As-tu déjà regretté une rupture ?',
+    'Quel est le surnom le plus mignon qu\'on t\'ait donné ?', 'Te vois-tu marié(e) un jour ?', 'Quel est le plus long moment où tu as été célibataire ?', 'Qu\'est-ce qui rend un couple solide selon toi ?',
+    'As-tu déjà eu un crush sur quelqu\'un d\'inaccessible ?', 'Quel est le compliment qui t\'a le plus touché(e) ?', 'Quelle est ta plus belle déclaration d\'amour ?', 'Qu\'est-ce qui te fait fondre chez quelqu\'un ?',
   ],
   hot: [
     'Quel est ton fantasme le plus récurrent ?', 'Quelle partie du corps t\'attire le plus chez les autres ?', 'Quelle est ta meilleure expérience au lit ?',
@@ -38,5 +60,9 @@ export default {
     'Plutôt matin, midi ou soir ?', 'Quelle musique pour une nuit parfaite ?', 'Quel sextoy as-tu, ou aimerais-tu essayer ?',
     'Dominer ou être dominé(e) ?', 'Quel est le message le plus coquin que tu aies envoyé ?', 'As-tu déjà été surpris(e) en pleine action ? Raconte.',
     'Quelle est la chose la plus sexy qu\'on t\'ait dite ?', 'Qu\'est-ce qui te met immédiatement dans l\'ambiance ?',
+    // Lot 2
+    'Quel est ton fantasme le plus avouable ?', 'Où rêverais-tu de faire l\'amour ?', 'Quelle partie du corps te fait le plus craquer ?', 'Quel est ton meilleur souvenir coquin ?',
+    'Qu\'est-ce qui t\'excite le plus chez quelqu\'un ?', 'Quel est le lieu le plus insolite où tu l\'as fait ?', 'Préfères-tu dominer ou te laisser faire ?', 'Quel est ton pire moment gênant au lit ?',
+    'Quelle tenue te rend irrésistible selon toi ?', 'Quelle célébrité hante tes rêves coquins ?', 'Quel est le message le plus osé que tu aies envoyé ?',
   ],
 };

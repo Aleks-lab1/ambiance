@@ -18,4 +18,14 @@ export default [
   'Quelqu\'un fait un check compliqué', 'Quelqu\'un dit « je vous aime tous »', 'Un jeu de cette appli est lancé', 'Quelqu\'un rit tellement qu\'il n\'arrive plus à parler',
   'Quelqu\'un mange directement dans le plat', 'Quelqu\'un fait le DJ sans qu\'on lui demande', 'Quelqu\'un parle de son voyage au bout du monde', 'Quelqu\'un donne un surnom à quelqu\'un',
   'Quelqu\'un s\'excuse pour rien', 'Quelqu\'un dit « vous êtes sérieux là ? »',
+  // Lot 2
+  'Quelqu\'un dit « c\'est la dernière »', 'Quelqu\'un met de la musique trop fort', 'Quelqu\'un fait une blague que personne ne comprend', 'Quelqu\'un parle de crypto',
+  'Quelqu\'un montre une vidéo de son chat', 'Quelqu\'un perd ses clés', 'Quelqu\'un arrive avec plus d\'une heure de retard', 'Quelqu\'un lance un débat politique',
+  'Quelqu\'un renverse de la sauce', 'Quelqu\'un dit « on se fait un resto bientôt »', 'Quelqu\'un raconte un rêve', 'Quelqu\'un fait une danse ridicule',
+  'Quelqu\'un ouvre une bouteille avec un briquet', 'Quelqu\'un demande le code wifi', 'Quelqu\'un lance un blind test', 'Quelqu\'un prend un appel en mode haut-parleur',
+  'Quelqu\'un dit « ça me rappelle quand… »', 'Quelqu\'un montre ses photos de vacances', 'Quelqu\'un raconte la même histoire deux fois', 'Quelqu\'un cherche un chargeur de téléphone',
+  'Quelqu\'un fait un toast', 'Quelqu\'un chante le générique d\'un dessin animé', 'Quelqu\'un dit « allez, on rentre » et ne part pas', 'Quelqu\'un fait un tour de magie',
+  'Quelqu\'un parle de son ex… encore', 'Quelqu\'un ronfle sur le canapé', 'Quelqu\'un propose un jeu à boire', 'Quelqu\'un dit qu\'il ne boit pas ce soir… puis boit',
+  'Quelqu\'un prend une photo de son assiette', 'Quelqu\'un débarque avec un gâteau', 'Quelqu\'un crie en voyant une araignée', 'Quelqu\'un se met à pleurer de rire',
+  'Quelqu\'un veut commander à manger à 2 h du matin', 'Quelqu\'un fait un câlin collectif',
 ];

@@ -15,4 +15,16 @@ export default [
   'Un bébé qui conduit un tracteur', 'Une baleine dans un aquarium trop petit', 'Un magicien qui rate son tour', 'Un squelette qui boit un café',
   'Un plombier dans une machine à laver', 'Une citrouille qui fait du karaoké', 'Un coq qui sonne le réveil', 'Un lapin qui sort d\'un chapeau trop petit',
   'Un pigeon qui vole une frite', 'Une cigogne qui livre une pizza', 'Un crocodile qui se brosse les dents', 'Un gorille en tutu',
+  // Lot 2
+  'Un éléphant qui fait du patin à glace', 'Un robot qui tombe amoureux d\'un grille-pain', 'Une grand-mère qui fait du skate', 'Un chat qui joue de la batterie',
+  'Un cowboy sur un flamant rose', 'Une baleine dans une baignoire', 'Un pompier qui a peur du feu', 'Un fantôme qui fait la lessive',
+  'Un dinosaure qui fait ses courses', 'Un chien qui conduit un tracteur', 'Une sorcière au supermarché', 'Un astronaute qui mange une raclette',
+  'Un pingouin qui fait du surf', 'Un roi qui fait la vaisselle', 'Une tortue avec un jetpack', 'Un singe qui fait un selfie',
+  'Une vache sur la Lune', 'Un poulpe qui fait le ménage', 'Un ninja qui fait de la danse classique', 'Un hamster dans une fusée',
+  'Une girafe qui joue au basket', 'Un clown dans un sous-marin', 'Un zombie qui fait du yoga', 'Un lapin qui fait un discours',
+  'Un ours qui fait de la boxe', 'Une licorne au fast-food', 'Un yéti en vacances à la plage', 'Un chevalier sur une trottinette',
+  'Un mouton qui tricote un pull', 'Une momie qui fait du shopping', 'Un poisson qui fait du vélo', 'Un extraterrestre qui passe le permis',
+  'Un gâteau qui fuit des enfants', 'Un hérisson qui fait un câlin', 'Un dragon qui éteint des bougies d\'anniversaire', 'Un père Noël en maillot de bain',
+  'Un panda qui fait du karaoké', 'Un chameau dans un ascenseur', 'Un gorille au mariage', 'Une pizza qui bronze',
+  'Un DJ dans une ferme', 'Un perroquet au tribunal', 'Un serpent qui fait du hula hoop', 'Un cochon qui fait de la plongée',
 ];

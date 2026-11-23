@@ -38,11 +38,13 @@ et sort avec le code 1 en cas d'échec.
 |---|---|
 | `unit/dico.test.mjs` | Dictionnaire du Bon Mot (sans navigateur) : mots courants, accents, prénoms, argot/verlan, tirage de lettres, enchaînement. |
 | `unit/plateau-core.test.mjs` | Bataille navale (flottes, tirs, IA), Memory, scores du Yam's. |
+| `unit/contenu.test.mjs` | Contenu de tous les autres jeux (cartes, mots, défis… plus de 7 700 éléments) : format, rien de vide, pas de doublon. |
 | `unit/race-core.test.mjs` | Jeux de rapidité : contenu (600+ questions de Quiz, 200+ estimations, Vrai ou faux, Émojis, Anagrammes : formats, pas de doublon), pas de question répétée d'une partie à l'autre, mode sans limite. |
 | `online/soiree.test.cjs` | Qui a écrit ça ?, Le Curseur, Dans sa tête, Dans l'ordre !, Qui suis-je ?, Chifoumi, à 3 joueurs simulés. |
 | `online/plateau.test.cjs` | Bataille navale (le gagnant reste), Memory, Yam's en ligne. |
 | `online/tour.test.cjs` | Paranoïa, Pour ou contre, Deux vérités un mensonge. |
 | `online/mots.test.cjs` | Petit bac, Mot mystère, Morpion. |
+| `online/memoire.test.cjs` | En ligne : 30 parties de suite sans retrouver la même première carte (Je n'ai jamais, Tu préfères, Et si, 3 en 5 s, Débats, Paranoïa, Unisson, Punchlines, Curseur), Chapeau et Qui suis-je sans doublon, mémoire partagée avec la version locale. |
 | `online/race.test.cjs` | Quiz en mode ∞ (13 questions sans répétition, « Terminer » réservé à l'hôte), À vue de nez en 5 questions. |
 | `online/cartes.test.cjs` | Et si, Confidences, Cap ou pas cap, Action ou vérité, Le Roi, Plus ou moins, Le Bus. |
 | `online/hasard.test.cjs` | La Bouteille, La roue des gages, Qui commence ?, Boîte à outils. |

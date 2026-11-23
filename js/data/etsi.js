@@ -11,6 +11,17 @@ export default {
     'tu participais à une émission de télé-réalité ? Laquelle, et combien de temps tu tiendrais ?', 'tu écrivais un livre sur ta vie ? Quel titre ?', 'tu avais un clone pour faire toutes tes corvées ?',
     'tu avais un bouton pour arrêter le temps une heure par jour ?', 'tu pouvais organiser la soirée parfaite, sans limite de budget ?', 'tu te retrouvais seul(e) au monde pendant une semaine ?',
     'tu pouvais vivre dans n\'importe quel pays ? Lequel ?', 'les animaux prenaient le pouvoir ? Quel animal serait le président ?', 'tu devais faire un métier au hasard pendant un mois ?',
+    // Lot 2
+    'tu pouvais échanger ta vie avec un animal pendant une semaine ? Lequel ?', 'tu devais vivre dans un supermarché pendant un mois ?', 'tu te réveillais avec 30 ans de plus ?', 'tu ne pouvais plus parler qu\'en chantant ?',
+    'tu découvrais que ton chat est un espion ?', 'tu pouvais ressusciter un plat disparu de la cantine ?', 'tu étais le dernier humain sur Terre pendant 24 heures ?', 'tu gagnais un voyage illimité mais seulement en vélo ?',
+    'tu devenais la mascotte d\'une équipe de foot ?', 'tu pouvais parler avec ton moi de 10 ans ? Que lui dirais-tu ?', 'tous les meubles de ta maison pouvaient parler ?', 'tu étais coincé(e) dans un ascenseur avec ta célébrité préférée ?',
+    'tu devais manger le même plat pendant un an ? Lequel ?', 'tu te réveillais dans un dessin animé ?', 'tu pouvais créer une nouvelle fête nationale ? Ce serait quoi ?', 'tu étais président(e) pendant une journée ?',
+    'tu ne pouvais plus jamais t\'asseoir ?', 'ta vie était une série ? Quel serait son titre ?', 'tu pouvais avoir un super-pouvoir complètement inutile ? Lequel ?', 'tu étais invisible seulement quand personne ne te regarde ?',
+    'les animaux votaient aux élections ?', 'tu devais t\'habiller comme un pirate tous les jours ?', 'tu trouvais une lampe magique avec seulement un vœu ?', 'tu devais vivre avec tes parents jusqu\'à 50 ans ?',
+    'ton reflet dans le miroir faisait des grimaces sans toi ?', 'tu pouvais transformer un objet de ta maison en animal ?', 'tu étais le chef d\'une tribu sur une île déserte ?', 'tu gagnais un concours de danse à la télé ?',
+    'tu devais remplacer ton prof ou ton patron pendant une semaine ?', 'tout ce que tu dis devenait vrai pendant une heure ?', 'tu pouvais écrire la fin d\'une série célèbre ?', 'tu étais un fantôme qui hante une maison ? Qui embêterais-tu ?',
+    'tu devais vivre une semaine sans miroir ni téléphone ?', 'tu pouvais inviter 3 personnages historiques à dîner ?', 'ta voix était remplacée par celle d\'un dessin animé ?', 'tu étais un objet dans cette pièce ? Lequel ?',
+    'tu devais traverser la France à pied ?', 'tu étais champion(ne) olympique d\'un sport absurde ? Lequel ?', 'tu recevais une lettre de toi-même du futur ?',
   ],
   deep: [
     'tu savais que tu ne pouvais pas échouer ? Que ferais-tu de ta vie ?', 'il te restait un an à vivre ? Qu\'est-ce qui changerait ?', 'tu pouvais changer une seule chose dans le monde ?',
@@ -21,6 +32,13 @@ export default {
     'tu pouvais revivre ton adolescence en sachant ce que tu sais aujourd\'hui ?', 'tu pouvais donner un seul conseil à toute l\'humanité ?', 'tu devais vivre sans téléphone pendant un an ?',
     'tu pouvais effacer un seul souvenir ?', 'tu découvrais que ta vie est un jeu vidéo ? Quel serait le prochain niveau ?', 'tu laissais un message pour l\'humanité dans 1 000 ans ?',
     'tu pouvais rendre une seule personne heureuse pour toujours ?', 'l\'argent n\'existait plus du jour au lendemain ?', 'tu pouvais vivre éternellement ? Accepterais-tu ?',
+    // Lot 2
+    'tu pouvais changer une seule décision de ta vie ?', 'tu savais que tu n\'avais plus qu\'un an à vivre ?', 'tu pouvais connaître la vérité sur une seule question ?', 'tu devais renoncer à l\'argent ou à l\'amour ?',
+    'tu pouvais revoir une personne disparue pendant une heure ?', 'personne ne se souvenait de toi demain matin ?', 'tu pouvais supprimer un seul souvenir ?', 'tu devais vivre dans un autre pays pour toujours ? Lequel ?',
+    'tu étais célèbre du jour au lendemain ?', 'tu pouvais résoudre un seul problème du monde ?', 'tu devais tout quitter pour vivre en pleine nature ?', 'on te donnait une seconde vie, la même en tout point ?',
+    'tu pouvais lire le journal intime de tes parents à ton âge ?', 'tu pouvais savoir ce que les autres pensent vraiment de toi ?', 'l\'argent n\'existait plus ? Que ferais-tu de tes journées ?', 'tu n\'avais plus peur de rien pendant une semaine ?',
+    'tu pouvais dire une chose à toute l\'humanité ?', 'tu pouvais vivre éternellement, mais seul(e) ?', 'tu devais choisir entre ta passion et ta sécurité ?', 'tu rencontrais ton toi de 80 ans ?',
+    'tu devais écrire ton propre éloge funèbre ?', 'tu pouvais recommencer ta vie à 15 ans en gardant tes souvenirs ?', 'tu pouvais pardonner à une seule personne ?',
   ],
   hot: [
     'tu pouvais passer une nuit avec n\'importe quelle célébrité ?', 'ton/ta partenaire te proposait un plan à trois ce soir ?', 'tu te réveillais demain à côté de quelqu\'un de cette pièce ?',
@@ -30,5 +48,9 @@ export default {
     'tu découvrais le compte OnlyFans d\'un(e) ami(e) ?', 'tu pouvais changer une seule chose dans ta vie sexuelle ?', 'tu recevais un sexto torride de la mauvaise personne ?',
     'tu devais faire un strip-tease pour gagner 10 000 € ?', 'tu avais un super-pouvoir au lit ? Lequel ?', 'tu devais choisir : ne plus jamais embrasser, ou ne plus jamais faire l\'amour ?',
     'ton crush t\'avouait ses sentiments ce soir, devant tout le monde ?', 'tu devais tourner une scène de film très chaude avec quelqu\'un ici ?',
+    // Lot 2
+    'tu pouvais passer une nuit avec la personne de ton choix, sans conséquence ?', 'ton/ta partenaire pouvait lire tous tes fantasmes ?', 'tu te retrouvais dans un hôtel de luxe avec ton crush ?', 'tu devais séduire quelqu\'un sans dire un seul mot ?',
+    'tu pouvais réaliser un seul fantasme ce soir ?', 'tu te réveillais dans le lit d\'une célébrité ?', 'tu devais faire un strip-tease pour gagner 10 000 euros ?', 'tous tes sextos étaient lus à voix haute ici ?',
+    'tu pouvais changer une chose dans ta vie sexuelle ?', 'tu étais coincé(e) une nuit dans un chalet avec quelqu\'un de cette pièce ?', 'tu avais un rendez-vous avec ton ex et ton crush en même temps ?', 'on te proposait un plan à trois ce soir ?',
   ],
 };

@@ -11,6 +11,16 @@ export default {
     'acheter un objet inutile très cher', 'battre un record du monde idiot', 'croire à une fake news', 'partir en voyage sans valise',
     'devenir prof', 'se marier à Las Vegas', 'finir dans un documentaire animalier', 'perdre son téléphone ce soir',
     's\'endormir en premier ce soir', 'manger quelque chose de bizarre pour un pari', 'parler avec un accent étranger sans raison', 'se lancer dans le stand-up',
+    // Lot 2
+    'partir vivre au bout du monde sur un coup de tête', 'pleurer devant une pub', 'rater son train à cause d\'un croissant', 'parler à ses plantes',
+    'gagner un concours de mangeur de hot-dogs', 'devenir président(e) de la République', 'ouvrir un restaurant', 'finir le dernier verre',
+    'connaître toutes les paroles d\'un dessin animé Disney', 'se faire arnaquer par un vendeur sur un marché', 'avoir 15 onglets ouverts en permanence', 'survivre seul(e) sur une île déserte',
+    'être en retard à son propre mariage', 'monter sur scène au karaoké sans qu\'on lui demande', 'faire un marathon', 'parler à un inconnu dans le métro',
+    'acheter un objet inutile en téléachat', 'se tromper de prénom en draguant', 'inventer un objet génial', 'battre tout le monde aux jeux de société',
+    'tricher au Monopoly', 'garder le plus longtemps un secret', 'mettre 3 heures à répondre à un message', 'faire une sieste n\'importe où',
+    'dépenser tout son salaire en une semaine', 'pleurer en regardant « Titanic »', 'avoir une collection bizarre', 'se teindre les cheveux en bleu',
+    'faire le tour du monde', 'se lever à 5 h du matin volontairement', 'être fan de Céline Dion en secret', 'devenir célèbre grâce à une vidéo ridicule',
+    'se faire tatouer le prénom de quelqu\'un', 'arriver en avance partout',
   ],
   epice: [
     'stalker son ex à 3h du matin', 'tromper son/sa partenaire', 'se remettre avec son ex', 'envoyer un message gênant ce soir',
@@ -21,6 +31,14 @@ export default {
     'dépenser tout son salaire en une soirée', 'se faire tatouer le prénom de son ou sa partenaire', 'être le pire en couple', 'avoir encore des sentiments pour son ex',
     'mentir sur son CV', 'parler mal de quelqu\'un ici', 'faire semblant d\'être malade pour éviter une soirée', 'lire les messages de son/sa partenaire',
     'pleurer en écoutant une chanson d\'amour', 'avoir un plan B en cas de rupture', 'faire le plus de bêtises une fois saoul', 'être viré d\'une soirée',
+    // Lot 2
+    'stalker son ex à 2 h du matin', 'dire « je t\'aime » le premier', 'draguer le serveur ou la serveuse', 'faire un scandale au restaurant',
+    'pleurer pour éviter une amende', 'avoir un crush sur quelqu\'un ici', 'garder rancune pendant 10 ans', 'ghoster quelqu\'un',
+    'se faire ghoster', 'dire du mal de quelqu\'un ici en partant', 'oublier l\'anniversaire de son/sa partenaire', 'quitter quelqu\'un par message',
+    'tomber amoureux(se) en vacances', 'envoyer un message à son ex ce soir', 'mentir pour ne pas venir à une soirée', 'regarder le téléphone de quelqu\'un en cachette',
+    'avoir un compte secret sur les réseaux', 'être le plus jaloux(se)', 'faire une crise de jalousie pour un like', 'se marier sur un coup de tête à Las Vegas',
+    'rompre le jour d\'un anniversaire', 'garder une photo de son ex dans son téléphone', 'avoir le plus de matchs sur les applis', 'inventer une excuse bidon pour un rendez-vous',
+    'être trop honnête au mauvais moment', 'lancer une rumeur',
   ],
   hot: [
     'avoir un coup d\'un soir ce soir', 'avoir le plus d\'expérience au lit', 'avoir un fétiche bizarre', 'avoir déjà fait l\'amour dans un lieu public',
@@ -29,6 +47,12 @@ export default {
     'tomber amoureux d\'un coup d\'un soir', 'embrasser quelqu\'un ici avant la fin de la soirée', 'utiliser des menottes', 'avoir une appli de rencontre ouverte en ce moment',
     'faire l\'amour au premier rendez-vous', 'avoir le plus de fantasmes inavouables', 'coucher avec son ex', 'être le plus coquin en secret',
     'faire l\'amour dans les toilettes d\'une boîte', 'dormir tout nu', 'avoir déjà été surpris en plein acte', 'garder ses chaussettes au lit',
+    // Lot 2
+    'faire l\'amour dans un lieu insolite cette année', 'envoyer un nude ce soir', 'faire un strip-tease', 'avoir un coup d\'un soir pendant ces vacances',
+    'avoir une sextape cachée', 'être le meilleur coup du groupe', 'embrasser le mieux', 'craquer pour un(e) collègue',
+    'faire l\'amour plusieurs fois par jour', 'avoir une collection de sextoys', 'draguer quelqu\'un de beaucoup plus âgé', 'faire l\'amour dans une voiture ce mois-ci',
+    'réaliser un fantasme fou', 'avoir déjà testé un club libertin', 'avoir déjà fait un plan à trois', 'flirter avec tout le monde ici',
+    'aller tout nu à la plage', 'avoir un rêve coquin sur quelqu\'un ici cette nuit', 'envoyer un sexto au mauvais destinataire',
   ],
   hotpp: [
     "avoir déjà fait une partouze",
@@ -60,6 +84,11 @@ export default {
     "avoir déjà fait l'amour dans un lieu public",
     "avoir déjà fait une sextape",
     "avoir déjà simulé le plus souvent",
-    "être le plus doué pour le sexe oral"
+    "être le plus doué pour le sexe oral",
+    // Lot 2
+    'avoir couché avec le plus de monde', 'faire l\'amour dans des toilettes publiques', 'avoir la plus grosse libido', 'accepter un plan à trois ce soir',
+    'avoir une liste de fantasmes écrite quelque part', 'faire l\'amour devant un miroir', 'être le/la plus dominant(e) au lit', 'être le/la plus soumis(e) au lit',
+    'avoir déjà fait l\'amour en public sans se faire prendre', 'faire une sextape', 'coucher avec quelqu\'un ici', 'avoir un plan cul caché',
+    'faire l\'amour au bureau', 'aimer qu\'on le/la regarde',
   ],
 };

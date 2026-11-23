@@ -15,6 +15,18 @@ export default {
     'été coincé dans un ascenseur', 'marché dans une crotte de chien', 'confondu deux jumeaux', 'appris une chorégraphie TikTok',
     'mis du sel à la place du sucre', 'parlé à voix haute en pensant être seul', 'eu un poisson rouge', 'gagné un concours',
     'menti dans un CV', 'regardé un film d\'horreur les yeux fermés', 'lancé un objet dans la cuvette des toilettes par accident', 'fait du camping sauvage',
+    // Lot 2
+    'mis du sel à la place du sucre dans un gâteau', 'oublié où j\'avais garé ma voiture', 'fait semblant de connaître une chanson en bougeant les lèvres', 'mangé un repas entier debout devant le frigo',
+    'dit bonjour à quelqu\'un qui saluait la personne derrière moi', 'essayé de pousser une porte où il était écrit « tirer »', 'mis mon téléphone au frigo par erreur', 'cherché mes lunettes alors que je les avais sur le nez',
+    'raconté la même anecdote deux fois à la même personne', 'fait tomber mon téléphone dans les toilettes', 'regardé la fin d\'un livre avant de l\'avoir commencé', 'googlé mon propre prénom',
+    'écouté la même chanson plus de 20 fois d\'affilée', 'dormi devant un film au cinéma', 'envoyé un vocal de plus de 5 minutes', 'fait semblant de dormir pour ne pas aider',
+    'parlé avec un accent sans m\'en rendre compte', 'mangé le dessert avant le plat', 'eu une dispute avec une machine (distributeur, imprimante…)', 'inventé une excuse pour rentrer plus tôt',
+    'dansé seul devant le miroir', 'pleuré en coupant des oignons… et continué pour de vrai', 'fait un vœu en soufflant sur une fleur de pissenlit', 'eu le hoquet pendant plus d\'une heure',
+    'fait une sieste de plus de 3 heures', 'été pris(e) en train de chanter dans la voiture à un feu rouge', 'acheté un objet en promo dont je n\'avais absolument pas besoin', 'lu les conditions d\'utilisation en entier',
+    'vu un film d\'horreur les yeux fermés', 'porté deux chaussettes différentes sans le faire exprès', 'appelé quelqu\'un par le prénom de son frère ou de sa sœur', 'joué à un jeu vidéo toute une nuit',
+    'réussi un Rubik\'s Cube', 'fait le tour du monde… sur Google Maps', 'cassé mon écran de téléphone', 'mangé une pizza entière tout seul',
+    'rêvé que je perdais mes dents', 'parlé dans mon sommeil', 'marché sur un Lego pieds nus', 'gagné à un jeu à gratter',
+    'eu un fou rire en classe', 'oublié mon propre code de carte bancaire', 'répondu « vous aussi » à « joyeux anniversaire »',
   ],
   soiree: [
     'dansé sur une table', 'vomi dans un taxi ou un Uber', 'perdu mon téléphone en soirée', 'fini une soirée sans savoir comment je suis rentré',
@@ -31,6 +43,17 @@ export default {
     'gagné de l\'argent au casino', 'fait un selfie avec un policier', 'été pris en photo par un photographe de boîte de nuit', 'pris l\'avion pour le week-end',
     'oublié un ami en soirée', 'fini une soirée aux urgences', 'menti à un videur', 'fait une soirée pyjama après 25 ans', 'fait la fête jusqu\'au lever du soleil',
     'commandé à manger en livraison plus de 3 fois dans la même semaine',
+    // Lot 2
+    'réveillé dans un endroit que je ne reconnaissais pas', 'mangé des pâtes froides à 4h du matin', 'été le dernier à partir d\'une soirée', 'fait un concours de shots',
+    'joué à « Action ou vérité » en soirée et regretté ma réponse', 'envoyé un message à mon patron en soirée', 'dansé sur une chanson que je déteste… et adoré ça', 'perdu ma voix à cause d\'une soirée',
+    'été pris(e) en photo en pleine chute', 'fait le DJ d\'une soirée sans en avoir le droit', 'dormi chez quelqu\'un que je connaissais à peine', 'donné mon numéro à quelqu\'un sans m\'en souvenir',
+    'été réveillé(e) par la police à cause du bruit', 'pris un bain de minuit', 'bu un cocktail inventé sur place qui était infect', 'raconté un secret en soirée que je n\'aurais pas dû',
+    'dansé jusqu\'au lever du soleil', 'fait une soirée pyjama après 20 ans', 'pleuré de rire au point de devoir m\'allonger', 'pris le mauvais manteau en partant d\'une soirée',
+    'déclaré mon amitié éternelle à quelqu\'un vers 3h du matin', 'commandé à manger à plus de 3h du matin', 'fait une soirée qui s\'est terminée au petit-déjeuner', 'fini une soirée à l\'hôpital',
+    'renversé un verre sur quelqu\'un', 'fait un strip-tease pour rire', 'été le capitaine de soirée (celui qui ne boit pas)', 'organisé une soirée où personne n\'est venu',
+    'été déguisé(e) alors que personne d\'autre ne l\'était', 'parlé à un inconnu toute la soirée dans un bar', 'fait une soirée karaoké qui a fini en concert de cris', 'pris l\'apéro pendant plus de 5 heures',
+    'fait une sieste en pleine soirée', 'dormi par terre chez des amis', 'laissé un message vocal gênant en soirée', 'dansé un slow avec un(e) inconnu(e)',
+    'fait la tournée des bars dans une ville inconnue', 'eu la gueule de bois pendant deux jours', 'fait le service dans une soirée où j\'étais invité(e)', 'fait un « Je n\'ai jamais » qui a viré au règlement de comptes',
   ],
   epice: [
     'stalké mon ex sur les réseaux', 'embrassé quelqu\'un dont je ne connaissais pas le prénom', 'eu un crush sur le/la partenaire d\'un ami',
@@ -45,6 +68,16 @@ export default {
     'dit « je t\'aime » sans le penser', 'fait le premier pas', 'été rejeté(e) en public', 'regardé le téléphone de mon/ma partenaire pendant qu\'il/elle dormait',
     'pensé à quelqu\'un d\'autre en embrassant mon/ma partenaire', 'été en couple avec quelqu\'un de beaucoup plus âgé', 'utilisé une appli de rencontre en couple',
     'été plus de deux ans célibataire', 'quitté quelqu\'un le jour de son anniversaire', 'eu un rêve érotique avec quelqu\'un ici', 'menti dans ce jeu',
+    // Lot 2
+    'oublié le prénom de quelqu\'un avec qui j\'ai eu un rendez-vous', 'fait semblant d\'être occupé(e) pour éviter un date', 'relu toute une conversation avec mon ex', 'liké une vieille photo par erreur en stalkant',
+    'eu un crush sur quelqu\'un de beaucoup plus jeune ou plus âgé', 'été amoureux(se) en secret pendant plus d\'un an', 'été en couple avec quelqu\'un que mes amis détestaient', 'écrit un message puis tout effacé dix fois de suite',
+    'pleuré devant quelqu\'un qui me plaisait', 'embrassé quelqu\'un juste pour gagner un pari', 'dit à quelqu\'un que j\'étais célibataire alors que non', 'été recalé(e) par quelqu\'un qui me plaisait vraiment',
+    'eu un rendez-vous catastrophique', 'recontacté quelqu\'un juste parce que je m\'ennuyais', 'fait exprès de croiser quelqu\'un qui me plaisait', 'été jaloux(se) de l\'ex de mon/ma partenaire',
+    'fouillé dans les affaires de quelqu\'un', 'eu un crush sur un(e) ami(e) d\'enfance', 'embrassé quelqu\'un dans un endroit très inapproprié', 'accepté un rendez-vous pour faire plaisir',
+    'été en couple à distance', 'rompu le jour de la Saint-Valentin', 'eu une histoire avec un(e) collègue en cachette', 'inventé un(e) petit(e) ami(e)',
+    'laissé quelqu\'un en « vu » exprès', 'envoyé un message à un ex pour son anniversaire', 'regardé qui avait vu mes stories en premier', 'mis une photo juste pour rendre quelqu\'un jaloux',
+    'embrassé quelqu\'un qui avait un(e) partenaire', 'été dragué(e) par le/la partenaire d\'un(e) ami(e)', 'eu un coup de foudre au premier regard', 'fait une déclaration par écrit',
+    'gardé un objet d\'un ex en souvenir', 'été amoureux(se) d\'une célébrité au point d\'avoir un poster', 'regretté d\'avoir rompu',
   ],
   hot: [
     'fait l\'amour en plein air', 'envoyé un nude', 'reçu un nude non sollicité', 'fait l\'amour dans une voiture', 'eu un coup d\'un soir',
@@ -57,6 +90,15 @@ export default {
     'utilisé de la nourriture au lit', 'fait l\'amour au travail', 'été attaché(e)', 'oublié le prénom de la personne avec qui j\'ai couché',
     'fait l\'amour en étant filmé', 'eu un fantasme sur quelqu\'un de cette pièce', 'couché avec quelqu\'un de beaucoup plus âgé', 'fait l\'amour dans une piscine ou un jacuzzi',
     'acheté de la lingerie pour une occasion spéciale', 'eu une panne', 'ri pendant l\'acte', 'pris une douche à plusieurs',
+    // Lot 2
+    'fait l\'amour dans une tente', 'fait l\'amour dans un ascenseur', 'envoyé une photo coquine à la mauvaise personne', 'eu un rêve érotique avec quelqu\'un de cette pièce',
+    'fait l\'amour dans un hôtel juste pour le plaisir', 'dormi avec quelqu\'un sans rien faire de toute la nuit', 'embrassé quelqu\'un du même sexe', 'fait un massage qui a mal tourné… ou très bien tourné',
+    'porté de la lingerie toute une journée pour quelqu\'un', 'fait l\'amour avec la lumière allumée en pleine journée', 'eu un coup d\'un soir avec un(e) ex', 'été surpris(e) par un voisin',
+    'fait l\'amour plus de 2 heures d\'affilée', 'fait l\'amour en écoutant de la musique très fort', 'joué au strip-poker', 'pris un bain à deux',
+    'eu un fou rire en essayant d\'être sexy', 'laissé une marque visible le lendemain (suçon…)', 'fait une séance photo coquine', 'dragué quelqu\'un en lui envoyant un message très osé',
+    'fait l\'amour dans un canapé chez quelqu\'un d\'autre', 'eu une relation purement physique', 'rejoint quelqu\'un en pleine nuit juste pour ça', 'fait l\'amour dans une voiture de location',
+    'été déçu(e) au lit au point de partir', 'réalisé un fantasme', 'eu envie de quelqu\'un pendant un mariage', 'été réveillé(e) de la meilleure des façons',
+    'eu une aventure avec un(e) inconnu(e) en voyage', 'acheté des préservatifs en étant très gêné(e)',
   ],
   hotpp: [
     "fait une fellation ou un cunni en voiture",
@@ -110,6 +152,12 @@ export default {
     "eu un orgasme rien qu'en embrassant",
     "laissé quelqu'un me filmer pendant l'acte (avec mon accord)",
     "fait l'amour en extérieur en plein jour",
-    "dormi avec quelqu'un dont j'ai oublié le prénom le lendemain"
+    "dormi avec quelqu'un dont j'ai oublié le prénom le lendemain",
+    // Lot 2
+    'fait l\'amour dans des toilettes publiques', 'testé un sextoy dans un lieu public', 'fait l\'amour devant un miroir', 'joué avec des glaçons au lit',
+    'envoyé une vidéo très explicite', 'fait l\'amour avec quelqu\'un dont j\'ai oublié le visage', 'testé le bondage', 'fait l\'amour sur un balcon',
+    'eu deux partenaires différents le même jour', 'été dominé(e) au lit', 'dominé quelqu\'un au lit', 'fait l\'amour dans la nature en pleine journée',
+    'regardé quelqu\'un se masturber', 'fait l\'amour dans un vestiaire', 'fait un plan à trois avec un couple', 'utilisé un bandeau sur les yeux',
+    'acheté un costume coquin', 'fait l\'amour en appel vidéo', 'fait l\'amour dans une salle de cinéma',
   ],
 };

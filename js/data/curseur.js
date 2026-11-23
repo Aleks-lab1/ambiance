@@ -12,4 +12,15 @@ export default [
   ['Mauvaise excuse', 'Excuse parfaite'], ['Personne n\'aime', 'Tout le monde aime'], ['Facile à dessiner', 'Impossible à dessiner'], ['Bon pour la santé', 'Mauvais pour la santé'],
   ['Petit plaisir', 'Grand bonheur'], ['Habit de tous les jours', 'Tenue de gala'], ['Overrated', 'Underrated'], ['Animal de compagnie nul', 'Animal de compagnie parfait'],
   ['Superstitieux', 'Rationnel'], ['Chanson à oublier', 'Tube éternel'], ['Débutant', 'Expert'], ['Odeur horrible', 'Odeur délicieuse'], ['Ça se fait', 'Ça ne se fait pas'],
+  // Lot 2
+  ['Calme', 'Explosif'], ['Pas drôle', 'Hilarant'], ['Pour les petits', 'Pour les grands'], ['Classique', 'Original'],
+  ['Nul en cuisine', 'Chef étoilé'], ['Mauvais goût', 'Bon goût'], ['Pauvre', 'Riche'], ['Honnête', 'Menteur'],
+  ['Ordonné', 'Bordélique'], ['Lève-tôt', 'Couche-tard'], ['Fidèle', 'Infidèle'], ['Prudent', 'Casse-cou'],
+  ['Timide', 'Exubérant'], ['Végétarien', 'Carnivore'], ['Sportif', 'Canapé'], ['Économe', 'Dépensier'],
+  ['Pessimiste', 'Optimiste'], ['Naïf', 'Méfiant'], ['Pas romantique', 'Très fleur bleue'], ['Discret', 'Exhibitionniste'],
+  ['Patient', 'Impatient'], ['Gentil', 'Diabolique'], ['Pas cher du tout', 'Ruineux'], ['Inconnu', 'Légende'],
+  ['Vieux jeu', 'Avant-gardiste'], ['Odeur de fleurs', 'Odeur de chaussettes'], ['Trop tôt', 'Trop tard'], ['Petit creux', 'Faim de loup'],
+  ['Bon voisin', 'Voisin infernal'], ['Plutôt chat', 'Plutôt chien'], ['Mauvais film', 'Chef-d\'œuvre'], ['Trop sucré', 'Pas assez sucré'],
+  ['Ça fait rire', 'Ça fait pleurer'], ['Une fois par an', 'Tous les jours'], ['Bon perdant', 'Mauvais perdant'], ['Super facile à apprendre', 'Impossible à apprendre'],
+  ['Coup de cœur', 'Coup de gueule'], ['Petit pas', 'Grand saut'], ['Normal', 'Bizarre'], ['Utile en soirée', 'Inutile en soirée'],
 ];

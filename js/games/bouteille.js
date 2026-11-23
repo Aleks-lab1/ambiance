@@ -15,6 +15,14 @@ export const DEFIS = {
     '{a} dit trois qualités de {b}.', '{b} invente un gage pour {a}.', '{a} et {b} chantent un refrain en duo.', '{a} et {b} échangent de place.',
     '{a} doit faire rire {b} en moins de 30 secondes.', '{b} pose une devinette à {a}.', '{a} et {b} miment un film ensemble, les autres devinent.',
     '{a} se met à genoux et demande {b} en amitié éternelle.',
+    // Lot 2
+    '{a} et {b} inventent ensemble une chanson de 4 vers.', '{b} raconte à {a} son meilleur souvenir d\'enfance.', '{a} et {b} font un bras de fer : le perdant prend {sip}.',
+    '{a} doit faire deviner un film à {b} en mimant.', '{a} et {b} échangent leurs prénoms jusqu\'au prochain tour.', '{b} choisit un accent que {a} garde jusqu\'au prochain tour.',
+    '{a} fait un portrait de {b} en 30 secondes.', '{a} et {b} se racontent une blague : celui qui rit en premier prend {sip}.', '{a} dit ce qu\'il ou elle admire chez {b}.',
+    '{a} et {b} font un pierre-feuille-ciseaux en 3 manches : le perdant fait un gage choisi par le groupe.', '{b} pose trois questions à {a}, qui doit répondre en une seconde.', '{a} doit imiter la façon de rire de {b}.',
+    '{a} et {b} dansent sur la prochaine chanson.', '{a} offre son verre à {b}… ou en sert un.', '{a} et {b} se tiennent par le petit doigt jusqu\'au prochain tour.',
+    '{b} donne à {a} un nouveau prénom de super-héros.', '{a} raconte comment il ou elle a rencontré {b}.', '{a} et {b} font un selfie avec la grimace la plus moche possible.',
+    '{a} chuchote un secret (pas trop grave) à {b}.', '{a} doit faire un compliment à {b} en alexandrin.',
   ],
   fun: [
     '{a} fait un massage des mains de 30 secondes à {b}.', '{a} et {b} dansent un slow sur la chanson choisie par le groupe.', '{b} écrit un message que {a} doit envoyer à son 5e contact.',
@@ -23,6 +31,12 @@ export const DEFIS = {
     '{a} chante une sérénade à {b}.', '{b} peut poser n\'importe quelle question à {a}. Refus = {sip2}.', '{a} fait une déclaration d\'amour théâtrale à {b}.',
     '{a} et {b} boivent leur prochain verre bras dessus bras dessous.', '{a} et {b} échangent un vêtement jusqu\'à la fin de la partie.', '{a} se laisse coiffer par {b}.',
     '{b} imite {a} draguant quelqu\'un.', '{a} dit qui, selon lui ou elle, pourrait sortir avec {b} dans le groupe.', '{a} et {b} font un câlin de 10 secondes.',
+    // Lot 2
+    '{a} et {b} échangent leur téléphone pour lire leurs 3 derniers messages.', '{b} choisit une photo de la galerie de {a} à montrer au groupe.', '{a} fait une déclaration d\'amour à {b} façon telenovela.',
+    '{a} et {b} doivent rester dos à dos, bras liés, jusqu\'au prochain tour.', '{b} dessine un truc sur la main de {a}.', '{a} et {b} rejouent la scène de « Titanic » sur une chaise.',
+    '{a} fait manger un aliment surprise à {b}, qui a les yeux fermés.', '{a} et {b} s\'échangent une chaussure jusqu\'à la fin de la partie.', '{b} coiffe {a} comme il ou elle veut.',
+    '{a} et {b} font une chorégraphie de 20 secondes devant tout le monde.', '{a} envoie un message à un ami de {b}, dicté par {b}.', '{a} et {b} jouent un couple qui se dispute pour une raison absurde.',
+    '{b} choisit ce que {a} va boire au prochain verre.', '{a} et {b} font un concours de grimaces, le groupe vote.', '{a} porte {b} sur son dos (ou essaie) pendant 10 secondes.',
   ],
   hot: [
     '{a} fait un bisou sur la joue de {b}.', '{a} fait un bisou dans le cou de {b}.', '{a} murmure quelque chose de sexy à l\'oreille de {b}.',
@@ -30,6 +44,10 @@ export const DEFIS = {
     '{a} et {b} se regardent dans les yeux 20 secondes sans rire. Le premier qui craque prend {sip2}.', '{a} dit ce qu\'il ou elle trouve le plus attirant chez {b}.',
     '{a} et {b} passent un glaçon de bouche en bouche.', '{b} choisit où {a} doit lui faire un bisou.', '{a} fait un slow très collé-serré avec {b}.',
     '{a} et {b} échangent un vêtement… que vous portez en ce moment.', '{a} mordille l\'oreille de {b}.', '{a} et {b} vont 1 minute seuls dans une autre pièce.',
+    // Lot 2
+    '{a} fait un massage des mains de 30 secondes à {b}, les yeux dans les yeux.', '{a} et {b} se regardent dans les yeux et se rapprochent jusqu\'à ce que l\'un craque.', '{a} embrasse {b} sur la joue, très lentement.',
+    '{b} décrit à {a} son rendez-vous idéal, à voix basse.', '{a} et {b} dansent un slow en se tenant par la taille.', '{a} fait un compliment très osé à {b}.',
+    '{a} et {b} se murmurent leur fantasme à l\'oreille.', '{b} enlève un accessoire de {a} (bijou, montre, veste…).',
   ],
 };
 const LEVELS = [

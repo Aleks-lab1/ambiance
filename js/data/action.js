@@ -10,6 +10,13 @@ export default {
       'Quelle chanson chantes-tu en secret à fond ?', 'Que ferais-tu avec 1 million d\'euros ?', 'Quel est le métier de tes rêves quand tu étais enfant ?',
       'Quelle est la dernière recherche sur ton téléphone ?', 'Qu\'est-ce que tu penses vraiment de {joueur} ?', 'Quelle est ta plus grosse bêtise d\'enfant ?',
       'Dans quelle époque aimerais-tu vivre ?', 'Quelle application utilises-tu le plus ?', 'De quoi as-tu le plus honte dans ta chambre ?',
+      // Lot 2
+      'Quel est ton dessin animé préféré de quand tu étais petit(e) ?', 'Quelle est la chose que tu fais le mieux ?', 'Quel est ton pire souvenir à l\'école ?', 'Qui est la personne la plus drôle que tu connaisses ?',
+      'Si tu pouvais être un animal, lequel serais-tu ?', 'Quel est ton plus grand défaut ?', 'Quel est le dernier film qui t\'a fait pleurer ?', 'Quelle est ta chanson préférée du moment ?',
+      'Quelle est ta plus grosse bêtise ?', 'Quel super-pouvoir aimerais-tu avoir ?', 'Quel est ton plat préféré de tous les temps ?', 'Qui t\'a le plus inspiré(e) dans ta vie ?',
+      'Quelle est ta plus grande fierté ?', 'Quelle est la chose la plus courageuse que tu aies faite ?', 'Quel métier voulais-tu faire enfant ?', 'Quel est ton pire défaut au volant ?',
+      'Qu\'est-ce qui t\'agace le plus chez {joueur} ?', 'Quel est le plus beau compliment qu\'on t\'ait fait ?', 'Quel est ton plus beau souvenir de vacances ?', 'As-tu déjà triché à un examen ?',
+      'Quel est ton rituel du matin ?', 'Quelle est ta série préférée ?',
     ],
     fun: [
       'Quelle est la chose la plus embarrassante qui te soit arrivée en public ?', 'As-tu déjà fait pipi dans une piscine ?', 'Quel est le message le plus gênant que tu aies envoyé ?',
@@ -21,6 +28,13 @@ export default {
       'Si tu devais supprimer une personne de tes contacts ici, qui serait-ce ?', 'As-tu déjà lu les messages de quelqu\'un en cachette ?', 'Quel est ton pire tic ?',
       'Raconte ta pire gueule de bois.', 'Quel est le prénom de ton premier amour ?', 'As-tu déjà fait semblant d\'être malade pour éviter {joueur} ?',
       'Quelle est la chose la plus folle que tu aies faite par amour ?', 'Quel est le défaut de {joueur} qui t\'agace le plus ?',
+      // Lot 2
+      'Quelle est la pire chose que tu aies dite sur {joueur} ?', 'Quelle est la recherche la plus gênante de ton historique ?', 'Quel est ton plus gros râteau ?', 'As-tu déjà fait semblant d\'être malade pour éviter une soirée ?',
+      'Quelle est l\'appli que tu ouvres le plus ?', 'Quelle est la chose la plus bizarre que tu aies mangée ?', 'Qui ici aimerais-tu échanger contre une célébrité ?', 'Quel est ton pire souvenir de soirée ?',
+      'Quel est le prénom de ton premier crush ?', 'As-tu déjà pleuré pour obtenir quelque chose ?', 'Quelle est la chose la plus chère que tu aies achetée sur un coup de tête ?', 'Quel est le secret le plus gênant que tes parents connaissent ?',
+      'As-tu déjà envoyé un message à la mauvaise personne ? Raconte.', 'Qui ici est le plus radin ?', 'Quelle est la chose que tu caches à tes parents ?', 'Quel est le pire rendez-vous que tu aies eu ?',
+      'Que penses-tu vraiment de la tenue de {joueur} ce soir ?', 'Quelle est la chose la plus folle que tu aies faite pour un crush ?', 'Quel est le pire cadeau que tu aies offert ?', 'As-tu déjà stalké quelqu\'un ici sur les réseaux ?',
+      'Quelle célébrité te fait honteusement craquer ?', 'Quelle est la pire excuse que tu aies inventée pour un retard ?',
     ],
     hot: [
       'Quel est ton plus grand fantasme ?', 'Où est l\'endroit le plus fou où tu as fait l\'amour ?', 'Quelle est ta position préférée ?',
@@ -29,6 +43,10 @@ export default {
       'Quel est ton fétiche le plus inavoué ?', 'As-tu déjà fait un rêve érotique avec quelqu\'un ici ?', 'Quelle est la chose la plus coquine que tu aies faite en public ?',
       'Préfères-tu dominer ou être dominé(e) ?', 'Quel est le pire sexto que tu aies reçu ?', 'As-tu déjà été surpris(e) en plein acte ?',
       'Quelle est ta zone érogène préférée ?', 'Quel est le vêtement le plus sexy pour toi ?', 'Quel est ton record de fois en une nuit ?', 'As-tu déjà embrassé quelqu\'un du même sexe ?',
+      // Lot 2
+      'Quel est ton fantasme le plus fou ?', 'Quel est le lieu le plus insolite où tu as fait l\'amour ?', 'Qu\'est-ce qui te fait craquer chez {joueur} ?', 'Quel est ton pire souvenir au lit ?',
+      'Combien de personnes as-tu embrassées cette année ?', 'Quel est ton meilleur coup d\'un soir ?', 'Préfères-tu les préliminaires ou le reste ?', 'As-tu déjà eu un rêve érotique avec quelqu\'un ici ?',
+      'Quelle est la partie de ton corps que tu préfères ?', 'As-tu déjà fait l\'amour au travail ?', 'Quel est ton plus gros râteau coquin ?', 'Quelle tenue te fait craquer chez quelqu\'un ?',
     ],
     hotpp: [
       "Raconte ta dernière masturbation : où, quand, et en pensant à qui ?",
@@ -58,7 +76,11 @@ export default {
       "À qui as-tu envoyé ton dernier nude ?",
       "Qu'est-ce qui te fait jouir à coup sûr ?",
       "Quelle est la plus longue période sans sexe que tu aies vécue, et comment tu as tenu ?",
-      "Décris en 3 mots ce que tu ferais à {joueur} si vous étiez seuls."
+      "Décris en 3 mots ce que tu ferais à {joueur} si vous étiez seuls.",
+      // Lot 2
+      'Quelle est ta position préférée ?', 'As-tu déjà fait un plan à trois ? Raconte.', 'Quel est ton record de fois en une nuit ?', 'Quel est le fantasme que tu n\'as jamais osé avouer ?',
+      'As-tu déjà simulé ? Avec qui ?', 'As-tu déjà couché avec quelqu\'un de cette pièce ?', 'Quel est le sextoy que tu aimerais essayer ?', 'Quel est l\'endroit le plus risqué où tu l\'as fait ?',
+      'As-tu déjà été surpris(e) en plein acte ?', 'Avec qui ici aimerais-tu réaliser un fantasme ?',
     ],
   },
   action: {
@@ -70,6 +92,12 @@ export default {
       'Parle uniquement en chuchotant jusqu\'à ton prochain tour.', 'Fais un bonhomme avec ce que tu trouves autour de toi.', 'Fais 10 pompes (ou 20 sur les genoux).',
       'Fais le présentateur météo pour la soirée.', 'Raconte ta journée comme un commentateur sportif.', 'Laisse {joueur} te faire une coiffure.',
       'Fais une imitation d\'une célébrité.', 'Dessine un portrait de {joueur} les yeux fermés.', 'Fais une pub pour ce qu\'il y a dans ton verre.',
+      // Lot 2
+      'Fais 15 secondes de danse de la victoire.', 'Fais 10 pompes.', 'Fais le tour de la pièce en marchant comme un pingouin.', 'Parle avec un accent de ton choix jusqu\'au prochain tour.',
+      'Mime ton film préféré, les autres doivent deviner.', 'Tiens la position de la chaise contre un mur 30 secondes.', 'Fais une imitation d\'un prof ou d\'un chef.', 'Dis l\'alphabet le plus vite possible.',
+      'Fais semblant d\'être un présentateur météo.', 'Mets tes chaussettes sur tes mains jusqu\'au prochain tour.', 'Fais un câlin à {joueur}.', 'Invente un slogan pour {joueur}.',
+      'Fais la statue pendant 1 minute, même si on te chatouille.', 'Récite les jours de la semaine à l\'envers.', 'Fais un discours de remerciement comme aux César.', 'Marche à reculons jusqu\'à ton prochain tour.',
+      'Fais une grimace et garde-la 20 secondes.', 'Chante une chanson en remplaçant toutes les paroles par « miaou ».',
     ],
     fun: [
       'Laisse {joueur} écrire un statut sur un de tes réseaux sociaux.', 'Envoie « Tu me manques » au 3e contact de ton répertoire.', 'Montre la dernière photo de ta galerie.',
@@ -80,6 +108,13 @@ export default {
       'Fais un rap sur {joueur} pendant 30 secondes.', 'Fais une story Instagram en chantant.', 'Garde un glaçon dans ta bouche jusqu\'à ce qu\'il fonde.',
       'Laisse {joueur} fouiller ton téléphone pendant 30 secondes.', 'Fais une fausse demande en mariage à {joueur}.', 'Raconte ton pire souvenir en mimant uniquement.',
       'Appelle un de tes parents et dis-lui que tu as une grande nouvelle… puis raccroche.', 'Marche comme un crabe jusqu\'à la cuisine et reviens.',
+      // Lot 2
+      'Envoie un émoji aubergine à ton dernier contact.', 'Laisse {joueur} écrire ta prochaine story.', 'Lis à voix haute ton dernier message envoyé.', 'Appelle quelqu\'un et chante-lui « Joyeux anniversaire ».',
+      'Fais une déclaration d\'amour à {joueur} façon telenovela.', 'Laisse {joueur} te coiffer comme il/elle veut.', 'Bois un mélange de 3 boissons choisies par le groupe.', 'Mets du rouge à lèvres sans miroir.',
+      'Fais un défilé de mode avec un vêtement de {joueur}.', 'Mange une cuillère de ketchup pur.', 'Fais un massage des pieds à {joueur} pendant 30 secondes.', 'Envoie « Je pense à toi 😘 » à la 5e personne de tes contacts.',
+      'Échange un vêtement avec {joueur} jusqu\'à la fin de la partie.', 'Fais une vidéo de toi en train de faire un dab et envoie-la à un parent.', 'Imite ton ex (ou une célébrité) pendant 30 secondes.', 'Parle comme un bébé jusqu\'à ton prochain tour.',
+      'Laisse {joueur} choisir ta coiffure pour le reste de la soirée.', 'Fais semblant d\'être un chien pendant 1 minute.', 'Raconte ton pire râteau en le mimant.', 'Chante une chanson d\'amour en regardant {joueur} dans les yeux.',
+      'Fais une demande en mariage à {joueur}.', 'Lèche ton coude (ou essaie très fort).', 'Commente la tenue de chaque joueur comme un juré de télé-crochet.',
     ],
     hot: [
       'Embrasse {joueur} sur la joue.', 'Fais un massage des épaules de 1 minute à {joueur}.', 'Retire un vêtement (pas de sous-vêtement).',
@@ -87,6 +122,10 @@ export default {
       'Fais un suçon sur ton propre bras.', 'Mime ta position préférée.', 'Envoie un message coquin à ton/ta partenaire (ou crush).', 'Danse de manière très sensuelle pendant 30 secondes.',
       'Laisse {joueur} te bander les yeux et deviner qui te touche la main.', 'Fais un bisou dans le cou de {joueur} (s\'il/elle accepte).', 'Décris ton dernier rêve érotique.',
       'Mange un fruit de la manière la plus sexy possible.', 'Fais un compliment très osé à {joueur}.', 'Mords doucement l\'oreille de {joueur} (s\'il/elle accepte).',
+      // Lot 2
+      'Fais un bisou dans le cou de {joueur}.', 'Fais un massage des épaules sensuel à {joueur} pendant 1 minute.', 'Enlève un vêtement de ton choix.', 'Murmure quelque chose de très coquin à l\'oreille de {joueur}.',
+      'Fais une danse sexy de 30 secondes.', 'Assieds-toi sur les genoux de {joueur} jusqu\'au prochain tour.', 'Embrasse {joueur} sur la joue très lentement.', 'Mime ta position préférée (habillé(e)).',
+      'Envoie un message coquin à ton crush.', 'Fais un slow collé-serré avec {joueur}.', 'Mords doucement l\'oreille de {joueur}.', 'Décris ton fantasme à {joueur} à voix basse.',
     ],
     hotpp: [
       "Fais un lap dance de 30 secondes à {joueur} (s'il/elle est d'accord).",
@@ -112,7 +151,10 @@ export default {
       "Mords doucement les lèvres de {joueur} (avec son accord).",
       "Les yeux bandés, devine qui t'embrasse dans le cou (volontaires uniquement).",
       "Caresse la cuisse de {joueur} pendant 20 secondes sans le/la quitter des yeux (avec son accord).",
-      "Fais deviner ton fantasme au groupe uniquement en mimant."
+      "Fais deviner ton fantasme au groupe uniquement en mimant.",
+      // Lot 2
+      'Embrasse {joueur} si les deux sont d\'accord.', 'Enlève deux vêtements.', 'Fais un strip-tease pour {joueur} (jusqu\'aux sous-vêtements).', 'Laisse {joueur} t\'embrasser où il/elle veut (au-dessus de la ceinture).',
+      'Passe un glaçon sur le corps de {joueur}.', 'Mime un orgasme bruyant pendant 10 secondes.', 'Fais un suçon à {joueur} (avec son accord).', 'Échange ton haut avec {joueur}, ici et maintenant.',
     ],
   },
 };

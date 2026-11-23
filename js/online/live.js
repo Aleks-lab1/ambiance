@@ -3,7 +3,7 @@ import { h, uid, shuffle, seg, pick, rand } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, actBtn, timerPill } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, actBtn, timerPill, drawNew } from './kit.js';
 import PATATE from '../data/patate.js';
 import { COLORS } from '../games/couleurs.js';
 import { PADS } from '../games/sequence.js';
@@ -15,11 +15,12 @@ const roundsSeg = (st, set, vals = [3, 5, 8]) => h('label', { class: 'field' }, 
 // PATATE CHAUDE
 // =====================================================================
 const FUSE = { court: [10, 25], normal: [20, 45], long: [35, 70] };
-function patateTheme(mode) {
+// Mêmes paquets que la version locale (patate.js) : thèmes déjà vus partagés.
+function patateTheme(s, mode) {
   const m = mode === 'mix' ? pick(['categories', 'syllabes', 'lettres']) : mode;
-  if (m === 'categories') return { kicker: 'Cite…', text: pick(PATATE.categories) };
-  if (m === 'syllabes') return { kicker: 'Un mot qui contient', text: `« ${pick(PATATE.syllabes)} »` };
-  return { kicker: 'Un mot qui commence par', text: pick(PATATE.lettres) };
+  if (m === 'categories') return { kicker: 'Cite…', text: drawNew(s, 'patate:c', PATATE.categories) };
+  if (m === 'syllabes') return { kicker: 'Un mot qui contient', text: `« ${drawNew(s, 'patate:s', PATATE.syllabes)} »` };
+  return { kicker: 'Un mot qui commence par', text: drawNew(s, 'patate:l', PATATE.lettres) };
 }
 
 export const patateOnline = {
@@ -110,7 +111,7 @@ function patateRound(room, s) {
   if (s.round > s.st.rounds) { s.phase = 'end'; return; }
   const [a, b] = FUSE[s.st.dur] || FUSE.normal;
   const on = activePids(room);
-  s.theme = patateTheme(s.st.mode);
+  s.theme = patateTheme(s, s.st.mode);
   s.holder = pick(on);
   s.start = Date.now();
   s.end = s.start + rand(a, b) * 1000;

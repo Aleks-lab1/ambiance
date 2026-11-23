@@ -4,7 +4,7 @@ import { gameColors } from '../themes.js';
 import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
 import { LEVELS as PARA_LEVELS } from '../games/paranoia.js';
 import PARA from '../data/paranoia.js';
 import DEBATS from '../data/debats.js';
@@ -22,8 +22,8 @@ function levelsForm(levels, st, set) {
   set({ levels: [...sel] });
   return h('div', { class: 'col' }, h('p', { class: 'muted small' }, 'Niveaux'), levelPicker(levels, sel, (x) => set({ levels: [...x] })));
 }
-const deckOf = (data, levels) => shuffle((levels && levels.length ? levels : Object.keys(data)).flatMap((l) => data[l] || []));
-const draw = (s, refill) => { if (!s.deck.length) s.deck = refill(); return s.deck.pop(); };
+const lvOf = (data, levels) => (levels && levels.length ? levels : Object.keys(data)).slice().sort();
+const flat = (data, levels) => lvOf(data, levels).flatMap((l) => data[l] || []);
 const name = (g, pid) => (pid === g.me ? 'Toi' : g.nameOf(pid));
 const roundsForm = (st, set, label = 'Nombre de tours') => h('label', { class: 'field' }, label, seg([5, 10, 15].map((n) => ({ value: n, label: String(n) })), st.rounds, (v) => set({ rounds: v })));
 
@@ -36,7 +36,7 @@ export const paranoiaOnline = {
   settingsForm: (st, set) => levelsForm(PARA_LEVELS, st, set),
   init(room, st) {
     const order = shuffle(activePids(room));
-    const s = { gid: uid(), st, order, asker: order[0], deck: deckOf(PARA, st.levels), n: 0 };
+    const s = { gid: uid(), st, order, asker: order[0], n: 0 };
     startAsk(s);
     return s;
   },
@@ -97,7 +97,7 @@ export const paranoiaOnline = {
     };
   },
 };
-function startAsk(s) { s.n++; s.phase = 'ask'; s.target = null; s.revealed = false; s.q = draw(s, () => deckOf(PARA, s.st.levels)); }
+function startAsk(s) { s.n++; s.phase = 'ask'; s.target = null; s.revealed = false; s.q = drawNew(s, 'paranoia:' + lvOf(PARA, s.st.levels), () => flat(PARA, s.st.levels)); }
 
 // =====================================================================
 // POUR OU CONTRE
@@ -111,7 +111,7 @@ export const debatsOnline = {
       roundsForm(st, set, 'Nombre de débats'));
   },
   init(room, st) {
-    const s = { gid: uid(), st, order: shuffle(activePids(room)), i: -1, deck: shuffle(DEBATS.slice()), round: 0 };
+    const s = { gid: uid(), st, order: shuffle(activePids(room)), i: -1, round: 0 };
     nextDebate(room, s);
     return s;
   },
@@ -184,7 +184,7 @@ function nextDebate(room, s) {
   s.pour = on[(2 * s.i) % on.length];
   s.contre = on[(2 * s.i + 1) % on.length];
   if (s.contre === s.pour) s.contre = on[(2 * s.i + 2) % on.length];
-  s.topic = draw(s, () => shuffle(DEBATS.slice()));
+  s.topic = drawNew(s, 'debats', DEBATS);
   s.votes = {};
   s.winner = null;
   s.phase = 'pour';
@@ -209,7 +209,7 @@ export const cinqOnline = {
   settingsForm: (st, set) => roundsForm(st, set),
   init(room, st) {
     const order = shuffle(activePids(room));
-    const s = { gid: uid(), st, order, player: order[0], deck: shuffle(CINQ.slice()), round: 0 };
+    const s = { gid: uid(), st, order, player: order[0], round: 0 };
     nextCinq(room, s, true);
     return s;
   },
@@ -268,7 +268,7 @@ function nextCinq(room, s, first = false) {
   s.round++;
   if (s.round > s.st.rounds) { s.phase = 'end'; return; }
   if (!first) s.player = nextOn(room, s.order, s.player);
-  s.prompt = draw(s, () => shuffle(CINQ.slice()));
+  s.prompt = drawNew(s, 'cinq', CINQ);
   s.votes = {}; s.ok = null; s.phase = 'ready';
 }
 function judgeEnd(room, s) {
@@ -287,7 +287,7 @@ export const deuxOnline = {
   settingsForm: (st, set) => levelsForm(DEUX_LEVELS, st, set),
   init(room, st) {
     const order = shuffle(activePids(room));
-    const s = { gid: uid(), st, order, teller: order[0], deck: deckOf(DEUX, st.levels), n: 0 };
+    const s = { gid: uid(), st, order, teller: order[0], n: 0 };
     startDeux(s);
     return s;
   },
@@ -370,7 +370,7 @@ export const deuxOnline = {
     };
   },
 };
-function startDeux(s) { s.n++; s.phase = 'write'; s.items = null; s.lie = null; s.votes = {}; s.theme = draw(s, () => deckOf(DEUX, s.st.levels)); }
+function startDeux(s) { s.n++; s.phase = 'write'; s.items = null; s.lie = null; s.votes = {}; s.theme = drawNew(s, 'on:deuxverites:' + lvOf(DEUX, s.st.levels), () => flat(DEUX, s.st.levels)); }
 function deuxResult(room, s) {
   for (const [p, x] of Object.entries(s.votes)) { if (x === s.lie) addScore(room, p, 1); else addScore(room, s.teller, 1); }
   s.phase = 'result';

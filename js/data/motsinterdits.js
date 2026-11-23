@@ -104,4 +104,23 @@ export default [
   ['Marathon', 'Courir', '42', 'Kilomètres', 'Course', 'Coureur'],
   ['Moto', 'Casque', 'Roues', 'Rouler', 'Vitesse', 'Motard'],
   ['Pique-nique', 'Herbe', 'Panier', 'Nappe', 'Manger', 'Dehors'],
+  // Lot 2
+  ['Piscine', 'Nager', 'Eau', 'Maillot', 'Plonger', 'Bassin'], ['Médecin', 'Malade', 'Hôpital', 'Docteur', 'Soigner', 'Ordonnance'], ['Pluie', 'Eau', 'Nuage', 'Parapluie', 'Mouillé', 'Gouttes'], ['École', 'Prof', 'Élève', 'Classe', 'Cours', 'Cartable'],
+  ['Train', 'Gare', 'Rails', 'Wagon', 'SNCF', 'Voyage'], ['Soleil', 'Chaud', 'Lumière', 'Été', 'Jaune', 'Ciel'], ['Chat', 'Miauler', 'Animal', 'Moustaches', 'Souris', 'Ronronner'], ['Chien', 'Aboyer', 'Os', 'Animal', 'Laisse', 'Niche'],
+  ['Glace', 'Froid', 'Cornet', 'Été', 'Vanille', 'Boule'], ['Piano', 'Touches', 'Instrument', 'Noir', 'Blanc', 'Musique'], ['Vacances', 'Partir', 'Été', 'Repos', 'Voyage', 'Valise'], ['Miroir', 'Reflet', 'Glace', 'Se regarder', 'Verre', 'Salle de bain'],
+  ['Cirque', 'Chapiteau', 'Clown', 'Acrobate', 'Lion', 'Spectacle'], ['Zoo', 'Animaux', 'Cage', 'Visiter', 'Lion', 'Girafe'], ['Musée', 'Tableau', 'Art', 'Visite', 'Louvre', 'Œuvre'], ['Bébé', 'Pleurer', 'Couche', 'Biberon', 'Petit', 'Naître'],
+  ['Mamie', 'Grand-mère', 'Vieille', 'Tricot', 'Gâteau', 'Papy'], ['Police', 'Voleur', 'Agent', 'Sirène', 'Arrêter', 'Menottes'], ['Trésor', 'Or', 'Coffre', 'Pirate', 'Carte', 'Caché'], ['Désert', 'Sable', 'Chameau', 'Chaud', 'Sahara', 'Dune'],
+  ['Tinder', 'Appli', 'Rencontre', 'Swiper', 'Match', 'Profil'], ['Bisou', 'Embrasser', 'Lèvres', 'Joue', 'Amour', 'Smack'], ['Coiffeur', 'Cheveux', 'Couper', 'Ciseaux', 'Salon', 'Brushing'],
+  // Lot 2
+  ['Hiver', 'Froid', 'Neige', 'Saison', 'Décembre', 'Noël'], ['Pâques', 'Œufs', 'Chocolat', 'Lapin', 'Cloches', 'Printemps'], ['Carnaval', 'Déguisement', 'Masque', 'Défilé', 'Rio', 'Confettis'], ['Tour de France', 'Vélo', 'Maillot jaune', 'Course', 'Cycliste', 'Étape'],
+  ['Jeux olympiques', 'Médaille', 'Anneaux', 'Sport', 'Athlète', 'Flamme'], ['Lego', 'Briques', 'Construire', 'Jouet', 'Plastique', 'Danois'], ['Monopoly', 'Jeu', 'Argent', 'Rue de la Paix', 'Prison', 'Dés'], ['Échecs', 'Roi', 'Reine', 'Pion', 'Plateau', 'Mat'],
+  ['Casino', 'Jeu', 'Argent', 'Roulette', 'Machine à sous', 'Las Vegas'], ['Loto', 'Gagner', 'Numéros', 'Tirage', 'Millions', 'Ticket'], ['Banque', 'Argent', 'Compte', 'Carte', 'Conseiller', 'Prêt'], ['Supermarché', 'Courses', 'Caddie', 'Caisse', 'Rayon', 'Magasin'],
+  ['Autoroute', 'Voiture', 'Péage', 'Route', 'Vitesse', 'Bouchon'], ['Feu rouge', 'Arrêt', 'Vert', 'Orange', 'Carrefour', 'Voiture'], ['GPS', 'Itinéraire', 'Carte', 'Voix', 'Tourner', 'Perdu'], ['Passeport', 'Voyage', 'Pays', 'Frontière', 'Photo', 'Douane'],
+  ['Aéroport', 'Avion', 'Valise', 'Vol', 'Embarquement', 'Terminal'], ['Parachute', 'Sauter', 'Avion', 'Ciel', 'Tomber', 'Toile'], ['Phare', 'Lumière', 'Mer', 'Bateau', 'Tour', 'Gardien'], ['Coquillage', 'Plage', 'Mer', 'Ramasser', 'Escargot', 'Nacre'],
+  ['Crème solaire', 'Soleil', 'Plage', 'Peau', 'Brûlure', 'Protection'], ['Arbre', 'Feuilles', 'Branches', 'Bois', 'Forêt', 'Racines'], ['Jardin', 'Fleurs', 'Plantes', 'Herbe', 'Arroser', 'Potager'], ['Fleuriste', 'Fleurs', 'Bouquet', 'Roses', 'Magasin', 'Vendre'],
+  ['Tracteur', 'Ferme', 'Champ', 'Agriculteur', 'Roues', 'Labourer'], ['Ferme', 'Vache', 'Animaux', 'Agriculteur', 'Campagne', 'Tracteur'], ['Cheval', 'Monter', 'Galop', 'Selle', 'Sabots', 'Équitation'], ['Hamster', 'Cage', 'Rongeur', 'Roue', 'Petit', 'Animal'],
+  ['Perroquet', 'Oiseau', 'Parler', 'Plumes', 'Couleurs', 'Répéter'], ['Méduse', 'Mer', 'Piquer', 'Transparente', 'Plage', 'Tentacules'], ['Pieuvre', 'Tentacules', 'Huit', 'Mer', 'Encre', 'Poulpe'], ['Dragon', 'Feu', 'Cracher', 'Ailes', 'Légende', 'Monstre'],
+  ['Super-héros', 'Pouvoirs', 'Cape', 'Sauver', 'Marvel', 'Batman'], ['Spider-Man', 'Araignée', 'Toile', 'Peter Parker', 'Marvel', 'Héros'], ['Harry Potter', 'Sorcier', 'Poudlard', 'Baguette', 'Lunettes', 'Cicatrice'], ['Mario', 'Nintendo', 'Plombier', 'Moustache', 'Luigi', 'Jeu vidéo'],
+  ['Instagram', 'Photo', 'Réseau', 'Story', 'Like', 'Abonnés'], ['YouTube', 'Vidéo', 'Youtubeur', 'Regarder', 'Abonné', 'Chaîne'], ['Podcast', 'Écouter', 'Émission', 'Audio', 'Épisode', 'Radio'], ['Jeu vidéo', 'Console', 'Manette', 'Jouer', 'Écran', 'Gamer'],
+  ['Influenceur', 'Réseaux', 'Abonnés', 'Instagram', 'Placement', 'Produit'], ['Mot de passe', 'Code', 'Secret', 'Ordinateur', 'Oublier', 'Compte'], ['Batterie', 'Charger', 'Téléphone', 'Pourcentage', 'Câble', 'Vide'], ['Émoji', 'Message', 'Visage', 'Smiley', 'Téléphone', 'Petit dessin'],
 ];

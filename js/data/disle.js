@@ -9,6 +9,12 @@ export default {
     'Il faut sortir les poubelles.', 'Ma batterie est à 1 %.', 'Je ne trouve plus la télécommande.', 'On est bientôt arrivés ?', 'J\'ai gagné au loto !',
     'Où est passé le chat ?', 'C\'est quoi, le code du Wi-Fi ?', 'Je reviens dans cinq minutes.', 'Il y a une araignée dans la douche.', 'Tu as pris le pain ?',
     'Je n\'ai plus de chaussettes propres.', 'Quelqu\'un veut le dernier morceau de pizza ?', 'J\'ai rendez-vous chez le dentiste.', 'C\'était délicieux, merci.',
+    // Lot 2
+    'Il reste du fromage ?', 'Où est la télécommande ?', 'J\'ai oublié mon parapluie.', 'Tu as vu l\'heure ?',
+    'C\'est mon dernier mot.', 'Quelqu\'un a vu mes lunettes ?', 'Je n\'ai plus de batterie.', 'On va être en retard !',
+    'Tu peux fermer la porte ?', 'Je prendrai un café, s\'il vous plaît.', 'Ma voiture ne démarre pas.', 'Le repas est prêt !',
+    'Tu veux danser ?', 'C\'est l\'anniversaire de mamie.', 'Il pleut encore.', 'Où sont les toilettes ?',
+    'J\'ai raté mon bus.', 'Je déteste les lundis.', 'Ce gâteau est délicieux.',
   ],
   manieres: [
     'comme un pirate', 'comme un robot', 'en pleine rupture amoureuse', 'comme un présentateur du JT', 'comme un commentateur de foot surexcité',
@@ -25,5 +31,12 @@ export default {
     'comme un coach sportif ultra motivé', 'avec l\'accent marseillais', 'avec l\'accent québécois', 'avec un accent anglais', 'avec un accent italien',
     'en rimes', 'comme un perroquet', 'comme une chèvre', 'en chantant comme dans une comédie musicale', 'comme un journaliste en direct d\'une tempête',
     'comme un acteur de film d\'horreur', 'comme un astronaute qui parle à la Terre', 'comme un ado amoureux', 'comme un vieux sage', 'comme un commissaire-priseur',
+    // Lot 2
+    'comme un présentateur de JT', 'comme un robot en panne', 'comme une star d\'Hollywood', 'comme un sergent militaire',
+    'en chuchotant un secret', 'en étant très amoureux(se)', 'comme un commentateur de foot', 'comme une grand-mère',
+    'comme un vendeur de marché', 'comme un prof sévère', 'comme un GPS', 'comme un extraterrestre',
+    'la bouche pleine', 'en étant ivre', 'comme un détective', 'comme un influenceur',
+    'comme un ninja', 'comme un mime qui a le droit de parler', 'en étant gelé(e)', 'en étant sous l\'eau',
+    'comme Dark Vador', 'comme un serveur parisien', 'en annonçant une mauvaise nouvelle', 'comme un clown triste',
   ],
 };

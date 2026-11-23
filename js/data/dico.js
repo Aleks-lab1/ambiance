@@ -103,4 +103,12 @@ export default [
   ['Zythophile', 'Amateur de bière.'],
   ['Xénophile', 'Qui aime les étrangers et ce qui vient de l\'étranger.'],
   ['Quérulent', 'Qui a une tendance excessive à se plaindre et à réclamer.'],
+  // Lot 2
+  ['Pédiluve', 'Petit bassin où l\'on se lave les pieds avant d\'entrer dans une piscine.'], ['Acouphène', 'Bruit (sifflement, bourdonnement) perçu dans l\'oreille sans source extérieure.'], ['Philatéliste', 'Collectionneur de timbres.'],
+  ['Numismate', 'Collectionneur de pièces de monnaie et de médailles.'], ['Cruciverbiste', 'Amateur de mots croisés.'], ['Vexillologie', 'Étude des drapeaux.'], ['Tautologie', 'Formule qui ne fait que répéter la même chose, comme « quand c\'est fini, c\'est fini ».'],
+  ['Chiroptère', 'Nom savant des chauves-souris.'], ['Lycanthrope', 'Loup-garou : humain qui se transforme en loup.'], ['Nyctophobie', 'Peur du noir.'],
+  ['Glabre', 'Sans poils, sans barbe.'], ['Hirsute', 'Dont les cheveux sont en désordre, ébouriffés.'], ['Pléthore', 'Quantité excessive, surabondance.'],
+  ['Sérendipité', 'Le fait de trouver par hasard quelque chose qu\'on ne cherchait pas.'], ['Ubiquité', 'Capacité d\'être à plusieurs endroits en même temps.'], 
+  ['Saugrenu', 'Bizarre, inattendu et un peu ridicule.'], ['Fanfaronner', 'Se vanter bruyamment.'], ['Bouquiniste', 'Marchand de livres d\'occasion, comme sur les quais de la Seine.'], ['Ripisylve', 'Forêt qui borde un cours d\'eau.'],
+  ['Sternutation', 'Le fait d\'éternuer.'], ['Hydromel', 'Boisson fermentée à base d\'eau et de miel.'], ['Mansuétude', 'Grande indulgence, bonté qui pardonne.'], 
 ];

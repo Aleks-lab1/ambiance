@@ -2,12 +2,12 @@
 import { h, shuffle, toggleRow, seg } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import PAIRS from '../data/imposteur.js';
+import { drawNew } from './kit.js';
 
 const player = (room, pid) => room.players.find((p) => p.pid === pid);
 
 function newRound(room, s) {
-  if (!s.deck.length) s.deck = shuffle(PAIRS.slice());
-  const pair = s.deck.pop();
+  const pair = drawNew(s, 'imposteur', PAIRS); // même paquet que la version locale
   const flip = Math.random() < 0.5;
   const civ = flip ? pair[0] : pair[1];
   const imp = flip ? pair[1] : pair[0];
@@ -65,7 +65,7 @@ export default {
   },
 
   init(room, st) {
-    const s = { st, deck: shuffle(PAIRS.slice()), round: 0 };
+    const s = { st, round: 0 };
     newRound(room, s);
     return s;
   },
