@@ -12,10 +12,12 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `index.html`, `manifest.webmanifest`, `sw.js` | Page unique, manifeste PWA, service worker (**généré**, ne pas modifier à la main) |
 | `js/` | Cœur : `app.js` (accueil, routes `#/…`, réglages), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
+| `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
 | `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `relay.js` (relais MQTT), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
 | `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
+| `img/ui/` | Images utilisées pendant les jeux : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow) |
 | `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main), `gen-images.mjs` (images des jeux, compositions dans `images/scenes.mjs`, emojis 3D dans `images/emoji/`) |
 | `css/style.css` | Toute la feuille de style |
 | `tests/` | Outils de test, hors appli (voir plus bas et `tests/README.md`) |
@@ -94,7 +96,8 @@ export const monJeuOnline = {
   `timerPill` (minuteur), `actBtn`, `waitHost`, **`drawNew(s, clé, éléments)`** : pioche une carte sans répétition d'une partie à l'autre
   (mémoire dans le téléphone de l'hôte). Toujours l'utiliser pour tirer du contenu en ligne, avec la même clé et la même forme d'éléments
   que la version locale (`makeDeck`) quand c'est possible : la mémoire est alors partagée (ex. `'jamais:soft'`, `'front:animaux'`, `'cinq'`).
-- `js/online/soiree.js` exporte aussi `rankList` (liste à classer en touchant), `scaleEl` + `cursorPoints` (échelle du Curseur), `CHI` / `beats`.
+- `js/online/soiree.js` exporte aussi `ORDRE_EDGES` (étiquettes de Dans l'ordre !), `scaleEl` + `scaleRange` + `cursorPoints` (échelle du Curseur,
+  le curseur se glisse directement sur l'échelle), `CHI` / `beats` / `chiArena` (poings « Chi… Fou… Mi ! » puis les deux choix).
 - Fin de partie : `phase: 'end'` + `endScreen(room, g)`. Ajouter le jeu dans `tests/online/` (simulateur `mp.cjs`).
 
 ## Ajouter un jeu sur un seul téléphone
@@ -108,6 +111,26 @@ export const monJeuOnline = {
 - **Image de la case** : composition dans `scripts/images/scenes.mjs`, puis `node scripts/gen-images.mjs <id>`.
 - Mode « on se passe le téléphone » : `hotseat(ctx, moduleEnLigne, réglages, onExit)` dans `js/games/plateau.js` fait tourner un module en ligne
   localement, `g.me` = joueur dont c'est le tour, `g.hotseat = true` (exemples : Memory, Yam's).
+
+## Animations « comme en vrai » (fluidité)
+L'utilisateur tient à ce que les jeux soient **fluides et satisfaisants** : on manipule directement (glisser plutôt que taper des numéros),
+et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourne, dé qui roule). Outils existants, à réutiliser :
+- **Classer en glissant** : `sortList(textes, { order, top, bottom, labels, locked, onChange })` (`js/sortable.js`) → `{ el, order(), lock(),
+  check(solution) (vert/rouge), settle(solution, étiquettes) (les cartes glissent à leur vraie place), destroy() }`. Doigt, souris et flèches
+  du clavier. Dans l'ordre !, Dans sa tête. Tests : `tests/lib/sort.cjs` (`sortByDrag`, `dragTo` : vrais glisser-déposer à la souris).
+- **4 en ligne** (nom générique : ne pas reprendre le nom commercial d'un jeu existant) : `c4View({ onPick })` → `setTurn(joueur, peutJouer)`,
+  `drop(case, joueur)` (promesse : la main se place, enfonce le jeton, il tombe derrière la façade et rebondit), `win`, `clear` (les jetons
+  tombent par le bas), `nope`. **Morpion** : `tttView` (grille et symboles tracés au feutre, ligne gagnante barrée).
+- **Cartes** : `flip3(face, dos)` / `revealCard(carte, classes)` (`js/games/paquet.js`) : la carte tirée arrive face cachée et se retourne en 3D.
+  Memory : `memBoard` (`js/online/plateau.js`), cartes 3D gardées d'une mise à jour à l'autre.
+- **Dés** : `tumble(dé)` (`js/common.js`, dé créé par `dieFace`) : il tourne, ses faces défilent, il retombe sur sa valeur.
+- **Roue, bouteille** : `spinTicks(élément, nbCases, { pointer, ms, onTick })` : un tic à chaque case qui passe vraiment (angle lu à chaque image).
+- **Bataille navale** : `bnGrid(..., { fx: { i, res } })` anime le dernier tir (gerbe d'eau, explosion, bateau coulé).
+- Divers : `.reveal-in` (carte secrète qu'on retourne : rôle, mot), `stamp` du Bingo, `drawing(n, true)` du Pendu (trait qui se trace),
+  sons `sfx.clack`, `card`, `rattle`, `splash`, `scribble`.
+- **Règle d'or en ligne** : `update` est appelé à chaque changement (un autre joueur qui valide…). Un élément animé ou qu'on manipule
+  (liste, plateau, cartes) doit **rester le même** d'un `update` à l'autre : ne remplacer que les textes autour, et n'animer que ce qui est
+  nouveau (comparer avec l'état affiché, ex. `shown` du 4 en ligne, `lastKey`). Sinon l'animation repart ou le glissement en cours est coupé.
 
 ## Jeu en ligne : connexions
 - `js/online/room.js` : l'hôte crée une partie avec un code. Les joueurs rejoignent via `#/join/CODE`.
@@ -142,6 +165,12 @@ export const monJeuOnline = {
 - Chez l'hôte, `g.send()` met l'écran à jour **tout de suite** (sans réseau) : modifier le texte affiché **avant** `g.send()`, sinon il écrase
   l'écran suivant (bug de La Séquence).
 - Animations partagées (bouteille, roue) : garder les mêmes éléments d'un `update` à l'autre, sinon la rotation CSS repart de zéro.
+- Chez l'hôte, la vue (`view(...)`) **partage les tableaux de l'état** (ex. `board`) : les copier (`slice`) avant de s'en servir plus tard
+  (animation en file d'attente), sinon on anime un coup… avec le plateau du coup suivant.
+- Liste à glisser en ligne : ne jamais la recréer pendant une question (le doigt « tenu » serait perdu). Elle est dans son propre conteneur.
+- Trait qui se trace en CSS : `pathLength="1"` sur des `<path>` uniquement (cercle → path en deux arcs) et l'animation `draw` (pointillés
+  seulement pendant l'animation, `backwards` s'il y a un délai) : à la fin le trait redevient plein, même si `pathLength` n'est pas géré.
+- Carte 3D (`flip3`) : ses deux faces sont dans la même case de grille, centrées (`justify-self: center`), sinon la rotation décale la carte.
 - Oublier `gen-sw.mjs` = les utilisateurs ne voient pas la mise à jour.
 - Environnement cloud : ne pas réinstaller Playwright (Chromium est préinstallé). Ne pas exécuter de code téléchargé : extraire avec grep/sed.
 - Playwright : `page.waitForFunction(async () => …)` n'attend pas la promesse (toujours « vraie ») : boucler sur `page.evaluate`.
@@ -156,6 +185,7 @@ export const monJeuOnline = {
 - `tests/relay/relay-real.manual.cjs` : manuel, avec les vrais serveurs relais (Internet, utilise `HTTPS_PROXY` si présent).
 - `tests/local/sw.test.cjs` : service worker et mode hors ligne, avec un vrai serveur web sur localhost.
 - `tests/unit/images.test.mjs` : une image (et une composition) par jeu.
+- `tests/lib/sort.cjs` : glisser-déposer à la souris dans une liste `sortList` (`sortByDrag(page, zone, ordreVoulu)`).
 - `tests/` est exclu du service worker (`SKIP` dans `scripts/gen-sw.mjs`).
 
 ## Préférences de l'utilisateur

@@ -2,10 +2,9 @@
 import { h, topbar, seg, shuffle, randInt, countdown, timerView, stepper, toast } from '../ui.js';
 import { get, set, getPlayers } from '../store.js';
 import { editPlayers } from '../players.js';
-import { TEAM_COLORS, dieFace, onlineBanner } from '../common.js';
+import { TEAM_COLORS, dieFace, tumble, onlineBanner } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 
-const die = (v) => dieFace(v, 'roll');
 
 export function start(ctx) {
   const { root } = ctx;
@@ -28,14 +27,19 @@ export function start(ctx) {
   }
 
   function des() {
-    let n = get('dice-n', 2);
+    let n = get('dice-n', 2), totalT = null;
     const row = h('div', { class: 'dice-row' });
     const total = h('h2', { class: 'center' });
     const roll = () => {
       const vals = Array.from({ length: n }, () => randInt(1, 6));
-      row.replaceChildren(...vals.map(die));
-      total.textContent = n > 1 ? `Total : ${vals.reduce((a, b) => a + b, 0)}` : '';
-      sfx.pop(); buzz(30);
+      const dice = vals.map((v) => dieFace(v));
+      row.replaceChildren(...dice);
+      dice.forEach((d) => tumble(d));
+      // Le total s'affiche quand les dés sont retombés.
+      total.textContent = '';
+      clearTimeout(totalT);
+      totalT = setTimeout(() => { total.textContent = n > 1 ? `Total : ${vals.reduce((a, b) => a + b, 0)}` : ''; }, 800);
+      sfx.rattle(); buzz(30);
     };
     body.append(
       h('div', { class: 'spread' }, h('b', null, 'Nombre de dés'), stepper(n, 1, 6, (v) => { n = v; set('dice-n', v); roll(); })),

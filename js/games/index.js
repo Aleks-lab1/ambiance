@@ -494,11 +494,11 @@ export const GAMES = [
     load: () => import('./duel.js'),
   },
   {
-    id: 'morpion', name: 'Morpion & 4 à la suite', emoji: '⭕', colors: ['#2193b0', '#6dd5ed'],
+    id: 'morpion', name: 'Morpion & 4 en ligne', emoji: '⭕', colors: ['#2193b0', '#6dd5ed'],
     desc: 'Les grands classiques à deux, ou contre le téléphone.',
     tags: ['rapide'], players: '1-2',
     rules: [
-      '<b>Morpion :</b> aligne 3 symboles (ligne, colonne ou diagonale) avant l\'autre. <b>4 à la suite :</b> fais tomber tes jetons dans les colonnes et aligne-en 4.',
+      '<b>Morpion :</b> aligne 3 symboles (ligne, colonne ou diagonale) avant l\'autre. <b>4 en ligne :</b> fais tomber tes jetons dans les colonnes et aligne-en 4.',
       'À deux sur le même téléphone, ou contre le téléphone (facile ou coriace). Le perdant prend une pénalité, et on alterne qui commence.',
     ],
     load: () => import('./morpion.js'),

@@ -1,8 +1,8 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = '26562394c2';
+const VERSION = 'cf2486b1da';
 const CACHE = 'ambiance-' + VERSION;
 // Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
-const IMG_CACHE = 'ambiance-img-5fbd902507';
+const IMG_CACHE = 'ambiance-img-34dc0e7830';
 const ASSETS = [
   "./",
   "./css/style.css",
@@ -95,6 +95,7 @@ const ASSETS = [
   "./js/games/sequence.js",
   "./js/games/soiree.js",
   "./js/games/teamwords.js",
+  "./js/morpion-vue.js",
   "./js/online/bingo.js",
   "./js/online/bonmot.js",
   "./js/online/cartes.js",
@@ -123,6 +124,7 @@ const ASSETS = [
   "./js/players.js",
   "./js/race-core.js",
   "./js/sfx.js",
+  "./js/sortable.js",
   "./js/store.js",
   "./js/themes.js",
   "./js/turn.js",
@@ -192,7 +194,8 @@ const IMAGES = [
   "./img/jeux/tupreferes.webp",
   "./img/jeux/unisson.webp",
   "./img/jeux/vraifaux.webp",
-  "./img/jeux/yams.webp"
+  "./img/jeux/yams.webp",
+  "./img/ui/main.webp"
 ];
 
 self.addEventListener('install', (event) => {

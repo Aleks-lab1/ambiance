@@ -3,6 +3,7 @@ import { h, topbar, shuffle } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { settings, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
+import { flip3 } from './paquet.js';
 import { sfx, buzz } from '../sfx.js';
 
 export const SUITS = [['♠', false], ['♥', true], ['♦', true], ['♣', false]];
@@ -61,12 +62,12 @@ export function start(ctx) {
         h('div', { class: 'spread' }, h('span', { class: 'pill' }, `🃏 ${deck.length} cartes`), kingsLine),
         p ? h('p', { class: 'center' }, card ? 'Carte de ' : 'À ', h('b', null, card ? players[(turn - 1 + players.length) % players.length] : p), card ? '' : ' de piocher !') : null,
         card
-          ? h('div', { class: 'playing-card flip' + (card.red ? ' red' : '') },
+          ? flip3(h('div', { class: 'playing-card' + (card.red ? ' red' : '') },
             h('div', { class: 'corner tl' }, card.r, h('br'), card.s),
             h('div', { class: 'mid' }, x.emoji),
-            h('div', { class: 'corner br' }, card.r, h('br'), card.s))
+            h('div', { class: 'corner br' }, card.r, h('br'), card.s)), back())
           : back(),
-        card ? h('div', { class: 'panel center col' }, h('h3', null, `${x.emoji} ${x.t}`), h('p', null, x.d)) : null,
+        card ? h('div', { class: 'panel center col anim-late' }, h('h3', null, `${x.emoji} ${x.t}`), h('p', null, x.d)) : null,
         h('div', { class: 'grow' }),
         deck.length && kings < 4
           ? h('button', { class: 'btn btn-primary btn-big btn-block', onclick: draw }, card && p ? `Au tour de ${p} → piocher` : 'Piocher une carte')
@@ -76,7 +77,7 @@ export function start(ctx) {
     function draw() {
       const card = deck.pop();
       turn++;
-      sfx.swoosh();
+      sfx.card();
       if (card.r === 'R') {
         kings++;
         buzz(kings === 4 ? [300, 100, 300, 100, 500] : 60);

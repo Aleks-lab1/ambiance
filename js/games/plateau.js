@@ -80,22 +80,28 @@ export const bataille = {
       clear();
       const cpu = randomFleet();
       const onCpu = {}, onMe = {};
-      let myTurn = true, over = false, msg = 'À toi de tirer !';
+      let myTurn = true, over = false, msg = 'À toi de tirer !', fx = null; // fx : dernier tir à animer { on: 'cpu' | 'me', i, res }
       const top = topbar(ctx, { onBack: setup });
-      const draw = () => root.replaceChildren(top, h('h2', { class: 'center' }, msg),
-        h('p', { class: 'center small' }, 'Chez le téléphone'), bnGrid(onCpu, { ships: over ? cpu : null, onFire: myTurn && !over ? shoot : null }),
-        h('p', { class: 'center small' }, 'Ta flotte'), bnGrid(onMe, { ships: mine, small: true }),
-        over ? h('button', { class: 'btn btn-primary btn-big btn-block', onclick: place }, '🔁 Rejouer') : null);
+      const draw = () => {
+        const f = fx; fx = null;
+        root.replaceChildren(top, h('h2', { class: 'center' }, msg),
+          h('p', { class: 'center small' }, 'Chez le téléphone'), bnGrid(onCpu, { ships: over ? cpu : null, onFire: myTurn && !over ? shoot : null, fx: f && f.on === 'cpu' ? f : null }),
+          h('p', { class: 'center small' }, 'Ta flotte'), bnGrid(onMe, { ships: mine, small: true, fx: f && f.on === 'me' ? f : null }),
+          over ? h('button', { class: 'btn btn-primary btn-big btn-block', onclick: place }, '🔁 Rejouer') : null);
+      };
       function shoot(i) {
         const r = fire(cpu, onCpu, i);
-        r.res === 'miss' ? sfx.swoosh() : (sfx.boom(), buzz(60));
+        fx = { on: 'cpu', i, res: r.res };
+        r.res === 'miss' ? sfx.splash() : (sfx.boom(), buzz(60));
         if (r.all) { over = true; msg = '🏆 Tu as coulé toute la flotte !'; set('bn-wins', get('bn-wins', 0) + 1); sfx.fanfare(); draw(); return; }
         if (r.res === 'miss') { myTurn = false; msg = '🌊 À l\'eau… le téléphone tire.'; draw(); timers.push(setTimeout(cpuShot, 800)); } else { msg = r.res === 'sunk' ? `💥 Coulé (bateau de ${r.sunk}) ! Rejoue.` : '🔥 Touché ! Rejoue.'; draw(); }
       }
       function cpuShot() {
         if (!root.isConnected || over) return;
-        const r = fire(mine, onMe, aiShot(onMe));
-        r.res === 'miss' ? sfx.swoosh() : (sfx.boom(), buzz([80, 40, 80]));
+        const i = aiShot(onMe);
+        const r = fire(mine, onMe, i);
+        fx = { on: 'me', i, res: r.res };
+        r.res === 'miss' ? sfx.splash() : (sfx.boom(), buzz([80, 40, 80]));
         if (r.all) { over = true; msg = `📱 Le téléphone a gagné… ${sip(2)} !`; sfx.bad(); draw(); return; }
         if (r.res === 'miss') { myTurn = true; msg = '🌊 Il a raté ! À toi.'; draw(); } else { msg = r.res === 'sunk' ? '💥 Il a coulé un de tes bateaux…' : '🔥 Il t\'a touché… il rejoue.'; draw(); timers.push(setTimeout(cpuShot, 900)); }
       }

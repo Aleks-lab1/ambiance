@@ -2,7 +2,7 @@
 import { h, topbar, seg, pick } from '../ui.js';
 import { get, set, sip } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
-import { ensureAdult, onlineBanner } from '../common.js';
+import { ensureAdult, onlineBanner, spinTicks } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 
 // {a} = celui qui a fait tourner la bouteille, {b} = celui qu'elle désigne.
@@ -119,10 +119,9 @@ export function start(ctx) {
       const cur = ((angle % 360) + 360) % 360;
       angle += 360 * (4 + Math.floor(Math.random() * 3)) + ((want - cur + 360) % 360);
       bottle.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-      // Petits clics pendant la rotation, de plus en plus lents.
-      let t = 0;
-      for (let k = 0; k < 18; k++) { t += 60 + k * k * 4; timers.push(setTimeout(() => sfx.tick(), t)); }
-      timers.push(setTimeout(() => done(target), 3700));
+      // Un tic chaque fois que le goulot passe devant quelqu'un, dont le prénom s'allume un instant.
+      const stop = spinTicks(bottle, n, { ms: 3700, onTick: (k) => { const el = names[k]; if (el) { el.classList.remove('pass'); void el.offsetWidth; el.classList.add('pass'); } } });
+      timers.push(setTimeout(() => { stop(); done(target); }, 3700));
     }
 
     function done(target) {

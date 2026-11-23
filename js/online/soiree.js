@@ -5,6 +5,7 @@ import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
+import { sortList } from '../sortable.js';
 import { matches } from '../race-core.js';
 import QAE from '../data/quiaecrit.js';
 import CURSEUR from '../data/curseur.js';
@@ -17,16 +18,8 @@ const roundsSeg = (st, set, vals, label = 'Nombre de manches') => h('label', { c
 const top = (pills) => h('div', { class: 'row' }, ...pills.flatMap((p, i) => (i === 1 ? [h('div', { class: 'grow' }), p] : [p])));
 const pill = (t) => h('span', { class: 'pill' }, t);
 
-/** Liste à classer en touchant les éléments dans l'ordre. order = indices déjà classés. */
-export function rankList(items, order, onChange, { disabled = false, labels = null } = {}) {
-  return h('div', { class: 'rank-list' }, items.map((it, i) => {
-    const pos = order.indexOf(i);
-    return h('button', {
-      class: 'rank-item' + (pos >= 0 ? ' on' : ''), disabled,
-      onclick: () => { const o = order.slice(); if (pos >= 0) o.splice(pos); else o.push(i); onChange(o); sfx.tick(); },
-    }, h('span', { class: 'rk' }, pos >= 0 ? String(pos + 1) : '·'), h('span', { class: 't' }, it), labels ? h('span', { class: 'yr' }, labels[i]) : null);
-  }));
-}
+/** Étiquettes en haut et en bas de la liste de Dans l'ordre ! (aussi utilisées par la version locale). */
+export const ORDRE_EDGES = { top: '⬆️ Plus ancien', bottom: '⬇️ Plus récent' };
 
 // =====================================================================
 // QUI A ÉCRIT ÇA ?
@@ -161,13 +154,21 @@ function qaeNext(room, s) {
 // LE CURSEUR
 // =====================================================================
 export const cursorPoints = (d) => (d <= 4 ? 4 : d <= 10 ? 3 : d <= 18 ? 2 : d <= 28 ? 1 : 0);
-export function scaleEl(pair, { target = null, marks = [], value = null } = {}) {
+/** Échelle du Curseur. input : curseur (input range) posé directement sur l'échelle, qu'on fait glisser. */
+export function scaleEl(pair, { target = null, marks = [], value = null, input = null } = {}) {
   return h('div', { class: 'scale' },
     h('div', { class: 'scale-labels' }, h('span', null, `⬅️ ${pair[0]}`), h('span', null, `${pair[1]} ➡️`)),
-    h('div', { class: 'scale-bar' + (marks.length ? ' with-marks' : '') },
+    h('div', { class: 'scale-bar' + (marks.length ? ' with-marks' : '') + (input ? ' with-input' : '') },
       target != null ? h('div', { class: 'scale-target', style: { left: `clamp(18px, ${target}%, calc(100% - 18px))` } }) : null,
-      ...marks.map((m) => h('div', { class: 'scale-mark' + (m.me ? ' me' : ''), style: { left: `${m.v}%` }, title: m.label }, h('span', null, m.label))),
-      value != null ? h('div', { class: 'scale-mark me', style: { left: `${value}%` } }) : null));
+      ...marks.map((m, i) => h('div', { class: 'scale-mark' + (m.me ? ' me' : ''), style: { left: `${m.v}%`, animationDelay: `${0.25 + i * 0.08}s` }, title: m.label }, h('span', null, m.label))),
+      value != null ? h('div', { class: 'scale-mark me', style: { left: `${value}%` } }) : null,
+      input));
+}
+/** Curseur à faire glisser sur l'échelle (petit tic tous les 10 %). */
+export function scaleRange(value = 50) {
+  let last = Math.round(value / 10);
+  return h('input', { type: 'range', min: '0', max: '100', value: String(value), class: 'scale-range', 'aria-label': 'Position du curseur',
+    oninput: (e) => { const k = Math.round(Number(e.target.value) / 10); if (k !== last) { last = k; sfx.tick(); } } });
 }
 export const curseurOnline = {
   id: 'curseur', name: 'Le Curseur', short: 'Un indice, placez le curseur', emoji: '🎚️', minPlayers: 2,
@@ -217,10 +218,10 @@ export const curseurOnline = {
               h('form', { class: 'chat-form', onsubmit: (e) => { e.preventDefault(); const t = input.value.trim(); if (t) { g.send({ type: 'clue', v: t }); sfx.pop(); } } }, input, h('button', { class: 'btn btn-primary', type: 'submit' }, 'Envoyer')));
           } else parts.push(card(colors, 'L\'échelle', null, scaleEl(v.pair)), h('p', { class: 'center muted' }, `💡 ${g.nameOf(v.giver)} cherche un indice…`));
         } else if (v.phase === 'guess') {
-          parts.push(card(colors, `L'indice de ${name(g, v.giver)}`, `« ${v.clue} »`, scaleEl(v.pair, me ? { target: v.target } : {})));
+          const range = me ? null : scaleRange(v.mine ?? 50);
+          parts.push(card(colors, `L'indice de ${name(g, v.giver)}`, `« ${v.clue} »`, scaleEl(v.pair, me ? { target: v.target } : { input: range })));
           if (!me) {
-            const range = h('input', { type: 'range', min: '0', max: '100', value: String(v.mine ?? 50), class: 'scale-range' });
-            parts.push(range, h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => { g.send({ type: 'guess', v: Number(range.value) }); sfx.pop(); buzz(15); } }, v.mine != null ? '✅ Curseur posé (tu peux le changer)' : '📍 Poser mon curseur'));
+            parts.push(h('p', { class: 'muted small center' }, 'Fais glisser le curseur sur l\'échelle.'), h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => { g.send({ type: 'guess', v: Number(range.value) }); sfx.pop(); buzz(15); } }, v.mine != null ? '✅ Curseur posé (tu peux le changer)' : '📍 Poser mon curseur'));
           } else parts.push(h('p', { class: 'center' }, '🤐 Pas un mot ! Les autres placent leur curseur…'), actBtn(g, '👀 Révéler', 'reveal'));
           parts.push(h('p', { class: 'status-line' }, `🎚️ ${v.nG} curseur${v.nG > 1 ? 's' : ''} posé${v.nG > 1 ? 's' : ''}`));
         } else {
@@ -284,40 +285,56 @@ export const danssateteOnline = {
   },
   mount(root, g) {
     const colors = gameColors('danssatete', ['#c94b4b', '#4b134f']);
-    const main = h('div', { class: 'col' });
+    // La liste reste la même d'une mise à jour à l'autre (sinon un glissement en cours serait interrompu
+    // dès qu'un autre joueur valide) : on ne remplace que l'en-tête et le bas de l'écran.
+    const head = h('div', { class: 'col' }), slot = h('div', { class: 'col' }), foot = h('div', { class: 'col' });
+    const main = h('div', { class: 'col' }, head, slot, foot);
     root.append(main);
-    let lastKey = null, order = [];
-    const render = (r, v) => {
-      const me = v.judge === g.me;
-      const parts = [top([pill(`🧠 ${v.round}/${v.rounds}`), pill(`🎯 ${name(g, v.judge)}`)]),
-        card(colors, me ? 'Classe selon TES goûts (1 = le mieux)' : `Comment ${g.nameOf(v.judge)} a-t-il classé…`, v.theme)];
-      if (v.phase === 'rank') {
-        if (v.mine) parts.push(h('div', { class: 'rank-list' }, v.mine.map((i, k) => h('div', { class: 'rank-item on' }, h('span', { class: 'rk' }, String(k + 1)), h('span', { class: 't' }, v.items[i])))),
-          h('p', { class: 'status-line' }, `✅ Envoyé · ${v.done.length}/${r.players.filter((p) => p.on).length} ont classé`));
-        else {
-          parts.push(h('p', { class: 'muted small center' }, 'Touche les éléments dans l\'ordre, du 1er au 5e (touche à nouveau pour annuler).'),
-            rankList(v.items, order, (o) => { order = o; render(r, v); }),
-            h('button', { class: 'btn btn-primary btn-big btn-block', disabled: order.length < 5, onclick: () => { g.send({ type: 'rank', o: order }); sfx.pop(); } }, 'Valider mon classement'));
-        }
-        if (g.isHost && v.done.includes(v.judge)) parts.push(actBtn(g, '👀 Révéler sans attendre', 'reveal'));
-      } else {
-        parts.push(h('p', { class: 'center' }, h('b', null, me ? 'Ton classement :' : `Le classement de ${g.nameOf(v.judge)} :`)),
-          h('div', { class: 'rank-list' }, v.judgeRank.map((i, k) => h('div', { class: 'rank-item on' }, h('span', { class: 'rk' }, String(k + 1)), h('span', { class: 't' }, v.items[i]),
-            h('span', { class: 'yr' }, Object.entries(v.ranks).filter(([p, o]) => p !== v.judge && o[k] === i).map(([p]) => name(g, p)).join(', '))))),
-          h('div', { class: 'scoreboard' }, Object.entries(v.pts).sort((a, b) => b[1] - a[1]).map(([p, n]) => h('div', { class: 'score-row' }, h('span', { class: 'n' }, name(g, p)), h('span', { class: 's' }, `+${n}`)))));
-        if (me || g.isHost) parts.push(actBtn(g, 'Tour suivant →', 'next', 'btn-primary btn-big'));
-      }
-      main.replaceChildren(...parts);
-    };
+    let lastKey = null, list = null, listKey = null, shownKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
-        const key = `${v.gid}:${v.round}:${v.phase}`;
-        if (key !== lastKey) { order = []; if (v.phase === 'reveal') sfx.end(); else sfx.go(); }
+        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; list = null; listKey = null; return; }
+        if (head.parentNode !== main) main.replaceChildren(head, slot, foot);
+        const key = `${v.gid}:${v.round}:${v.phase}`, qk = `${v.gid}:${v.round}`;
+        if (key !== lastKey) { if (v.phase === 'reveal') sfx.end(); else sfx.go(); }
         lastKey = key;
-        render(r, v);
+        const me = v.judge === g.me;
+        head.replaceChildren(top([pill(`🧠 ${v.round}/${v.rounds}`), pill(`🎯 ${name(g, v.judge)}`)]),
+          card(colors, me ? 'Classe selon TES goûts' : `Comment ${g.nameOf(v.judge)} a-t-il classé…`, v.theme));
+        if (v.phase === 'rank') {
+          if (listKey !== qk) {
+            list = sortList(v.items, { top: '⬆️ N°1', bottom: '⬇️ N°5', order: v.mine || null });
+            listKey = qk;
+            slot.replaceChildren(list.el);
+          }
+          if (v.mine) list.lock();
+          foot.replaceChildren(
+            v.mine ? h('p', { class: 'status-line' }, `✅ Envoyé · ${v.done.length}/${r.players.filter((p) => p.on).length} ont classé`)
+              : h('p', { class: 'muted small center' }, 'Fais glisser les cartes pour les classer, du n°1 (en haut) au n°5.'),
+            v.mine ? null : h('button', { class: 'btn btn-primary btn-big btn-block', onclick: (e) => { e.currentTarget.disabled = true; list.lock(); g.send({ type: 'rank', o: list.order() }); sfx.pop(); } }, 'Valider mon classement'),
+            g.isHost && v.done.includes(v.judge) ? actBtn(g, '👀 Révéler sans attendre', 'reveal') : null);
+          return;
+        }
+        // Révélation : chaque carte glisse à la place choisie par le joueur désigné.
+        const ref = v.judgeRank;
+        const finders = v.items.map((_, i) => Object.entries(v.ranks).filter(([p, o]) => p !== v.judge && o[ref.indexOf(i)] === i).map(([p]) => name(g, p)).join(', '));
+        if (shownKey !== qk) {
+          shownKey = qk;
+          if (list && listKey === qk && v.mine && !me) {
+            list.check(ref);
+            const l = list;
+            setTimeout(() => { if (l === list) { l.settle(ref, finders); sfx.swoosh(); } }, 750);
+          } else {
+            list = sortList(v.items, { order: ref, locked: true, labels: finders });
+            listKey = qk;
+            slot.replaceChildren(list.el);
+          }
+        }
+        foot.replaceChildren(h('p', { class: 'center' }, h('b', null, me ? 'Ton classement est révélé !' : `Le classement de ${g.nameOf(v.judge)} :`)),
+          h('div', { class: 'scoreboard' }, Object.entries(v.pts).sort((a, b) => b[1] - a[1]).map(([p, n]) => h('div', { class: 'score-row' }, h('span', { class: 'n' }, name(g, p)), h('span', { class: 's' }, `+${n}`)))),
+          me || g.isHost ? actBtn(g, 'Tour suivant →', 'next', 'btn-primary btn-big') : null);
       },
-      destroy() {},
+      destroy() { if (list) list.destroy(); },
     };
   },
 };
@@ -382,35 +399,54 @@ export const ordreOnline = {
       sol: s.phase === 'reveal' ? s.sol : null, years: s.phase === 'reveal' ? s.items.map((e) => fmtYear(e[1])) : null, answers: s.phase === 'reveal' ? s.answers : null };
   },
   mount(root, g) {
-    const main = h('div', { class: 'col' });
     const tp = timerPill(g);
+    // Même principe que Dans sa tête : la liste n'est jamais recréée pendant une question.
+    const head = h('div', { class: 'col' }), slot = h('div', { class: 'col' }), foot = h('div', { class: 'col' });
+    const main = h('div', { class: 'col' }, head, slot, foot);
     root.append(main);
-    let lastKey = null, order = [];
-    const render = (r, v) => {
-      tp.set(v.phase === 'q' ? v.deadline : 0);
-      const parts = [top([pill(`📅 ${v.round}/${v.rounds}`), tp.el]), h('p', { class: 'center' }, h('b', null, 'Du plus ancien au plus récent :'))];
-      if (v.phase === 'q') {
-        if (v.mine) parts.push(rankList(v.items, v.mine.o, () => {}, { disabled: true }), h('p', { class: 'status-line' }, `✅ Envoyé · ${v.n} réponse${v.n > 1 ? 's' : ''}`));
-        else parts.push(rankList(v.items, order, (o) => { order = o; render(r, v); }),
-          h('button', { class: 'btn btn-primary btn-big btn-block', disabled: order.length < 4, onclick: () => { g.send({ type: 'order', o: order }); sfx.pop(); } }, 'Valider'));
-        if (g.isHost) parts.push(actBtn(g, '⏭ Révéler', 'next'));
-      } else {
-        parts.push(rankList(v.sol.map((i) => v.items[i]), [0, 1, 2, 3], () => {}, { disabled: true, labels: v.sol.map((i) => v.years[i]) }),
-          h('div', { class: 'scoreboard' }, r.players.map((p) => ({ p, a: v.answers[p.pid] })).sort((a, b) => ((b.a && b.a.pts) || 0) - ((a.a && a.a.pts) || 0)).map((x) => h('div', { class: 'score-row' },
-            h('span', { class: 'n' }, (x.p.pid === g.me ? 'Toi' : x.p.name) + (x.a && x.a.first ? ' ⚡' : '')), h('span', { class: 'muted small' }, x.a ? `${x.a.ok}/4 bien placés` : '💤'), h('span', { class: 's' }, `+${x.a ? x.a.pts : 0}`)))),
-          g.isHost ? actBtn(g, v.round < v.rounds ? 'Question suivante →' : '🏆 Classement final', 'next', 'btn-primary btn-big') : null);
-      }
-      main.replaceChildren(...parts);
-    };
+    let lastKey = null, list = null, listKey = null, shownKey = null, auto = null, sent = null;
+    const send = () => { if (!list || sent === listKey) return; sent = listKey; list.lock(); g.send({ type: 'order', o: list.order() }); sfx.pop(); };
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
-        const key = `${v.gid}:${v.round}:${v.phase}`;
-        if (key !== lastKey) { order = []; v.phase === 'q' ? sfx.go() : (v.mine && v.mine.ok === 4 ? sfx.ok() : sfx.end()); }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; list = null; listKey = null; return; }
+        if (head.parentNode !== main) main.replaceChildren(head, slot, foot);
+        const key = `${v.gid}:${v.round}:${v.phase}`, qk = `${v.gid}:${v.round}`;
+        if (key !== lastKey) { v.phase === 'q' ? sfx.go() : (v.mine && v.mine.ok === 4 ? sfx.ok() : sfx.end()); }
         lastKey = key;
-        render(r, v);
+        tp.set(v.phase === 'q' ? v.deadline : 0);
+        clearTimeout(auto);
+        head.replaceChildren(top([pill(`📅 ${v.round}/${v.rounds}`), tp.el]),
+          h('p', { class: 'center' }, h('b', null, v.phase === 'q' ? 'Remets-les dans l\'ordre !' : 'La bonne réponse :')));
+        if (v.phase === 'q') {
+          if (listKey !== qk) { list = sortList(v.items, { ...ORDRE_EDGES, order: v.mine ? v.mine.o : null }); listKey = qk; slot.replaceChildren(list.el); }
+          if (v.mine) list.lock();
+          // Temps presque écoulé : on envoie l'ordre actuel plutôt que de tout perdre.
+          else auto = setTimeout(send, Math.max(0, v.deadline - g.now() - 700));
+          foot.replaceChildren(
+            v.mine ? h('p', { class: 'status-line' }, `✅ Envoyé · ${v.n} réponse${v.n > 1 ? 's' : ''}`)
+              : h('p', { class: 'muted small center' }, 'Fais glisser les cartes, du plus ancien (en haut) au plus récent.'),
+            v.mine ? null : h('button', { class: 'btn btn-primary btn-big btn-block', onclick: (e) => { e.currentTarget.disabled = true; send(); } }, 'Valider'),
+            g.isHost ? actBtn(g, '⏭ Révéler', 'next') : null);
+          return;
+        }
+        if (shownKey !== qk) {
+          shownKey = qk;
+          if (list && listKey === qk && v.mine) {
+            list.check(v.sol);
+            const l = list;
+            setTimeout(() => { if (l === list) { l.settle(v.sol, v.years); if (v.mine.ok < 4) sfx.swoosh(); } }, v.mine.ok === 4 ? 250 : 750);
+          } else {
+            list = sortList(v.items, { order: v.sol, locked: true, labels: v.years });
+            listKey = qk;
+            slot.replaceChildren(list.el);
+          }
+        }
+        foot.replaceChildren(
+          h('div', { class: 'scoreboard' }, r.players.map((p) => ({ p, a: v.answers[p.pid] })).sort((a, b) => ((b.a && b.a.pts) || 0) - ((a.a && a.a.pts) || 0)).map((x) => h('div', { class: 'score-row' },
+            h('span', { class: 'n' }, (x.p.pid === g.me ? 'Toi' : x.p.name) + (x.a && x.a.first ? ' ⚡' : '')), h('span', { class: 'muted small' }, x.a ? `${x.a.ok}/4 bien placé${x.a.ok > 1 ? 's' : ''}` : '💤'), h('span', { class: 's' }, `+${x.a ? x.a.pts : 0}`)))),
+          g.isHost ? actBtn(g, v.round < v.rounds ? 'Question suivante →' : '🏆 Classement final', 'next', 'btn-primary btn-big') : null);
       },
-      destroy() { tp.stop(); },
+      destroy() { tp.stop(); clearTimeout(auto); if (list) list.destroy(); },
     };
   },
 };
@@ -523,6 +559,38 @@ function qsjEnd(room, s) { if (s.order.filter((p) => room.players.some((x) => x.
 // =====================================================================
 export const CHI = [{ id: 'pierre', e: '🪨', n: 'Pierre' }, { id: 'feuille', e: '📄', n: 'Feuille' }, { id: 'ciseaux', e: '✂️', n: 'Ciseaux' }];
 export const beats = (a, b) => (a === 'pierre' && b === 'ciseaux') || (a === 'feuille' && b === 'pierre') || (a === 'ciseaux' && b === 'feuille');
+/**
+ * Deux poings face à face : count() les fait battre « Chi… Fou… Mi ! » (promesse, ~1 s), puis show() révèle
+ * les deux choix (w > 0 : la gauche gagne, w < 0 : la droite gagne). Aussi utilisé par la version locale.
+ */
+export function chiArena(leftName, rightName) {
+  const L = h('span', { class: 'chi-hand' }, '✊'), R = h('span', { class: 'chi-hand bot' }, '✊');
+  const word = h('span', { class: 'chi-word' });
+  const ln = h('small', null, leftName), rn = h('small', null, rightName);
+  const el = h('div', { class: 'chi-arena' }, h('div', { class: 'chi-side' }, L, ln), word, h('div', { class: 'chi-side' }, R, rn));
+  const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  return {
+    el,
+    names(a, b) { ln.textContent = a; rn.textContent = b; },
+    async count() {
+      L.textContent = R.textContent = '✊';
+      el.classList.remove('done', 'lw', 'rw', 'tie');
+      for (const w of ['Chi…', 'Fou…', 'Mi !']) {
+        word.textContent = w;
+        el.classList.remove('pump'); void el.offsetWidth; el.classList.add('pump');
+        sfx.tick(); buzz(8);
+        await pause(330);
+      }
+      el.classList.remove('pump');
+    },
+    show(a, b, w) {
+      const e = (id) => (CHI.find((x) => x.id === id) || {}).e || '❔';
+      L.textContent = e(a); R.textContent = b ? e(b) : '❔';
+      word.textContent = w > 0 ? '>' : w < 0 ? '<' : '=';
+      el.classList.add('done', w > 0 ? 'lw' : w < 0 ? 'rw' : 'tie');
+    },
+  };
+}
 export const chifoumiOnline = {
   id: 'chifoumi', name: 'Chifoumi', short: 'Pierre, feuille, ciseaux : chacun contre tous', emoji: '✂️', minPlayers: 2,
   defaults: { rounds: 7 },
@@ -547,27 +615,47 @@ export const chifoumiOnline = {
     const main = h('div', { class: 'col' });
     const tp = timerPill(g);
     root.append(main);
-    let lastKey = null;
+    let lastKey = null, shown = null, arena = null;
+    const render = (r, v) => {
+      const parts = [top([pill(`✂️ Manche ${v.round}/${v.rounds}`), tp.el])];
+      if (v.phase === 'pick') {
+        parts.push(h('h2', { class: 'center' }, v.mine ? 'Choix verrouillé 🔒' : 'Choisis en secret !'),
+          h('div', { class: 'chi-btns' }, CHI.map((c) => h('button', { class: 'chi-btn' + (v.mine === c.id ? ' on' : ''), onclick: () => { g.send({ type: 'pick', c: c.id }); sfx.pop(); buzz(15); } }, h('span', { class: 'e' }, c.e), h('span', null, c.n)))),
+          h('p', { class: 'status-line' }, `${v.n}/${r.players.filter((p) => p.on).length} ont choisi · tu marques 1 point par joueur battu`));
+      } else {
+        parts.push(arena.el, h('div', { class: 'scoreboard chi-scores' }, r.players.filter((p) => v.picks[p.pid]).sort((a, b) => (v.gains[b.pid] || 0) - (v.gains[a.pid] || 0)).map((p) => {
+          const c = CHI.find((x) => x.id === v.picks[p.pid]);
+          return h('div', { class: 'score-row' }, h('span', { style: { fontSize: '28px' } }, c.e), h('span', { class: 'n' }, p.pid === g.me ? 'Toi' : p.name), h('span', { class: 'muted small' }, `total ${p.score}`), h('span', { class: 's' }, `+${v.gains[p.pid] || 0}`));
+        })), h('p', { class: 'status-line' }, 'Manche suivante dans un instant…'));
+      }
+      main.replaceChildren(...parts);
+    };
     return {
       update(r, v) {
         if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         tp.set(v.phase === 'pick' ? v.deadline : 0);
-        const parts = [top([pill(`✂️ Manche ${v.round}/${v.rounds}`), tp.el])];
-        if (v.phase === 'pick') {
-          parts.push(h('h2', { class: 'center' }, v.mine ? 'Choix verrouillé 🔒' : 'Choisis en secret !'),
-            h('div', { class: 'chi-btns' }, CHI.map((c) => h('button', { class: 'chi-btn' + (v.mine === c.id ? ' on' : ''), onclick: () => { g.send({ type: 'pick', c: c.id }); sfx.pop(); buzz(15); } }, h('span', { class: 'e' }, c.e), h('span', null, c.n)))),
-            h('p', { class: 'status-line' }, `${v.n}/${r.players.filter((p) => p.on).length} ont choisi · tu marques 1 point par joueur battu`));
-        } else {
-          parts.push(h('div', { class: 'scoreboard' }, r.players.filter((p) => v.picks[p.pid]).sort((a, b) => (v.gains[b.pid] || 0) - (v.gains[a.pid] || 0)).map((p) => {
-            const c = CHI.find((x) => x.id === v.picks[p.pid]);
-            return h('div', { class: 'score-row' }, h('span', { style: { fontSize: '28px' } }, c.e), h('span', { class: 'n' }, p.pid === g.me ? 'Toi' : p.name), h('span', { class: 'muted small' }, `total ${p.score}`), h('span', { class: 's' }, `+${v.gains[p.pid] || 0}`));
-          })), h('p', { class: 'status-line' }, 'Manche suivante dans un instant…'));
-          if (key !== lastKey) (v.gains[g.me] || 0) > 0 ? sfx.ok() : sfx.bad();
-        }
         if (key !== lastKey && v.phase === 'pick') sfx.go();
+        if (key !== lastKey && v.phase === 'reveal') {
+          // « Chi… Fou… Mi ! » puis on montre son choix face à celui d'un adversaire (le meilleur de la manche).
+          lastKey = key;
+          const others = r.players.filter((p) => p.pid !== g.me && v.picks[p.pid]);
+          const best = others.sort((a, b) => (v.gains[b.pid] || 0) - (v.gains[a.pid] || 0))[0];
+          arena = chiArena('Toi', best ? (others.length > 1 ? `${best.name} (et les autres)` : best.name) : '…');
+          main.replaceChildren(top([pill(`✂️ Manche ${v.round}/${v.rounds}`), tp.el]), arena.el);
+          arena.count().then(() => {
+            if (lastKey !== key) return;
+            const mine = v.picks[g.me], his = best ? v.picks[best.pid] : null;
+            arena.show(mine, his, mine && his ? (beats(mine, his) ? 1 : beats(his, mine) ? -1 : 0) : 0);
+            shown = key;
+            render(r, v);
+            (v.gains[g.me] || 0) > 0 ? sfx.ok() : sfx.bad();
+          });
+          return;
+        }
         lastKey = key;
-        main.replaceChildren(...parts);
+        if (v.phase === 'reveal' && shown !== key) return; // compte à rebours en cours
+        render(r, v);
       },
       destroy() { tp.stop(); },
     };
@@ -585,5 +673,5 @@ function chiReveal(room, s) {
     s.gains[p] = ps.filter((q) => q !== p && beats(s.picks[p], s.picks[q])).length;
     addScore(room, p, s.gains[p]);
   }
-  s.phase = 'reveal'; s.until = Date.now() + 4500;
+  s.phase = 'reveal'; s.until = Date.now() + 5500; // dont ~1 s de « Chi… Fou… Mi ! »
 }

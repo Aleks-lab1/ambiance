@@ -79,13 +79,15 @@ export default {
     root.append(head, gridSlot, feedSlot, hostSlot);
     let lastFeed = null;
     let lastGid = null;
+    let justMarked = -1; // case que je viens de cocher : coup de tampon
     return {
       update(room, v) {
         if (!v.card) { gridSlot.replaceChildren(h('p', { class: 'muted center' }, 'Ta grille arrive…')); return; }
         const hl = v.lines.flatMap((l) => lineCells(l));
         head.replaceChildren(h('span', { class: 'pill' }, `🎱 ${v.lines.length} ligne${v.lines.length > 1 ? 's' : ''}`), h('div', { class: 'grow' }),
           h('span', { class: 'pill' }, '🏆 ' + ((room.players.find((p) => p.pid === g.me) || {}).score || 0)));
-        gridSlot.replaceChildren(gridEl({ card: v.card, list: LIST, marks: v.marks, highlight: hl, onToggle: (pos) => { g.send({ type: 'mark', pos }); sfx.pop(); buzz(10); } }));
+        gridSlot.replaceChildren(gridEl({ card: v.card, list: LIST, marks: v.marks, highlight: hl, stamp: justMarked, onToggle: (pos) => { justMarked = pos; g.send({ type: 'mark', pos }); sfx.pop(); buzz(10); } }));
+        justMarked = -1;
         // Annonces
         const newest = v.feed.length ? v.feed[v.feed.length - 1].id : 0;
         if (lastGid === v.gid && lastFeed !== null && newest > lastFeed) {

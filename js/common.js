@@ -2,6 +2,7 @@
 import { h, modal, chip, toast } from './ui.js';
 import { settings, saveSettings } from './store.js';
 import { gameColors } from './themes.js';
+import { sfx } from './sfx.js';
 
 /** Demande la confirmation 18+ une seule fois. */
 export async function ensureAdult() {
@@ -85,9 +86,64 @@ export function podium(list) {
 
 // Points d'un dé (grille 3×3) pour chaque face.
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-/** Un dé dessiné en CSS. cls : 'sm', 'xs', 'hl', 'dim', 'roll'… */
+/** Un dé dessiné en CSS. cls : 'md', 'xs', 'hl', 'dim'… */
 export function dieFace(v, cls = '') {
-  return h('div', { class: 'die ' + cls, 'aria-label': 'Dé : ' + v }, Array.from({ length: 9 }, (_, i) => h('i', { class: PIPS[v] && PIPS[v].includes(i) ? 'on' : '' })));
+  return h('div', { class: 'die ' + cls, 'aria-label': 'Dé : ' + v, 'data-v': String(v) }, Array.from({ length: 9 }, (_, i) => h('i', { class: PIPS[v] && PIPS[v].includes(i) ? 'on' : '' })));
+}
+function setPips(el, v) { [...el.children].forEach((p, i) => p.classList.toggle('on', !!PIPS[v] && PIPS[v].includes(i))); }
+/**
+ * Fait rouler un dé (créé par dieFace) : il tourne en l'air, ses faces défilent, puis il retombe sur sa valeur.
+ * Chaque dé part avec un sens et une durée un peu différents, comme de vrais dés.
+ */
+export function tumble(el, ms = 520 + Math.random() * 260) {
+  const v = Number(el.dataset.v);
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  el.style.setProperty('--spin', `${(Math.random() < 0.5 ? -1 : 1) * Math.round(200 + Math.random() * 220)}deg`);
+  el.style.setProperty('--dur', `${Math.round(ms)}ms`);
+  el.classList.remove('tumble', 'land');
+  void el.offsetWidth;
+  el.classList.add('tumble');
+  const t0 = performance.now();
+  let last = 0, face = v;
+  const step = (now) => {
+    if (now - t0 >= ms) { setPips(el, v); el.classList.remove('tumble'); el.classList.add('land'); return; }
+    if (now - last > 70) { last = now; let f; do f = 1 + Math.floor(Math.random() * 6); while (f === face); face = f; setPips(el, f); }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/**
+ * Petits « tic » synchronisés avec une rotation CSS en cours (roue des gages, bouteille) : on lit l'angle réel
+ * à chaque image, et chaque fois qu'une case (n cases) passe, on joue un tic, on fait battre le pointeur et on
+ * appelle onTick(numéro de la case visée). Renvoie une fonction pour arrêter.
+ */
+export function spinTicks(el, n, { pointer = null, ms = 4500, onTick = null } = {}) {
+  const slice = 360 / n;
+  let prev = null, cum = 0, seg = null, lastSound = 0, raf = 0;
+  const t0 = performance.now();
+  const angle = () => {
+    const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(el).transform || '');
+    if (!m) return 0;
+    const [a, b] = m[1].split(',').map(Number);
+    return (Math.atan2(b, a) * 180) / Math.PI;
+  };
+  const step = (now) => {
+    const a = angle();
+    if (prev === null) cum = a;
+    else { let d = a - prev; if (d > 180) d -= 360; if (d < -180) d += 360; cum += d; }
+    prev = a;
+    const k = Math.floor((cum + slice / 2) / slice);
+    if (seg !== null && k !== seg) {
+      if (now - lastSound > 30) { lastSound = now; sfx.tick(); }
+      if (pointer) { pointer.classList.remove('flap'); void pointer.offsetWidth; pointer.classList.add('flap'); }
+      if (onTick) onTick(((k % n) + n) % n);
+    }
+    seg = k;
+    if (now - t0 < ms && el.isConnected) raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+  return () => cancelAnimationFrame(raf);
 }
 
 /** Bandeau « Jouer en ligne » pour les jeux qui ont aussi une version multijoueur. */

@@ -44,7 +44,9 @@ run(async () => {
   check(await until(async () => (await navigator.serviceWorker.getRegistration())?.active?.state === 'activated'), 'service worker installé et actif');
 
   const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-  const nImages = JSON.parse(sw.match(/const IMAGES = (\[[\s\S]*?\]);/)[1]).length;
+  const IMAGES = JSON.parse(sw.match(/const IMAGES = (\[[\s\S]*?\]);/)[1]);
+  const nImages = IMAGES.length;
+  const nTiles = IMAGES.filter((u) => u.startsWith('./img/jeux/')).length; // images des cases (+ img/ui/ : main du 4 en ligne…)
   const nAssets = JSON.parse(sw.match(/const ASSETS = (\[[\s\S]*?\]);/)[1]).length;
   const caches1 = await page.evaluate(async () => Object.fromEntries(await Promise.all((await caches.keys()).map(async (k) => [k, (await (await caches.open(k)).keys()).length]))));
   const imgCache = Object.keys(caches1).find((k) => k.startsWith('ambiance-img-'));
@@ -74,7 +76,9 @@ run(async () => {
   for (let y = 0; y < 12000; y += 700) { await page.evaluate((v) => window.scrollTo(0, v), y); await W(40); }
   await W(500);
   const img = await page.evaluate(() => { const l = [...document.querySelectorAll('img.tile-art')]; return { n: l.length, ok: l.filter((i) => i.complete && i.naturalWidth > 0).length, emo: document.querySelectorAll('.tile-emo').length }; });
-  check(img.n >= nImages && img.ok === img.n && !img.emo, `hors ligne : ${img.ok}/${img.n} images affichées`, img);
+  check(img.n >= nTiles && img.ok === img.n && !img.emo, `hors ligne : ${img.ok}/${img.n} images affichées`, img);
+  const hand = await page.evaluate(() => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i.naturalWidth > 0); i.onerror = () => ok(false); i.src = 'img/ui/main.webp'; }));
+  check(hand, 'hors ligne : image de la main (4 en ligne) disponible');
   check(!errors.length, 'aucune erreur JS', errors);
   await browser.close();
   server.close();

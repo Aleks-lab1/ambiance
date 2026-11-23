@@ -110,7 +110,7 @@ export default {
   mount(root, g) {
     const box = h('div', { class: 'col' });
     root.append(box);
-    let shown = false;
+    let shown = false, turned = false; // turned : on vient de toucher la carte (elle se retourne)
     let lastKey = null;
 
     return {
@@ -128,13 +128,14 @@ export default {
           parts.push(h('div', { class: 'panel center col' }, h('div', { class: 'hero-emo' }, '👀'), h('h3', null, 'Tu es spectateur pour cette manche'), h('p', { class: 'muted' }, 'Tu joueras à la prochaine !')));
         } else if (v.phase === 'words') {
           const secret = h('button', {
-            class: 'secret-btn',
-            onclick: () => { shown = !shown; sfx.pop(); this.update(room, v); },
+            class: 'secret-btn' + (turned ? ' reveal-in' : ''),
+            onclick: () => { shown = !shown; turned = true; sfx.card(); this.update(room, v); },
           }, shown
             ? (v.word
               ? [h('span', { class: 'muted small' }, 'Ton mot secret'), h('div', { class: 'reveal-word' }, v.word), h('span', { class: 'muted small' }, 'Touche pour cacher')]
               : [h('div', { class: 'emo' }, '🤐'), h('b', null, 'Tu n\'as pas de mot !'), h('span', { class: 'muted small' }, 'Tu es l\'imposteur. Écoute les autres et bluffe…')])
             : [h('div', { class: 'emo' }, '🔒'), 'Touche pour voir ton mot', h('span', { class: 'muted small' }, 'Cache ton écran !')]);
+          turned = false;
           parts.push(secret,
             h('div', { class: 'panel col' },
               h('h3', null, '🗣️ Ordre de parole'),

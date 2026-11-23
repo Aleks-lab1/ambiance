@@ -31,14 +31,14 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 | ⚡ | **Réflexes** | Le plus rapide quand l'écran passe au vert (version à plusieurs du Duel). |
 | 🌈 | **Couleurs pièges** | Tout le monde joue la même manche en même temps. |
 | 🟩 | **Le Mot mystère** | Course : le premier qui trouve le mot gagne. |
-| ⭕ | **Morpion & 4 à la suite** | Le gagnant reste et affronte le suivant. |
+| ⭕ | **Morpion & 4 en ligne** | Le gagnant reste et affronte le suivant. |
 | 🤫 🎤 ⏱️ 🤥 | **Chacun son tour** | Paranoïa (question secrète), Pour ou contre (débat + vote), 3 en 5 secondes, Deux vérités un mensonge. |
 | 🐺 | **Loup-garou** | Rôles secrets sur chaque téléphone, l'hôte est le meneur. |
 | 🙊 | **Je n'ai jamais** | Vote secret « déjà fait / jamais », puis les noms s'affichent. |
 | 🕵️‍♀️ | **Qui a écrit ça ?** | Réponses anonymes à une question perso, puis on devine l'auteur de chacune. |
 | 🎚️ | **Le Curseur** | Une échelle entre deux opposés, un indice, chacun place son curseur. Aussi sur un seul téléphone. |
-| 🧠 | **Dans sa tête** | Devine comment un ami classe 5 éléments. |
-| 📅 | **Dans l'ordre !** | Remets 4 événements dans l'ordre chronologique. Aussi sur un seul téléphone. |
+| 🧠 | **Dans sa tête** | Devine comment un ami classe 5 éléments, en faisant glisser les cartes. |
+| 📅 | **Dans l'ordre !** | Remets 4 événements dans l'ordre chronologique en faisant glisser les cartes. Aussi sur un seul téléphone. |
 | 🎭 | **Qui suis-je ?** | Tout le monde voit ton identité secrète… sauf toi. |
 | ✂️ | **Chifoumi** | Pierre, feuille, ciseaux, chacun contre tous. Seul : contre le téléphone. |
 | 🚢 🧩 🎲 | **Bataille navale, Memory, Yam's** | Jeux de plateau : en ligne, ou sur un seul téléphone (contre le téléphone, ou chacun son tour). |
@@ -91,7 +91,7 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 | 🌈 | **Couleurs pièges** | « ROUGE » écrit en bleu : touche la couleur de l'encre |
 | 🪢 | **Le Pendu** | Mot au hasard ou choisi par un joueur, dessin en 7 étapes |
 | 🟩 | **Le Mot mystère** | 5, 6 ou 7 lettres en 6 essais, lettres bien ou mal placées |
-| ⭕ | **Morpion & 4 à la suite** | À deux ou contre le téléphone |
+| ⭕ | **Morpion & 4 en ligne** | À deux ou contre le téléphone. Morpion dessiné au feutre ; 4 en ligne sur un vrai plateau : une main lâche le jeton, qui tombe et rebondit |
 | 🍾 | **La Bouteille** | Cercle des joueurs, bouteille qui tourne, défi à deux (jusqu'au Hot) |
 | 🃏 | **Plus ou moins** | Carte plus haute ou plus basse, la série fait monter les gorgées |
 | 🚌 | **Le Bus** | 4 cartes, 4 questions : rouge/noir, plus/moins, entre/dehors, couleur |
@@ -114,6 +114,7 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 - 🔁 Les cartes déjà vues ne reviennent pas d'une soirée à l'autre, sur un seul téléphone comme en ligne (réinitialisable dans les réglages).
 - 📴 Fonctionne **hors ligne** une fois chargé (sauf le mode en ligne, évidemment).
 - 🔊 Sons synthétisés, 📳 vibrations, écran maintenu allumé pendant les parties.
+- ✨ **Animations « comme en vrai »** : cartes qu'on fait glisser pour les classer, jetons qui tombent, cartes à jouer et cartes du Memory qui se retournent en 3D, dés qui roulent, « Chi… Fou… Mi ! », gerbes d'eau et explosions à la Bataille navale, tics de la roue et de la bouteille synchronisés avec la rotation, pendu dessiné trait par trait, coup de tampon au Bingo.
 
 ## Lancer en local
 
@@ -190,12 +191,15 @@ js/online/room.js    salon en ligne, hôte, clients, reconnexion
 js/online/*.js       jeux en ligne (dessin, imposteur, votes, quiz/rapidité, écriture,
                      téléphone dessiné, bingo, menteur, cartes, paquet, hasard, oral…)
 js/race-core.js      logique partagée des jeux de rapidité (local + en ligne)
+js/sortable.js       liste à remettre dans l'ordre en faisant glisser (Dans l'ordre !, Dans sa tête)
+js/morpion-vue.js    plateaux animés du Morpion et du 4 en ligne (local + en ligne)
 js/bingo-core.js     grilles et lignes du bingo
 js/bonmot-core.js    dictionnaire et tirage des lettres du Bon Mot
 js/canvas.js         planche à dessin synchronisable
 js/turn.js           moteur des jeux en équipes
 js/data/*.js         tout le contenu
 img/jeux/            image de chaque jeu pour l'accueil (générée par scripts/gen-images.mjs)
+img/ui/              images utilisées pendant les jeux (main du 4 en ligne, emoji Fluent 3D)
 scripts/             gen-sw.mjs (service worker), gen-mots.mjs (dictionnaire), gen-images.mjs (images des jeux,
                      compositions dans scripts/images/scenes.mjs, emojis 3D dans scripts/images/emoji/)
 vendor/              PeerJS 1.5.4 et qrcode-generator 1.4.4 (licences MIT)

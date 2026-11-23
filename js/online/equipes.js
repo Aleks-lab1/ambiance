@@ -339,7 +339,7 @@ export const loupOnline = {
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);
-    let shown = false, lastGid = null;
+    let shown = false, lastGid = null, turned = false; // turned : la carte de rôle vient d'être touchée (elle se retourne)
     return {
       update(r, v) {
         if (v.gid !== lastGid) { shown = false; lastGid = v.gid; sfx.go(); }
@@ -364,11 +364,12 @@ export const loupOnline = {
         }
         const R = v.myRole ? ROLES[v.myRole] : null;
         const roleCard = R ? h('button', {
-          class: 'role-card loup-secret' + (shown ? '' : ' hidden-role'), style: { '--g1': R.colors[0], '--g2': R.colors[1], width: '100%' },
-          onclick: () => { shown = !shown; sfx.pop(); this.update(r, v); },
+          class: 'role-card loup-secret' + (shown ? '' : ' hidden-role') + (turned ? ' reveal-in' : ''), style: { '--g1': R.colors[0], '--g2': R.colors[1], width: '100%' },
+          onclick: () => { shown = !shown; turned = true; sfx.card(); this.update(r, v); },
         }, shown ? [h('div', { class: 'emo' }, R.emoji), h('h2', null, R.name), h('p', null, R.desc),
           v.myRole === 'loup' && v.wolves.length > 1 ? h('p', null, h('b', null, `Tes complices : ${v.wolves.filter((p) => p !== g.me).map((p) => g.nameOf(p)).join(', ')}`)) : null,
           h('p', { class: 'small' }, 'Touche pour cacher')] : [h('div', { class: 'emo' }, '🂠'), h('h2', null, 'Ton rôle secret'), h('p', null, 'Touche pour le voir… sans que les autres regardent !')]) : h('p', { class: 'center muted' }, 'Tu observes la partie.');
+        turned = false;
         main.replaceChildren(
           h('p', { class: 'center muted' }, `🎙️ Meneur : ${g.nameOf(r.host)} · Jour ${v.day}`),
           v.alive[g.me] === false ? h('div', { class: 'conn-banner' }, '✝ Tu es mort… Ne dis plus rien, mais tu peux suivre la partie !') : null,

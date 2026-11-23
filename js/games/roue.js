@@ -1,7 +1,7 @@
 // La roue des gages.
 import { h, topbar, pick } from '../ui.js';
 import { get, set, makeDeck, getPlayers, sip } from '../store.js';
-import { levelPicker, onlineBanner } from '../common.js';
+import { levelPicker, onlineBanner, spinTicks } from '../common.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
 
@@ -79,8 +79,9 @@ export function start(ctx) {
     let spinning = false;
     const result = h('div', { class: 'col', style: { minHeight: '150px' } });
     const btn = h('button', { class: 'btn btn-primary btn-big btn-block', onclick: spin }, '🎡 Tourner la roue');
+    const pointer = h('div', { class: 'wheel-pointer' }, '🔻');
     root.replaceChildren(topbar(ctx, { onBack: setup }),
-      h('div', { class: 'wheel-wrap' }, h('div', { class: 'wheel-pointer' }, '🔻'), cv),
+      h('div', { class: 'wheel-wrap' }, pointer, cv),
       result, btn);
 
     function spin() {
@@ -95,10 +96,10 @@ export function start(ctx) {
       angle = angle - (angle % 360) + target;
       cv.style.transform = `rotate(${angle}deg)`;
       sfx.swoosh();
-      let ticks = 0;
-      const tickIv = setInterval(() => { if (++ticks > 30 || !root.isConnected) clearInterval(tickIv); else sfx.tick(); }, 60 + ticks * 4);
+      // Un tic à chaque case qui passe sous le pointeur (qui bat), de plus en plus lent.
+      const stop = spinTicks(cv, n, { pointer, ms: 4300 });
       setTimeout(() => {
-        clearInterval(tickIv);
+        stop();
         spinning = false;
         btn.disabled = false;
         if (!root.isConnected) return;

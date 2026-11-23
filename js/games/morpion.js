@@ -1,8 +1,10 @@
-// Morpion et 4 à la suite : à deux sur le même téléphone, ou contre le téléphone.
+// Morpion et 4 en ligne : à deux sur le même téléphone, ou contre le téléphone.
+// Les plateaux animés (main qui lâche le jeton, traits au feutre) sont dans js/morpion-vue.js.
 import { h, topbar, seg } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
+import { c4View, tttView } from '../morpion-vue.js';
 
 const SYM = ['❌', '⭕'];
 
@@ -38,7 +40,7 @@ function ai3(b, me, level) {
   return moves[Math.floor(Math.random() * moves.length)];
 }
 
-// ---------------- 4 à la suite ----------------
+// ---------------- 4 en ligne ----------------
 export const W = 7, H = 6;
 export function drop(b, col) { for (let r = H - 1; r >= 0; r--) if (b[r * W + col] === null) return r * W + col; return -1; }
 export function win4(b) {
@@ -114,7 +116,7 @@ export function start(ctx) {
     clear();
     const box = h('div', { class: 'col' });
     const render = () => box.replaceChildren(
-      h('label', { class: 'field' }, 'Jeu', seg([{ value: 'morpion', label: '❌⭕ Morpion' }, { value: 'quatre', label: '🔴🟡 4 à la suite' }], opts.game, (v) => { opts.game = v; save(); })),
+      h('label', { class: 'field' }, 'Jeu', seg([{ value: 'morpion', label: '❌⭕ Morpion' }, { value: 'quatre', label: '🔴🟡 4 en ligne' }], opts.game, (v) => { opts.game = v; save(); })),
       h('label', { class: 'field' }, 'Adversaire', seg([{ value: 'deux', label: '👥 À deux' }, { value: 'ia', label: '📱 Le téléphone' }], opts.vs, (v) => { opts.vs = v; save(); render(); })),
       opts.vs === 'ia' ? h('label', { class: 'field' }, 'Niveau du téléphone', seg([{ value: 'facile', label: '😌 Facile' }, { value: 'normal', label: '😤 Coriace' }], opts.level, (v) => { opts.level = v; save(); })) : null,
       opts.vs === 'deux' ? h('p', { class: 'muted small' }, `Joueurs : ${names().join(' contre ')} (les deux premiers de la liste des joueurs).`) : null);
@@ -131,46 +133,57 @@ export function start(ctx) {
     const quatre = opts.game === 'quatre';
     const N = names();
     const b = Array(quatre ? W * H : 9).fill(null);
-    let turn = first;
-    let over = false;
+    let turn = first, over = false, busy = false;
     const status = h('h2', { class: 'center' });
     const score = h('p', { class: 'center muted' });
-    const cells = b.map((_, i) => h('button', { class: quatre ? 'c4-cell' : 'ttt-cell', 'aria-label': `Case ${i + 1}`, onclick: () => human(quatre ? i % W : i) }));
-    const board = h('div', { class: quatre ? 'c4-board' : 'ttt-board' }, cells);
+    const view = quatre ? c4View({ onPick: human }) : tttView({ onPick: human });
     const after = h('div', { class: 'col' });
-    root.replaceChildren(topbar(ctx, { onBack: setup }), status, score, board, h('div', { class: 'grow' }), after);
+    root.replaceChildren(topbar(ctx, { onBack: setup }), status, score, view.el, h('div', { class: 'grow' }), after);
 
     const isAI = (p) => opts.vs === 'ia' && p === 1;
+    const wait = (ms) => new Promise((ok) => timers.push(setTimeout(ok, ms)));
     function info() {
       score.textContent = `${N[0]} ${scores[0]} – ${scores[1]} ${N[1]}`;
       if (!over) status.textContent = `${quatre ? (turn ? '🟡' : '🔴') : SYM[turn]} ${isAI(turn) ? 'Le téléphone réfléchit…' : `À ${N[turn] === 'Toi' ? 'toi' : N[turn]} de jouer`}`;
     }
-    function place(i) {
+    function nextTurn() {
+      view.setTurn(turn, !isAI(turn));
+      info();
+      if (isAI(turn)) timers.push(setTimeout(aiMove, quatre ? 380 : 500));
+    }
+    async function place(i) {
+      busy = true;
       b[i] = turn;
-      cells[i].textContent = quatre ? '' : SYM[turn];
-      cells[i].classList.add(quatre ? (turn ? 'p1' : 'p0') : 'on', 'pop');
-      sfx.pop(); buzz(10);
+      if (quatre) await view.drop(i, turn);
+      else { view.set(i, turn, true); await wait(280); }
+      busy = false;
+      if (!root.isConnected || !view.el.isConnected) return;
       const w = quatre ? win4(b) : win3(b);
       if (w) { end(w); return; }
       turn = 1 - turn;
-      info();
-      if (isAI(turn)) timers.push(setTimeout(aiMove, 450));
+      nextTurn();
     }
     function human(x) {
-      if (over || isAI(turn)) return;
+      if (over || busy || isAI(turn)) return;
       const i = quatre ? drop(b, x) : (b[x] === null ? x : -1);
-      if (i < 0) return;
+      if (i < 0) { if (quatre) view.nope(); return; }
       place(i);
     }
-    function aiMove() {
-      if (over || !root.isConnected) return;
+    async function aiMove() {
+      if (over || busy || !root.isConnected) return;
       const lvl = opts.level;
-      const i = quatre ? drop(b, ai4(b, 1, lvl)) : ai3(b, 1, lvl);
-      place(i);
+      if (quatre) {
+        const c = ai4(b, 1, lvl);
+        // Le téléphone hésite un peu au-dessus d'une autre colonne avant de jouer.
+        if (Math.random() < 0.5) { busy = true; await view.goTo(Math.max(0, Math.min(W - 1, c + (Math.random() < 0.5 ? -1 : 1))), 1.3); await wait(160); busy = false; }
+        if (!root.isConnected || over) return;
+        place(drop(b, c));
+      } else place(ai3(b, 1, lvl));
     }
     function end(w) {
       over = true;
-      w.cells.forEach((i) => cells[i].classList.add('win'));
+      view.win(w.cells);
+      if (quatre) view.rest(); else view.setTurn(turn, false);
       if (w.p === -1) { status.textContent = '🤝 Match nul !'; sfx.swoosh(); }
       else {
         scores[w.p]++;
@@ -185,10 +198,18 @@ export function start(ctx) {
       first = 1 - first; // on alterne qui commence
       after.replaceChildren(h('div', { class: 'row' },
         h('button', { class: 'btn btn-soft grow', onclick: setup }, 'Réglages'),
-        h('button', { class: 'btn btn-primary grow', onclick: play }, '🔁 Revanche')));
+        h('button', { class: 'btn btn-primary grow', onclick: revanche }, '🔁 Revanche')));
     }
-    info();
-    if (isAI(turn)) timers.push(setTimeout(aiMove, 600));
+    // Revanche sur le même plateau : les jetons tombent par le bas (ou les traits s'effacent), puis on rejoue.
+    async function revanche() {
+      after.replaceChildren();
+      await view.clear();
+      if (!root.isConnected) return;
+      b.fill(null); over = false; turn = first;
+      if (quatre) view.back();
+      nextTurn();
+    }
+    nextTurn();
   }
 
   setup();

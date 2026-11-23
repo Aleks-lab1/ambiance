@@ -28,12 +28,12 @@ export function completeLines(marks) {
 export function lineCells(i) { return LINES[i]; }
 export function isFull(marks) { return new Set([...marks, FREE]).size >= 25; }
 
-/** Grille cliquable. */
-export function gridEl({ card, list, marks, onToggle, highlight = [] }) {
+/** Grille cliquable. stamp : case qu'on vient de cocher (coup de tampon). */
+export function gridEl({ card, list, marks, onToggle, highlight = [], stamp = -1 }) {
   const m = new Set(marks);
   const hl = new Set(highlight);
   return h('div', { class: 'bingo-grid' }, Array.from({ length: 25 }, (_, pos) => h('button', {
-    class: 'bingo-cell' + (pos === FREE || m.has(pos) ? ' on' : '') + (pos === FREE ? ' free' : '') + (hl.has(pos) ? ' hl' : ''),
+    class: 'bingo-cell' + (pos === FREE || m.has(pos) ? ' on' : '') + (pos === FREE ? ' free' : '') + (hl.has(pos) ? ' hl' : '') + (pos === stamp && m.has(pos) ? ' stamp' : ''),
     disabled: pos === FREE,
     onclick: () => onToggle(pos),
   }, cellText(card, list, pos))));

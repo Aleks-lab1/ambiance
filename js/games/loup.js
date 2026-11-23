@@ -81,7 +81,7 @@ export function start(ctx) {
       sfx.pop(); buzz(30);
       const wolvesList = p.role === 'loup' ? game.players.filter((x) => x.role === 'loup' && x !== p).map((x) => x.name) : [];
       btn.replaceWith(h('div', { class: 'col', style: { width: '100%' } },
-        h('div', { class: 'role-card', style: { '--g1': R.colors[0], '--g2': R.colors[1] } },
+        h('div', { class: 'role-card reveal-in', style: { '--g1': R.colors[0], '--g2': R.colors[1] } },
           h('div', { class: 'emo' }, R.emoji), h('h2', null, R.name), h('p', null, R.desc),
           wolvesList.length ? h('p', null, h('b', null, 'Tes complices : '), wolvesList.join(', ')) : null),
         h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => distribute(game, i + 1) }, 'Cacher et passer le téléphone')));

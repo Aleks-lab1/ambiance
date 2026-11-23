@@ -28,6 +28,18 @@ export function cardEl(c, cls = '') {
     h('span', { class: 'tl' }, c.r, h('br'), c.s), h('span', { class: 'mid' }, c.s), h('span', { class: 'br' }, c.r, h('br'), c.s));
 }
 
+/**
+ * Carte qui se retourne en 3D (le dos d'abord, puis la face) : front et back sont deux cartes de même taille.
+ * Utilisée pour chaque nouvelle carte tirée (Plus ou moins, Le Bus, Le Roi, en local et en ligne).
+ */
+export function flip3(front, back) {
+  back.classList.add('f3-back');
+  front.classList.add('f3-front');
+  return h('div', { class: 'flip3' }, h('div', { class: 'flip3-in' }, back, front));
+}
+/** Nouvelle carte tirée : elle arrive face cachée et se retourne. */
+export const revealCard = (c, cls = '') => flip3(cardEl(c, cls), cardEl(null, cls.replace(/\b(good|bad|next)\b/g, '')));
+
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const who = (players, turn) => (players.length ? players[turn % players.length] : null);
 
@@ -67,7 +79,7 @@ export const plusmoins = {
         const p = who(players, turn);
         status.textContent = p ? `Au tour de ${p}` : 'Plus ou moins ?';
         sub.textContent = streak ? `🔥 ${streak} d'affilée — si tu rates, tu prends ${sip(streak + 1)}` : 'La prochaine carte sera-t-elle plus haute ou plus basse ?';
-        table.replaceChildren(cardEl(cur, 'big'), next ? cardEl(next, 'big flip ' + (ok ? 'good' : 'bad')) : cardEl(null, 'big'));
+        table.replaceChildren(cardEl(cur, 'big'), next ? revealCard(next, 'big ' + (ok ? 'good' : 'bad')) : cardEl(null, 'big'));
         passBtn.classList.toggle('hidden', !(players.length > 1 && streak >= 3 && !next));
         passBtn.textContent = `✋ Passer la main à ${who(players, turn + 1)} (série de ${streak} gagnée !)`;
       }
@@ -78,23 +90,27 @@ export const plusmoins = {
         // Égalité = perdu (sinon ce serait trop facile !).
         const ok = up ? next.v > cur.v : next.v < cur.v;
         render(next, ok);
-        if (ok) {
-          streak++;
-          sfx.ok(); buzz(20);
-          if (streak > get('pm-record', 0)) set('pm-record', streak);
-          trail.append(cardEl(cur, 'mini'));
-        } else {
-          sfx.bad(); buzz([150, 60, 150]);
-          const p = who(players, turn);
-          sub.textContent = `❌ ${next.v === cur.v ? 'Égalité, c\'est perdu !' : 'Raté !'} ${p ? p + ' ' + drinks(streak + 1) : cap(sip(streak + 1))} !`;
-        }
+        sfx.card();
+        // Le verdict tombe quand la carte a fini de se retourner.
+        setTimeout(() => {
+          if (!root.isConnected) return;
+          if (ok) {
+            sfx.ok(); buzz(20);
+            trail.append(cardEl(cur, 'mini pop-in'));
+          } else {
+            sfx.bad(); buzz([150, 60, 150]);
+            const p = who(players, turn);
+            sub.textContent = `❌ ${next.v === cur.v ? 'Égalité, c\'est perdu !' : 'Raté !'} ${p ? p + ' ' + drinks(streak + 1) : cap(sip(streak + 1))} !`;
+          }
+        }, 420);
+        if (ok) { streak++; if (streak > get('pm-record', 0)) set('pm-record', streak); }
         setTimeout(() => {
           if (!root.isConnected) return;
           if (!ok) { streak = 0; turn++; trail.replaceChildren(); }
           cur = next;
           busy = false;
           render();
-        }, ok ? 900 : 2200);
+        }, ok ? 1200 : 2400);
       }
       btnPlus.onclick = () => guess(true);
       btnMoins.onclick = () => guess(false);
@@ -153,11 +169,11 @@ export const bus = {
       const btns = h('div', { class: 'col' });
       root.replaceChildren(topbar(ctx, { onBack: setup }), status, prog, table, sub, h('div', { class: 'grow' }), btns);
 
-      function render() {
+      function render(fresh = -1) {
         const p = who(players, turn);
         status.textContent = p ? `${p} est dans le bus 🚌` : 'Dans le bus 🚌';
         prog.replaceChildren(STEPS.map((s, i) => h('span', { class: 'bus-step' + (i < step ? ' done' : i === step ? ' cur' : '') }, String(i + 1))));
-        table.replaceChildren(...[0, 1, 2, 3].map((i) => (cards[i] ? cardEl(cards[i], 'mid-size') : cardEl(null, 'mid-size' + (i === step ? ' next' : '')))));
+        table.replaceChildren(...[0, 1, 2, 3].map((i) => (cards[i] ? (i === fresh ? revealCard(cards[i], 'mid-size') : cardEl(cards[i], 'mid-size')) : cardEl(null, 'mid-size' + (i === step ? ' next' : '')))));
         sub.textContent = `Étape ${step + 1}/4 : ${STEPS[step].q}${tries > 1 ? ` · essai n°${tries}` : ''}`;
         btns.replaceChildren(h('div', { class: 'answer-btns' + (step === 3 ? ' four-opts' : '') },
           STEPS[step].opts.map((o) => h('button', { class: 'btn btn-big ' + (o.id === 'rouge' || o.id === '♥' || o.id === '♦' ? 'btn-bad' : 'btn-soft'), onclick: () => answer(o.id) }, o.label))));
@@ -168,12 +184,13 @@ export const bus = {
         const c = dealer.draw();
         cards[step] = c;
         const ok = stepOk(step, cards, c)(choice);
-        render();
+        render(step);
         btns.replaceChildren();
+        sfx.card();
+        setTimeout(() => { if (root.isConnected) { if (ok) { sfx.ok(); buzz(20); } else { sfx.bad(); buzz([150, 60, 150]); } } }, 420);
         if (ok) {
-          sfx.ok(); buzz(20);
           if (step === 3) {
-            sfx.fanfare(); buzz([40, 30, 40, 30, 120]);
+            setTimeout(() => { sfx.fanfare(); buzz([40, 30, 40, 30, 120]); }, 600);
             const p = who(players, turn);
             sub.textContent = `🎉 ${p ? p + ' descend' : 'Tu descends'} du bus en ${tries} essai${tries > 1 ? 's' : ''} ! ${players.length ? 'Il ou elle distribue ' + sip(4) + '.' : ''}`;
             btns.replaceChildren(h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => { turn++; step = 0; cards = []; tries = 1; busy = false; render(); } },
@@ -181,12 +198,11 @@ export const bus = {
             return;
           }
           step++;
-          setTimeout(() => { if (root.isConnected) { busy = false; render(); } }, 700);
+          setTimeout(() => { if (root.isConnected) { busy = false; render(); } }, 1000);
         } else {
-          sfx.bad(); buzz([150, 60, 150]);
           const p = who(players, turn);
           sub.textContent = `❌ Raté ! ${p ? p + ' ' + drinks(step + 1) : cap(sip(step + 1))} et on repart de zéro…`;
-          setTimeout(() => { if (!root.isConnected) return; step = 0; cards = []; tries++; busy = false; render(); }, 2300);
+          setTimeout(() => { if (!root.isConnected) return; step = 0; cards = []; tries++; busy = false; render(); }, 2600);
         }
       }
       render();

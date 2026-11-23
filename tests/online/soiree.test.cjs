@@ -2,6 +2,7 @@
 const { mp } = require('../lib/mp.cjs');
 const { shot } = require('../lib/pw-helper.cjs');
 const { check, wait: W, run } = require('../lib/check.cjs');
+const { sortByDrag, shownOrder } = require('../lib/sort.cjs');
 const P = ['A', 'B', 'C'];
 const clean = async (t, name) => { const s = await t.state(); check(!s.log.length && !t.errors.length, `${name} : aucune erreur`, [s.log, t.errors]); };
 
@@ -27,20 +28,36 @@ run(async () => {
 
   console.log('Dans sa tête');
   t = await mp('/js/online/soiree.js', 'danssateteOnline', { rounds: 2 });
-  for (const p of P) { for (let i = 0; i < 5; i++) await t.at(p).locator('.rank-item').nth(i).click(); await t.at(p).getByRole('button', { name: /Valider/ }).click(); await W(100); }
+  check(await t.at('A').locator('.sort-item').count() === 5 && !(await t.at('A').locator('.rank-item').count()), 'Dans sa tête : 5 cartes à glisser (plus de numéros à toucher)');
+  const wantA = [4, 3, 2, 1, 0];
+  check(JSON.stringify(await sortByDrag(t.page, t.at('A'), wantA)) === JSON.stringify(wantA), 'Dans sa tête : classement remis dans l\'ordre voulu en glissant');
+  check((await t.at('A').locator('.sort-item .rk').allInnerTexts()).join('') === '12345', 'Dans sa tête : numéros 1 à 5 de haut en bas');
+  for (const p of P) { await t.at(p).getByRole('button', { name: /Valider/ }).click(); await W(100); }
   await W(200);
   check((await t.state()).phase === 'reveal', 'révélation après les 3 classements');
+  check(JSON.stringify(await t.get(() => window.__h.s.ranks.A)) === JSON.stringify(wantA), 'Dans sa tête : classement glissé bien envoyé');
+  await W(1200);
+  const judgeRank = await t.get(() => window.__h.s.ranks[window.__h.s.judge]);
+  check(JSON.stringify(await shownOrder(t.at('C'))) === JSON.stringify(judgeRank), 'Dans sa tête : les cartes glissent dans l\'ordre du joueur désigné');
   await clean(t, 'Dans sa tête'); await t.browser.close();
 
   console.log('Dans l\'ordre !');
   t = await mp('/js/online/soiree.js', 'ordreOnline', { rounds: 1 });
   const sol = await t.get(() => window.__h.s.sol);
-  for (const k of sol) await t.at('A').locator('.rank-item').nth(k).click();
+  check(JSON.stringify(await sortByDrag(t.page, t.at('A'), sol)) === JSON.stringify(sol), 'Dans l\'ordre : A remet les cartes dans le bon ordre en glissant');
   await t.at('A').getByRole('button', { name: 'Valider' }).click();
-  for (const p of ['B', 'C']) { for (let i = 0; i < 4; i++) await t.at(p).locator('.rank-item').nth(i).click(); await t.at(p).getByRole('button', { name: 'Valider' }).click(); }
+  await t.at('B').getByRole('button', { name: 'Valider' }).click();
   await W(300);
+  check(!(await t.at('A').locator('.sort-wrap:not(.locked)').count()), 'Dans l\'ordre : liste bloquée après l\'envoi');
   const scoreA = await t.get(() => window.__h.room.players.find((p) => p.pid === 'A').score);
   check(scoreA >= 6, 'ordre parfait = au moins 4 + 2 points', scoreA);
+  // C n'a pas validé : son ordre actuel part tout seul juste avant la fin du temps.
+  await t.page.evaluate(() => { window.__h.s.deadline = Date.now() + 1500; window.__h.push(); });
+  await W(2600);
+  check((await t.state()).phase === 'reveal' && !!(await t.get(() => window.__h.s.answers.C)), 'Dans l\'ordre : réponse envoyée automatiquement à la fin du temps', await t.get(() => window.__h.s.answers));
+  await W(1200);
+  check(JSON.stringify(await shownOrder(t.at('B'))) === JSON.stringify(sol) && /\d{3,4}/.test(await t.txt('B')), 'Dans l\'ordre : les cartes glissent à leur place, dates affichées');
+  await shot(t.page, 'mp-ordre');
   await clean(t, 'Dans l\'ordre'); await t.browser.close();
 
   console.log('Qui suis-je ?');

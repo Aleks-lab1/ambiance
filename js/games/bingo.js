@@ -14,11 +14,11 @@ export function start(ctx) {
   const gridSlot = h('div');
   const info = h('div', { class: 'center' });
 
-  function render(celebrate) {
+  function render(celebrate, stamp = -1) {
     const lines = completeLines(st.marks);
     const full = isFull(st.marks);
     gridSlot.replaceChildren(gridEl({
-      card: st.card, list: LIST, marks: st.marks, highlight: lines.flatMap(lineCells),
+      card: st.card, list: LIST, marks: st.marks, highlight: lines.flatMap(lineCells), stamp,
       onToggle: (pos) => {
         const before = completeLines(st.marks).length;
         const m = new Set(st.marks);
@@ -26,7 +26,7 @@ export function start(ctx) {
         st.marks = [...m];
         save();
         sfx.pop(); buzz(10);
-        render(completeLines(st.marks).length > before);
+        render(completeLines(st.marks).length > before, pos);
       },
     }));
     info.replaceChildren(h('h3', null, full ? '🏆 CARTON PLEIN !' : lines.length ? `🎉 ${lines.length} ligne${lines.length > 1 ? 's' : ''} complète${lines.length > 1 ? 's' : ''} !` : 'Aucune ligne pour l\'instant'));

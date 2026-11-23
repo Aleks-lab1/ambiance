@@ -1,4 +1,4 @@
-// Jeux en ligne de lettres et de plateau : Petit bac, Mot mystère (course), Le Pendu, Morpion & 4 à la suite.
+// Jeux en ligne de lettres et de plateau : Petit bac, Mot mystère (course), Le Pendu, Morpion & 4 en ligne.
 import { h, uid, shuffle, seg, pick, norm, toast } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import { sip } from '../store.js';
@@ -7,6 +7,7 @@ import { softNorm } from '../race-core.js';
 import { loadDico, normWord } from '../bonmot-core.js';
 import { score as mmScore } from '../games/motmystere.js';
 import { win3, win4, drop, W } from '../games/morpion.js';
+import { c4View, tttView } from '../morpion-vue.js';
 import { drawing, KEYS as PENDU_KEYS, MAX as PENDU_MAX } from '../games/pendu.js';
 import PB from '../data/petitbac.js';
 
@@ -237,7 +238,7 @@ export const motmystereOnline = {
           const winner = v.finish[0];
           after.replaceChildren(h('div', { class: 'panel center col' },
             h('h3', null, `Le mot était « ${v.target.toUpperCase()} »`),
-            h('p', null, winner ? `🏆 ${name(g, winner)} a trouvé en premier !` : `Personne n'a trouvé : tout le monde prend ${sip(1)} !`)),
+            h('p', null, winner ? (winner === g.me ? '🏆 Tu as trouvé en premier !' : `🏆 ${g.nameOf(winner)} a trouvé en premier !`) : `Personne n'a trouvé : tout le monde prend ${sip(1)} !`)),
           g.isHost ? actBtn(g, v.round < v.rounds ? 'Mot suivant →' : '🏆 Classement final', 'next', 'btn-primary btn-big') : null);
           if (lastKey !== key + ':r') sfx.end();
           lastKey = key + ':r';
@@ -264,12 +265,12 @@ function mmRound(s) {
 }
 
 // =====================================================================
-// MORPION & 4 À LA SUITE (le gagnant reste, le suivant prend la place du perdant)
+// MORPION & 4 EN LIGNE (le gagnant reste, le suivant prend la place du perdant)
 // =====================================================================
 export const morpionOnline = {
-  id: 'morpion', name: 'Morpion & 4 à la suite', short: 'Le gagnant reste, au suivant !', emoji: '⭕', minPlayers: 2,
+  id: 'morpion', name: 'Morpion & 4 en ligne', short: 'Le gagnant reste, au suivant !', emoji: '⭕', minPlayers: 2,
   defaults: { game: 'morpion' },
-  settingsForm(st, set) { return h('label', { class: 'field' }, 'Jeu', seg([{ value: 'morpion', label: '❌⭕ Morpion' }, { value: 'quatre', label: '🔴🟡 4 à la suite' }], st.game, (v) => set({ game: v }))); },
+  settingsForm(st, set) { return h('label', { class: 'field' }, 'Jeu', seg([{ value: 'morpion', label: '❌⭕ Morpion' }, { value: 'quatre', label: '🔴🟡 4 en ligne' }], st.game, (v) => set({ game: v }))); },
   init(room, st) {
     const order = activePids(room);
     const s = { gid: uid(), st, quatre: st.game === 'quatre', duo: [order[0], order[1]], queue: order.slice(2), first: 0, n: 0 };
@@ -309,36 +310,73 @@ export const morpionOnline = {
   },
   view(room, s) { return { gid: s.gid, n: s.n, quatre: s.quatre, board: s.board, duo: s.duo, queue: s.queue, turn: s.turn, phase: s.phase, win: s.win, last: s.last }; },
   mount(root, g) {
-    const main = h('div', { class: 'col' });
-    root.append(main);
-    let lastKey = null;
+    // Plateau animé gardé d'une mise à jour à l'autre (js/morpion-vue.js) : chaque nouveau coup est joué en
+    // animation (jeton qui tombe, trait au feutre), dans l'ordre d'arrivée, puis les textes sont mis à jour.
+    const head = h('p', { class: 'center' }), status = h('h2', { class: 'center' }), slot = h('div'), foot = h('div', { class: 'col' });
+    root.append(h('div', { class: 'col' }, head, status, slot, foot));
+    let view = null, kind = null, boardKey = null, shown = [], cur = null, chain = Promise.resolve(), dead = false, lastKey = null, wonKey = null;
+    const pause = (ms) => new Promise((ok) => setTimeout(ok, ms));
+    function choose(x) {
+      const v = cur;
+      if (!v || v.phase !== 'play' || v.duo.indexOf(g.me) !== v.turn) return;
+      if (v.quatre ? drop(v.board, x) < 0 : v.board[x] !== null) { if (v.quatre) view.nope(); return; }
+      g.send({ type: 'play', i: x });
+    }
+    function texts(r, v) {
+      const meIdx = v.duo.indexOf(g.me);
+      const myTurn = v.phase === 'play' && meIdx === v.turn;
+      const sym = (p) => (v.quatre ? (p ? '🟡' : '🔴') : (p ? '⭕' : '❌'));
+      const pScore = (pid) => (playerOf(r, pid) || {}).score || 0;
+      head.replaceChildren(h('b', null, `${sym(0)} ${name(g, v.duo[0])} (${pScore(v.duo[0])})`), '  contre  ', h('b', null, `${sym(1)} ${name(g, v.duo[1])} (${pScore(v.duo[1])})`));
+      status.textContent = v.phase === 'play' ? (myTurn ? `${sym(v.turn)} À toi de jouer !` : `${sym(v.turn)} À ${g.nameOf(v.duo[v.turn])} de jouer`)
+        : v.win.p < 0 ? '🤝 Match nul !' : v.duo[v.win.p] === g.me ? '🏆 Tu as gagné !' : `🏆 ${g.nameOf(v.duo[v.win.p])} gagne !`;
+      foot.replaceChildren(
+        v.queue.length ? h('p', { class: 'center muted small' }, `⏳ Prochains challengers : ${v.queue.map((p) => name(g, p)).join(', ')}`) : null,
+        v.phase === 'over' && v.win.p >= 0 ? h('p', { class: 'center' }, v.duo[1 - v.win.p] === g.me ? `Tu prends ${sip(1)}.` : `${g.nameOf(v.duo[1 - v.win.p])} prend ${sip(1)}.`) : null,
+        v.phase === 'over' && (g.isHost || meIdx >= 0) ? actBtn(g, v.queue.length && v.win.p >= 0 ? '🔁 Au suivant !' : '🔁 Revanche', 'again', 'btn-primary btn-big') : null);
+      const key = `${v.gid}:${v.n}:${v.phase}:${v.turn}`;
+      if (key !== lastKey) {
+        if (v.phase === 'over') { v.win.p >= 0 && v.duo[v.win.p] === g.me ? (sfx.fanfare(), buzz([40, 30, 120])) : sfx.end(); } else if (myTurn) buzz(15);
+      }
+      lastKey = key;
+      if (v.phase === 'over') {
+        if (wonKey !== boardKey) { wonKey = boardKey; view.win(v.win.cells); }
+        if (v.quatre) view.rest(); else view.setTurn(v.turn, false);
+      } else view.setTurn(v.turn, myTurn);
+    }
+    async function show(r, v) {
+      const bk = `${v.gid}:${v.n}`;
+      if (!view || kind !== v.quatre) {
+        view = v.quatre ? c4View({ onPick: choose }) : tttView({ onPick: choose });
+        kind = v.quatre; boardKey = null; shown = Array(v.board.length).fill(null);
+        slot.replaceChildren(view.el);
+      }
+      if (boardKey !== bk) {
+        // Nouvelle manche : les jetons tombent par le bas (ou les traits s'effacent).
+        if (boardKey !== null && shown.some((x) => x !== null)) await view.clear();
+        shown = Array(v.board.length).fill(null);
+        boardKey = bk;
+        if (v.quatre && view.back) view.back();
+      }
+      const adds = v.board.map((p, i) => (p !== null && shown[i] === null ? i : -1)).filter((i) => i >= 0);
+      const anim = adds.includes(v.last) ? v.last : -1;
+      // Les coups « en retard » (on rejoint une partie en cours) s'affichent directement, le dernier est animé.
+      if (v.quatre) { const pre = v.board.slice(); if (anim >= 0) pre[anim] = null; view.set(pre); } else for (const i of adds) if (i !== anim) view.set(i, v.board[i], false);
+      if (anim >= 0) {
+        if (v.quatre) await view.drop(anim, v.board[anim]);
+        else { view.set(anim, v.board[anim], true); await pause(260); }
+      }
+      shown = v.board.slice();
+      if (!dead) texts(r, v);
+    }
     return {
       update(r, v) {
-        const key = `${v.gid}:${v.n}:${v.phase}:${v.board.filter((x) => x !== null).length}`;
-        const meIdx = v.duo.indexOf(g.me);
-        const myTurn = v.phase === 'play' && meIdx === v.turn;
-        const sym = (p) => (v.quatre ? (p ? '🟡' : '🔴') : (p ? '⭕' : '❌'));
-        let status;
-        if (v.phase === 'play') status = myTurn ? `${sym(v.turn)} À toi de jouer !` : `${sym(v.turn)} À ${g.nameOf(v.duo[v.turn])} de jouer`;
-        else status = v.win.p < 0 ? '🤝 Match nul !' : `🏆 ${name(g, v.duo[v.win.p])} gagne !`;
-        const cells = v.board.map((x, i) => h('button', {
-          class: (v.quatre ? 'c4-cell' : 'ttt-cell') + (x === null ? '' : v.quatre ? (x ? ' p1' : ' p0') : ' on') + (v.win && v.win.cells.includes(i) ? ' win' : '') + (i === v.last ? ' pop' : ''),
-          disabled: !myTurn, onclick: () => g.send({ type: 'play', i: v.quatre ? i % W : i }),
-        }, !v.quatre && x !== null ? sym(x) : ''));
-        const pScore = (pid) => (playerOf(r, pid) || {}).score || 0;
-        main.replaceChildren(
-          h('p', { class: 'center' }, h('b', null, `${sym(0)} ${name(g, v.duo[0])} (${pScore(v.duo[0])})`), '  contre  ', h('b', null, `${sym(1)} ${name(g, v.duo[1])} (${pScore(v.duo[1])})`)),
-          h('h2', { class: 'center' }, status),
-          h('div', { class: v.quatre ? 'c4-board' : 'ttt-board' }, cells),
-          v.queue.length ? h('p', { class: 'center muted small' }, `⏳ Prochains challengers : ${v.queue.map((p) => name(g, p)).join(', ')}`) : null,
-          v.phase === 'over' && v.win.p >= 0 ? h('p', { class: 'center' }, v.duo[1 - v.win.p] === g.me ? `Tu prends ${sip(1)}.` : `${g.nameOf(v.duo[1 - v.win.p])} prend ${sip(1)}.`) : null,
-          v.phase === 'over' && (g.isHost || meIdx >= 0) ? actBtn(g, v.queue.length && v.win.p >= 0 ? '🔁 Au suivant !' : '🔁 Revanche', 'again', 'btn-primary btn-big') : null);
-        if (key !== lastKey) {
-          if (v.phase === 'over') { v.win.p >= 0 && v.duo[v.win.p] === g.me ? (sfx.fanfare(), buzz([40, 30, 120])) : sfx.end(); } else if (myTurn) { sfx.pop(); buzz(15); } else sfx.tick();
-        }
-        lastKey = key;
+        // Copie : chez l'hôte, la vue partage les tableaux de l'état du jeu, qui changent au coup suivant.
+        const snap = { ...v, board: v.board.slice(), duo: v.duo.slice(), queue: v.queue.slice(), win: v.win ? { p: v.win.p, cells: v.win.cells.slice() } : null };
+        cur = snap;
+        chain = chain.then(() => (dead ? null : show(r, snap))).catch((e) => console.error(e));
       },
-      destroy() {},
+      destroy() { dead = true; },
     };
   },
 };
@@ -414,7 +452,7 @@ export const penduOnline = {
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);
-    let v = null, lastKey = null, onKey = null, form = null;
+    let v = null, lastKey = null, onKey = null, form = null, wordKey = null, lastErr = 0, seenNow = [];
     const unbind = () => { if (onKey) document.removeEventListener('keydown', onKey); onKey = null; };
     const myTurn = () => v && v.phase === 'play' && v.cur === g.me;
     const send = (k) => { if (myTurn() && !v.tried.includes(k)) { g.send({ type: 'letter', k }); sfx.pop(); } };
@@ -446,6 +484,13 @@ export const penduOnline = {
         }
         form = null;
         const over = v.phase === 'over';
+        // Nouvelle erreur : la partie du dessin se trace ; nouvelles lettres : elles apparaissent en sautant.
+        const wk = `${v.gid}:${v.round}`;
+        if (wk !== wordKey) { wordKey = wk; lastErr = 0; seenNow = []; }
+        const newErr = v.errors > lastErr;
+        lastErr = v.errors;
+        const seen = seenNow;
+        seenNow = v.slots.map((x) => !!x.c);
         const keys = PENDU_KEYS.map((k) => {
           const tried = v.tried.includes(k);
           return h('button', { class: 'kb-key' + (tried ? (v.good.includes(k) ? ' good' : ' bad') : ''), disabled: tried || !myTurn(), onclick: () => send(k) }, k);
@@ -456,8 +501,8 @@ export const penduOnline = {
         else status = myTurn() ? '👉 À toi : propose une lettre !' : `${g.nameOf(v.cur)} propose une lettre…`;
         const L = v.last;
         main.replaceChildren(head,
-          h('div', { class: 'pendu-svg', html: drawing(v.errors) }),
-          h('div', { class: 'pendu-word' }, v.slots.map((x) => (x.sp != null ? h('span', { class: 'sp' }, x.sp === ' ' ? '\u00a0' : x.sp) : h('span', { class: 'ltr' + (x.miss ? ' miss' : '') }, x.c)))),
+          h('div', { class: 'pendu-svg' + (newErr ? ' oops' : ''), html: drawing(v.errors, newErr) }),
+          h('div', { class: 'pendu-word' }, v.slots.map((x, i) => (x.sp != null ? h('span', { class: 'sp' }, x.sp === ' ' ? '\u00a0' : x.sp) : h('span', { class: 'ltr' + (x.miss ? ' miss' : '') + (x.c && !(seen[i]) ? ' pop-in' : '') }, x.c)))),
           L && !over ? h('p', { class: 'center small muted' }, L.good ? `✅ ${L.by === g.me ? 'Tu as' : g.nameOf(L.by) + ' a'} trouvé le ${L.k} (+1)` : `❌ Pas de ${L.k} dans le mot`) : null,
           h('p', { class: 'center' }, status),
           h('div', { class: 'kb' + (over ? ' done' : '') }, keys),

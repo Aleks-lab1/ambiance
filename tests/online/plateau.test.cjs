@@ -23,13 +23,18 @@ run(async () => {
   t = await mp('/js/online/plateau.js', 'memoryOnline', { pairs: 8 });
   const deck = await t.get(() => window.__h.s.deck);
   const j = deck.indexOf(deck[0], 1);
-  await t.at('A').locator('.mem-card').nth(0).click(); await W(60); await t.at('A').locator('.mem-card').nth(j).click(); await W(150);
+  await t.at('A').locator('.mc').nth(0).click(); await W(60); await t.at('A').locator('.mc').nth(j).click(); await W(150);
   check((await t.get(() => window.__h.s.cur)) === 'A', 'paire trouvée : A rejoue');
+  check(await t.at('C').locator('.mc.up.done').count() === 2, 'Memory : la paire reste retournée chez les autres joueurs');
   // Deux cartes encore cachées qui ne vont pas ensemble (la paire de la carte 0 peut être la carte 1).
   const a = deck.findIndex((e, i) => i > 0 && i !== j);
   const k = deck.findIndex((e, i) => i > a && i !== j && e !== deck[a]);
-  await t.at('A').locator('.mem-card').nth(a).click(); await W(60); await t.at('A').locator('.mem-card').nth(k).click(); await W(1700);
+  await t.at('A').locator('.mc').nth(a).click(); await W(60); await t.at('A').locator('.mc').nth(k).click(); await W(200);
+  check(await t.at('B').locator('.mc.up.miss').count() === 2, 'Memory : les 2 cartes ratées se retournent chez B (et tremblent)');
+  await W(1500);
   check((await t.get(() => window.__h.s.cur)) === 'B', 'raté : au tour de B');
+  check(await t.at('B').locator('.mc.up').count() === 2 && !(await t.at('B').locator('.mc.miss').count()), 'Memory : les cartes ratées se recachent, la paire reste visible');
+  await shot(t.page, 'mp-memory');
   await clean(t, 'Memory'); await t.browser.close();
 
   console.log('Yam\'s');

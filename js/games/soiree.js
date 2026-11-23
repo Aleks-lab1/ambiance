@@ -3,7 +3,8 @@ import { h, topbar, pick, rand } from '../ui.js';
 import { get, set, sip } from '../store.js';
 import { onlineBanner } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
-import { rankList, scaleEl, cursorPoints, ordreQuestion, CHI, beats } from '../online/soiree.js';
+import { scaleEl, scaleRange, cursorPoints, ordreQuestion, ORDRE_EDGES, CHI, beats, chiArena } from '../online/soiree.js';
+import { sortList } from '../sortable.js';
 import { fmtYear } from '../data/ordre.js';
 import CURSEUR from '../data/curseur.js';
 
@@ -29,9 +30,9 @@ export const curseur = {
             h('button', { class: 'btn btn-primary btn-big btn-block', onclick: guess }, '🙈 J\'ai mon indice, cacher')));
         } }, '👀 Voir la cible')));
       function guess() {
-        const range = h('input', { type: 'range', min: '0', max: '100', value: '50', class: 'scale-range' });
-        root.replaceChildren(top, h('div', { class: 'col' }, h('h2', { class: 'center' }, 'Dis ton indice à voix haute !'), scaleEl(pair),
-          h('p', { class: 'muted center' }, 'Le groupe se met d\'accord et place le curseur :'), range,
+        const range = scaleRange(50);
+        root.replaceChildren(top, h('div', { class: 'col' }, h('h2', { class: 'center' }, 'Dis ton indice à voix haute !'),
+          h('p', { class: 'muted center' }, 'Le groupe se met d\'accord et fait glisser le curseur sur l\'échelle :'), scaleEl(pair, { input: range }),
           h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => reveal(Number(range.value)) }, '👀 Révéler')));
       }
       function reveal(v) {
@@ -57,24 +58,29 @@ export const ordre = {
     function question(n, total) {
       const items = ordreQuestion();
       const sol = items.map((e, i) => [e[1], i]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
-      let order = [];
       const top = topbar(ctx, { onBack: setup });
-      const draw = () => root.replaceChildren(top, h('div', { class: 'row' }, h('span', { class: 'pill' }, `📅 Question ${n + 1}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `⭐ ${total}`)),
-        h('p', { class: 'center' }, h('b', null, 'Du plus ancien au plus récent :')),
-        rankList(items.map((e) => e[0]), order, (o) => { order = o; draw(); }),
-        h('div', { class: 'grow' }),
-        h('button', { class: 'btn btn-primary btn-big btn-block', disabled: order.length < 4, onclick: reveal }, '👀 Vérifier'));
+      const list = sortList(items.map((e) => e[0]), ORDRE_EDGES);
+      const title = h('h2', { class: 'center' }, 'Remets-les dans l\'ordre !');
+      const hint = h('p', { class: 'center muted small' }, 'Fais glisser les cartes, du plus ancien (en haut) au plus récent (en bas).');
+      const foot = h('div', { class: 'col' }, h('button', { class: 'btn btn-primary btn-big btn-block', onclick: reveal }, '👀 Vérifier'));
+      root.replaceChildren(top, h('div', { class: 'row' }, h('span', { class: 'pill' }, `📅 Question ${n + 1}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `⭐ ${total}`)),
+        title, hint, list.el, h('div', { class: 'grow' }), foot);
       function reveal() {
-        const ok = order.filter((x, k) => sol[k] === x).length;
-        ok === 4 ? sfx.fanfare() : ok ? sfx.ok() : sfx.bad();
+        const ok = list.check(sol);
+        foot.replaceChildren();
+        hint.textContent = '';
         buzz(30);
-        root.replaceChildren(top, h('h2', { class: 'center' }, ok === 4 ? '🎉 Parfait !' : `${ok}/4 bien placés`),
-          rankList(sol.map((i) => items[i][0]), [0, 1, 2, 3], () => {}, { disabled: true, labels: sol.map((i) => fmtYear(items[i][1])) }),
-          ok < 2 ? h('p', { class: 'center muted' }, `Moins de 2 bons : ${sip(1)} !`) : null,
-          h('div', { class: 'grow' }),
-          h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => question(n + 1, total + ok) }, 'Question suivante →'));
+        ok === 4 ? sfx.fanfare() : ok ? sfx.ok() : sfx.bad();
+        title.textContent = ok === 4 ? '🎉 Parfait !' : `${ok}/4 bien placé${ok > 1 ? 's' : ''}`;
+        // Les cartes mal placées glissent ensuite à leur vraie place, et les dates apparaissent.
+        setTimeout(() => {
+          if (!root.isConnected) return;
+          list.settle(sol, items.map((e) => fmtYear(e[1])));
+          if (ok < 4) sfx.swoosh();
+          foot.replaceChildren(ok < 2 ? h('p', { class: 'center muted' }, `Moins de 2 bons : ${sip(1)} !`) : null,
+            h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => question(n + 1, total + ok) }, 'Question suivante →'));
+        }, ok === 4 ? 250 : 750);
       }
-      draw();
     }
     setup();
   },
@@ -91,27 +97,40 @@ export const chifoumi = {
       h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => play(0, 0, 0) }, '✂️ Jouer'));
     function play(me, cpu, streak) {
       const top = topbar(ctx, { onBack: setup });
-      const res = h('div', { class: 'col center' });
-      root.replaceChildren(top, h('h2', { class: 'center' }, `Toi ${me} – ${cpu} Téléphone`), h('p', { class: 'center muted' }, 'Premier à 3 points !'), res, h('div', { class: 'grow' }),
-        h('div', { class: 'chi-btns' }, CHI.map((c) => h('button', { class: 'chi-btn', onclick: () => go(c.id) }, h('span', { class: 'e' }, c.e), h('span', null, c.n)))));
-      function go(choice) {
+      const score = h('h2', { class: 'center' }, `Toi ${me} – ${cpu} Téléphone`);
+      const msg = h('p', { class: 'center muted' }, 'Premier à 3 points !');
+      const arena = chiArena('Toi', 'Téléphone');
+      let busy = false;
+      const btns = h('div', { class: 'chi-btns' }, CHI.map((c) => h('button', { class: 'chi-btn', onclick: () => go(c.id) }, h('span', { class: 'e' }, c.e), h('span', null, c.n))));
+      root.replaceChildren(top, score, msg, arena.el, h('div', { class: 'grow' }), btns);
+      async function go(choice) {
+        if (busy) return;
+        busy = true;
+        btns.classList.add('wait');
         const bot = pick(CHI).id;
+        await arena.count();
+        if (!root.isConnected) return;
         const w = beats(choice, bot) ? 1 : beats(bot, choice) ? -1 : 0;
-        const e = (id) => CHI.find((x) => x.id === id).e;
-        const m2 = me + (w > 0), c2 = cpu + (w < 0);
+        arena.show(choice, bot, w);
+        me += w > 0; cpu += w < 0;
         w > 0 ? sfx.ok() : w < 0 ? sfx.bad() : sfx.pop();
         buzz(20);
-        if (m2 >= 3 || c2 >= 3) {
-          const won = m2 >= 3;
+        score.textContent = `Toi ${me} – ${cpu} Téléphone`;
+        msg.textContent = w > 0 ? 'Gagné !' : w < 0 ? 'Perdu !' : 'Égalité, on rejoue !';
+        if (me >= 3 || cpu >= 3) {
+          const won = me >= 3;
           const st = won ? streak + 1 : 0;
           if (st > get('chi-record', 0)) set('chi-record', st);
-          won ? sfx.fanfare() : sfx.bad();
-          root.replaceChildren(top, h('div', { class: 'big-center' }, h('div', { class: 'hero-emo' }, won ? '🏆' : '📱'), h('h2', null, won ? 'Tu as gagné !' : `Le téléphone gagne… ${sip(1)} !`),
-            h('p', null, `${e(choice)} contre ${e(bot)} · ${m2} – ${c2}`), h('button', { class: 'btn btn-primary btn-big', onclick: () => play(0, 0, st) }, '🔁 Revanche')));
+          setTimeout(() => {
+            if (!root.isConnected) return;
+            won ? sfx.fanfare() : sfx.bad();
+            root.replaceChildren(top, h('div', { class: 'big-center' }, h('div', { class: 'hero-emo' }, won ? '🏆' : '📱'), h('h2', null, won ? 'Tu as gagné !' : `Le téléphone gagne… ${sip(1)} !`),
+              h('p', null, `${me} – ${cpu}`), h('button', { class: 'btn btn-primary btn-big', onclick: () => play(0, 0, st) }, '🔁 Revanche')));
+          }, 1100);
           return;
         }
-        play(m2, c2, streak);
-        root.querySelector('.col.center').replaceChildren(h('div', { style: { fontSize: '64px' } }, `${e(choice)} ${w > 0 ? '>' : w < 0 ? '<' : '='} ${e(bot)}`), h('b', null, w > 0 ? 'Gagné !' : w < 0 ? 'Perdu !' : 'Égalité !'));
+        busy = false;
+        btns.classList.remove('wait');
       }
     }
     setup();

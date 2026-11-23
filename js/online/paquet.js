@@ -5,7 +5,7 @@ import { settings, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { activePids, addScore, nextOn, endScreen } from './kit.js';
 import { rule, RANKS as ROI_RANKS, SUITS as ROI_SUITS } from '../games/roi.js';
-import { cardEl, newDeck, STEPS, stepOk } from '../games/paquet.js';
+import { cardEl, newDeck, STEPS, stepOk, flip3, revealCard } from '../games/paquet.js';
 
 const tourSeg = (st, set, label = 'Tours par joueur') => h('label', { class: 'field' }, label, seg([1, 2, 3].map((n) => ({ value: n, label: String(n) })), st.rounds, (v) => set({ rounds: v })));
 const drawFrom = (s) => { if (!s.deck.length) s.deck = newDeck(); return s.deck.pop(); };
@@ -17,7 +17,7 @@ const head = (g, v, extra) => h('div', { class: 'row' }, h('span', { class: 'pil
 // =====================================================================
 function roiCard(c) {
   const x = rule(c.r);
-  return h('div', { class: 'playing-card flip' + (c.red ? ' red' : '') },
+  return h('div', { class: 'playing-card' + (c.red ? ' red' : '') },
     h('div', { class: 'corner tl' }, c.r, h('br'), c.s), h('div', { class: 'mid' }, x.emoji), h('div', { class: 'corner br' }, c.r, h('br'), c.s));
 }
 
@@ -75,8 +75,8 @@ export const roiOnline = {
           h('div', { class: 'spread' }, h('span', { class: 'pill' }, `🃏 ${v.left} cartes`),
             h('div', { class: 'row', style: { gap: '6px', fontSize: '22px' } }, [0, 1, 2, 3].map((i) => h('span', { style: { opacity: i < v.kings ? 1 : 0.25 } }, '👑')))),
           v.card ? h('p', { class: 'center' }, byMe ? 'Ta carte' : ['Carte de ', h('b', null, byName)]) : h('p', { class: 'center muted' }, 'Le paquet est mélangé…'),
-          v.card ? roiCard(v.card) : h('div', { class: 'playing-card back' }),
-          x ? h('div', { class: 'panel center col' }, h('h3', null, `${x.emoji} ${x.t}`), h('p', null, x.d)) : null,
+          v.card ? (fresh ? flip3(roiCard(v.card), h('div', { class: 'playing-card back' })) : roiCard(v.card)) : h('div', { class: 'playing-card back' }),
+          x ? h('div', { class: 'panel center col' + (fresh ? ' anim-late' : '') }, h('h3', null, `${x.emoji} ${x.t}`), h('p', null, x.d)) : null,
           me || g.isHost
             ? h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => g.send({ type: 'draw' }) }, me ? '🃏 À toi : piocher une carte' : `🃏 Piocher pour ${g.nameOf(v.who)}`)
             : h('p', { class: 'status-line' }, `⏳ Au tour de ${g.nameOf(v.who)} de piocher`));
@@ -162,7 +162,7 @@ export const plusmoinsOnline = {
         const parts = [head(g, v),
           h('h2', { class: 'center' }, me ? 'À toi : plus ou moins ?' : `${N} joue`),
           h('p', { class: 'center muted' }, sub),
-          h('div', { class: 'pc-table' }, cardEl(v.cur, 'big'), L ? cardEl(L.next, 'big flip ' + (L.ok ? 'good' : 'bad')) : cardEl(null, 'big')),
+          h('div', { class: 'pc-table' }, cardEl(v.cur, 'big'), L ? (key !== lastKey ? revealCard(L.next, 'big ' + (L.ok ? 'good' : 'bad')) : cardEl(L.next, 'big ' + (L.ok ? 'good' : 'bad'))) : cardEl(null, 'big')),
           h('div', { class: 'pc-trail' }, v.trail.map((c) => cardEl(c, 'mini')))];
         if (v.phase === 'guess') {
           if (can) {
@@ -173,7 +173,7 @@ export const plusmoinsOnline = {
           } else parts.push(h('p', { class: 'status-line' }, `👀 ${N} choisit : plus ou moins ?`));
         }
         if (key !== lastKey) {
-          if (L) { L.ok ? (sfx.ok(), buzz(20)) : (sfx.bad(), me && buzz([150, 60, 150])); }
+          if (L) { sfx.card(); setTimeout(() => { L.ok ? (sfx.ok(), buzz(20)) : (sfx.bad(), me && buzz([150, 60, 150])); }, 420); }
           else if (v.phase === 'guess' && me && v.streak === 0) { sfx.go(); buzz([30, 30, 30]); }
         }
         lastKey = key;
@@ -258,13 +258,14 @@ export const busOnline = {
         const N = g.nameOf(v.who);
         const can = me || g.isHost;
         const shownStep = v.phase === 'show' ? v.last.step : v.step;
+        const fresh = key !== lastKey && v.last ? v.last.step : -1; // carte qui vient d'être tirée : elle se retourne
         let sub = `Étape ${shownStep + 1}/4 : ${STEPS[shownStep].q}${v.tries > 1 ? ` · essai n°${v.tries}` : ''}`;
         if (v.phase === 'show') sub = `❌ Raté ! ${me ? 'Tu prends' : N + ' prend'} ${sip(v.last.step + 1)} et on repart de zéro…`;
         if (v.phase === 'won') sub = `🎉 ${me ? 'Tu descends' : N + ' descend'} du bus en ${v.tries} essai${v.tries > 1 ? 's' : ''} ! +${v.pts} point${v.pts > 1 ? 's' : ''}, et ${sip(4)} à distribuer.`;
         const parts = [head(g, v),
           h('h2', { class: 'center' }, me ? 'Tu es dans le bus 🚌' : `${N} est dans le bus 🚌`),
           h('div', { class: 'bus-steps' }, STEPS.map((x, i) => h('span', { class: 'bus-step' + (i < v.step || v.phase === 'won' ? ' done' : i === v.step ? ' cur' : '') }, String(i + 1)))),
-          h('div', { class: 'pc-table four' }, [0, 1, 2, 3].map((i) => (v.cards[i] ? cardEl(v.cards[i], 'mid-size') : cardEl(null, 'mid-size' + (i === v.step && v.phase === 'play' ? ' next' : ''))))),
+          h('div', { class: 'pc-table four' }, [0, 1, 2, 3].map((i) => (v.cards[i] ? (i === fresh ? revealCard(v.cards[i], 'mid-size') : cardEl(v.cards[i], 'mid-size')) : cardEl(null, 'mid-size' + (i === v.step && v.phase === 'play' ? ' next' : ''))))),
           h('p', { class: 'center muted' }, sub)];
         if (v.phase === 'play') {
           if (can) {
@@ -276,7 +277,9 @@ export const busOnline = {
           parts.push(can ? h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => g.send({ type: 'next' }) }, 'Joueur suivant →') : h('p', { class: 'status-line' }, `⏳ ${N} passe au joueur suivant…`));
         }
         if (key !== lastKey && v.last && v.n) {
-          if (v.phase === 'won') { sfx.fanfare(); buzz([40, 30, 40, 30, 120]); } else if (v.phase === 'show') { sfx.bad(); if (me) buzz([150, 60, 150]); } else if (v.last.ok) { sfx.ok(); buzz(20); }
+          sfx.card();
+          const ph = v.phase, ok = v.last.ok;
+          setTimeout(() => { if (ph === 'won') { sfx.fanfare(); buzz([40, 30, 40, 30, 120]); } else if (ph === 'show') { sfx.bad(); if (me) buzz([150, 60, 150]); } else if (ok) { sfx.ok(); buzz(20); } }, 420);
         }
         lastKey = key;
         main.replaceChildren(...parts);

@@ -1,7 +1,7 @@
 // Jeux de hasard en ligne : La Bouteille, La roue des gages, Qui commence ?, Boîte à outils.
 // Le joueur dont c'est le tour (ou l'hôte) lance, tout le monde voit l'animation sur son téléphone.
 import { h, uid, shuffle, pick, randInt, seg, stepper } from '../ui.js';
-import { levelPicker, dieFace, TEAM_COLORS, podium } from '../common.js';
+import { levelPicker, dieFace, tumble, spinTicks, TEAM_COLORS, podium } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { activePids, addScore, nextOn, isOn, playerOf, drawNew } from './kit.js';
@@ -87,6 +87,7 @@ export const bouteilleOnline = {
       bottle.addEventListener('click', spin);
       ring.append(bottle);
     }
+    let stopTicks = () => {};
     return {
       update(r, view) {
         v = view;
@@ -112,17 +113,18 @@ export const bouteilleOnline = {
         const key = `${v.n}:${v.phase}`;
         if (key !== lastKey) {
           clear();
+          stopTicks();
           if (v.phase === 'spin') {
             sfx.swoosh(); buzz(20);
-            let t = 0;
-            for (let k = 0; k < 18; k++) { t += 60 + k * k * 4; timers.push(setTimeout(() => sfx.tick(), t)); }
+            const els = v.order.map((p) => names[p]);
+            stopTicks = spinTicks(bottle, v.order.length, { ms: 3800, onTick: (k) => { const el = els[k]; if (el) { el.classList.remove('pass'); void el.offsetWidth; el.classList.add('pass'); } } });
           }
           if (v.phase === 'result') { sfx.ok(); buzz(v.target === g.me ? [60, 40, 120] : [40, 30, 80]); }
           if (v.phase !== 'spin' && me && lastKey) buzz(20);
         }
         lastKey = key;
       },
-      destroy() { clear(); },
+      destroy() { clear(); stopTicks(); },
     };
   },
 };
@@ -175,11 +177,12 @@ export const roueOnline = {
     const status = h('h2', { class: 'center' });
     const result = h('div', { class: 'col', style: { minHeight: '120px' } });
     const btnSlot = h('div', { class: 'col' });
-    let v = null, lastKey = null, tickIv = null, first = true;
+    let v = null, lastKey = null, tickIv = () => {}, first = true;
     const can = () => v && (v.who === g.me || g.isHost) && v.phase !== 'spin';
     const spin = () => { if (can()) { g.send({ type: 'spin' }); sfx.pop(); } };
     cv.addEventListener('click', spin);
-    root.append(h('div', { class: 'col' }, status, h('div', { class: 'wheel-wrap' }, h('div', { class: 'wheel-pointer' }, '🔻'), cv), result, btnSlot));
+    const pointer = h('div', { class: 'wheel-pointer' }, '🔻');
+    root.append(h('div', { class: 'col' }, status, h('div', { class: 'wheel-wrap' }, pointer, cv), result, btnSlot));
 
     function resultCard() {
       const seg0 = SEGMENTS[v.idx];
@@ -211,17 +214,16 @@ export const roueOnline = {
           ? h('button', { class: 'btn btn-primary btn-big btn-block', onclick: spin }, me ? '🎡 Tourner la roue' : `🎡 Tourner pour ${g.nameOf(v.who)}`)
           : h('p', { class: 'status-line' }, `⏳ ${g.nameOf(v.who)} va tourner la roue`));
         if (key !== lastKey) {
-          clearInterval(tickIv);
+          tickIv();
           if (v.phase === 'spin') {
             sfx.swoosh();
-            let ticks = 0;
-            tickIv = setInterval(() => { if (++ticks > 30) clearInterval(tickIv); else sfx.tick(); }, 90);
+            tickIv = spinTicks(cv, SEGMENTS.length, { pointer, ms: 4500 });
           }
           if (v.phase === 'result') { sfx.fanfare(); buzz(v.victim === g.me ? [80, 40, 120] : [50, 30, 80]); }
         }
         lastKey = key;
       },
-      destroy() { clearInterval(tickIv); },
+      destroy() { tickIv(); },
     };
   },
 };
@@ -427,7 +429,7 @@ export const outilsOnline = {
       const fresh = last.dice !== v.dice.k;
       return [
         g.isHost ? h('div', { class: 'spread' }, h('b', null, 'Nombre de dés'), stepper(v.dice.n, 1, 6, (n) => g.send({ type: 'diceN', n }))) : null,
-        h('div', { class: 'big-center' }, h('div', { class: 'dice-row' }, v.dice.vals.map((x) => dieFace(x, fresh ? 'roll' : ''))),
+        h('div', { class: 'big-center' }, h('div', { class: 'dice-row' }, v.dice.vals.map((x) => { const d = dieFace(x); if (fresh && v.dice.by) { tumble(d); } return d; })),
           v.dice.vals.length > 1 ? h('h2', null, `Total : ${v.dice.vals.reduce((a, b) => a + b, 0)}`) : null,
           v.dice.by ? h('p', { class: 'muted small' }, `Lancé ${by(v.dice.by)}`) : null),
         h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => g.send({ type: 'roll' }) }, '🎲 Lancer'),
@@ -483,7 +485,7 @@ export const outilsOnline = {
           : h('div', { class: 'row' }, h('span', { class: 'pill' }, (TOOLS.find((t) => t.value === v.tab) || TOOLS[0]).label), h('div', { class: 'grow' }), h('span', { class: 'muted small' }, 'L\'hôte choisit l\'outil')));
         bigEl = null;
         body.replaceChildren(...({ des, piece, equipes, chrono, scores })[v.tab]().filter(Boolean));
-        if (last.dice !== undefined && last.dice !== v.dice.k && v.tab === 'des') { sfx.pop(); buzz(30); }
+        if (last.dice !== undefined && last.dice !== v.dice.k && v.tab === 'des') { sfx.rattle(); buzz(30); }
         if (last.coin !== undefined && last.coin !== v.coin.k && v.tab === 'piece') sfx.swoosh();
         if (last.teams !== undefined && last.teams !== v.teams.k) sfx.pop();
         if (last.chrono !== undefined && last.chrono !== v.chrono.k) { sfx.fanfare(); buzz([300, 100, 300, 100, 300]); }

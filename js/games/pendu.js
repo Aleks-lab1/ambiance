@@ -72,6 +72,7 @@ export function start(ctx) {
     const players = getPlayers();
     let turn = 0;
     const tried = new Set();
+    const shownIdx = new Set(); // lettres déjà affichées (les nouvelles apparaissent en sautant)
     let errors = 0;
     let over = false;
     const svg = h('div', { class: 'pendu-svg', html: drawing(0) });
@@ -86,11 +87,14 @@ export function start(ctx) {
 
     function render() {
       // Lettres du mot (avec accents) : visibles si leur version sans accent a été trouvée.
-      slots.replaceChildren(...[...shown].map((ch) => {
+      slots.replaceChildren(...[...shown].map((ch, i) => {
         const base = normWord(ch);
         if (!base) return h('span', { class: 'sp' }, ch === ' ' ? ' ' : ch);
         const found = [...base].every((c) => tried.has(c.toUpperCase())); // « œ » = O + E
-        return h('span', { class: 'ltr' + (over && !found ? ' miss' : '') }, found || over ? ch : '');
+        const show = found || over;
+        const el = h('span', { class: 'ltr' + (over && !found ? ' miss' : '') + (show && !shownIdx.has(i) ? ' pop-in' : '') }, show ? ch : '');
+        if (show) shownIdx.add(i);
+        return el;
       }));
       const p = players.length ? players[turn % players.length] : null;
       if (!over) status.textContent = `${p ? `À ${p} de proposer une lettre · ` : ''}❤️ ${MAX - errors} erreur${MAX - errors > 1 ? 's' : ''} restante${MAX - errors > 1 ? 's' : ''}`;
@@ -102,7 +106,7 @@ export function start(ctx) {
       const good = target.includes(k.toLowerCase());
       keys[k].classList.add(good ? 'good' : 'bad');
       keys[k].disabled = true;
-      if (good) { sfx.ok(); buzz(15); } else { errors++; sfx.bad(); buzz([80, 40, 80]); svg.innerHTML = drawing(errors); turn++; }
+      if (good) { sfx.ok(); buzz(15); } else { errors++; sfx.bad(); buzz([80, 40, 80]); svg.innerHTML = drawing(errors, true); svg.classList.remove('oops'); void svg.offsetWidth; svg.classList.add('oops'); turn++; }
       const won = [...new Set(target)].every((c) => tried.has(c.toUpperCase()));
       if (won || errors >= MAX) end(won);
       render();
@@ -132,11 +136,11 @@ export function start(ctx) {
   return unbind;
 }
 
-// Dessin du pendu, étape par étape (0 à 7).
-export function drawing(n) {
+// Dessin du pendu, étape par étape (0 à 7). anim : la dernière partie ajoutée se trace comme au crayon.
+export function drawing(n, anim = false) {
   const parts = [
     '<path d="M10 115 H70 M30 115 V10 H80 V22" />',
-    '<circle cx="80" cy="32" r="10" />',
+    '<path d="M80 22 a10 10 0 1 1 0 20 a10 10 0 1 1 0 -20" />',
     '<path d="M80 42 V72" />',
     '<path d="M80 50 L66 62" />',
     '<path d="M80 50 L94 62" />',
@@ -144,6 +148,7 @@ export function drawing(n) {
     '<path d="M80 72 L92 92" />',
     '<path d="M75 29 l3 3 m0 -3 l-3 3 M82 29 l3 3 m0 -3 l-3 3 M75 37 q5 -3 10 0" />',
   ];
-  const shown = parts.slice(0, Math.min(parts.length, n + 1));
+  const k = Math.min(parts.length, n + 1);
+  const shown = parts.slice(0, k).map((p, i) => (anim && i === k - 1 && n > 0 ? p.replace('<path ', '<path class="new" pathLength="1" ') : p));
   return `<svg viewBox="0 0 120 120" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-label="Erreurs : ${n}">${shown.join('')}</svg>`;
 }

@@ -2,7 +2,7 @@
 import { h, uid, seg } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { dieFace } from '../common.js';
+import { dieFace, tumble } from '../common.js';
 import { activePids, addScore, playerOf, endScreen, actBtn } from './kit.js';
 import { BN, randomFleet, fire, memDeck, YAMS_CATS, yamsScore, yamsTotals, rollDie } from '../plateau-core.js';
 
@@ -11,24 +11,71 @@ const name = (g, pid) => (pid === g.me && !g.hotseat ? 'Toi' : g.nameOf(pid));
 const yourTurn = (g) => (g.hotseat ? `À ${g.nameOf(g.me)} !` : 'À toi !');
 
 // ---------------- Rendus partagés (aussi utilisés par les versions locales) ----------------
-/** Grille de bataille navale. ships = cases de bateaux visibles, shots = tirs reçus. */
-export function bnGrid(shots, { ships = null, onFire = null, small = false } = {}) {
+/**
+ * Grille de bataille navale. ships = cases de bateaux visibles, shots = tirs reçus.
+ * fx = { i, res } : dernier tir, animé (gerbe d'eau si raté, explosion si touché / coulé).
+ */
+export function bnGrid(shots, { ships = null, onFire = null, small = false, fx = null } = {}) {
   const shipSet = new Set(ships ? ships.flatMap((s) => s.cells) : []);
-  return h('div', { class: 'bn-grid' + (small ? ' small' : '') }, Array.from({ length: BN * BN }, (_, i) => {
+  // Bateau qui vient de couler : les cases coulées reliées à la case touchée (les bateaux ne se touchent jamais).
+  const sunk = new Set();
+  if (fx && fx.res === 'sunk') {
+    const todo = [fx.i];
+    while (todo.length) {
+      const i = todo.pop();
+      if (sunk.has(i) || shots[i] !== 'sunk') continue;
+      sunk.add(i);
+      if (i >= BN) todo.push(i - BN);
+      if (i < BN * (BN - 1)) todo.push(i + BN);
+      if (i % BN) todo.push(i - 1);
+      if (i % BN < BN - 1) todo.push(i + 1);
+    }
+  }
+  return h('div', { class: 'bn-grid' + (small ? ' small' : '') + (fx && fx.res !== 'miss' ? ' fx-shake' : '') }, Array.from({ length: BN * BN }, (_, i) => {
     const st = shots[i];
+    const anim = fx && fx.i === i ? ' fx-' + fx.res : sunk.has(i) ? ' fx-sunk' : '';
     return h('button', {
-      class: 'bn-cell' + (shipSet.has(i) ? ' ship' : '') + (st ? ' ' + st : ''),
+      class: 'bn-cell' + (shipSet.has(i) ? ' ship' : '') + (st ? ' ' + st : '') + anim,
       disabled: !onFire || !!st, onclick: onFire && !st ? () => onFire(i) : null,
       'aria-label': `Case ${String.fromCharCode(65 + Math.floor(i / BN))}${(i % BN) + 1}`,
-    }, st === 'miss' ? '•' : st === 'hit' ? '🔥' : st === 'sunk' ? '💥' : '');
+    }, h('span', null, st === 'miss' ? '•' : st === 'hit' ? '🔥' : st === 'sunk' ? '💥' : ''));
   }));
 }
-export function memGrid(cards, { onFlip = null, owners = null } = {}) {
-  const cols = cards.length > 24 ? 6 : cards.length > 16 ? 6 : 4;
-  return h('div', { class: 'mem-grid', style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } }, cards.map((c, i) => h('button', {
-    class: 'mem-card' + (c ? ' up' : '') + (owners && owners[i] ? ' done' : ''), disabled: !onFlip || !!c,
-    onclick: onFlip && !c ? () => onFlip(i) : null,
-  }, c || '')));
+/** Plateau de Memory : les cartes se retournent en 3D et restent les mêmes d'une mise à jour à l'autre. */
+export function memBoard(n, onFlip) {
+  const cols = n > 16 ? 6 : 4;
+  const state = Array.from({ length: n }, () => ({ up: false, done: false }));
+  const fronts = [];
+  let can = false;
+  const cards = state.map((st, i) => {
+    const front = h('span', { class: 'mc-face mc-front' });
+    fronts.push(front);
+    return h('button', { class: 'mc', 'aria-label': `Carte ${i + 1}`, onclick: () => { if (can && !st.up && !st.done) onFlip(i); } },
+      h('span', { class: 'mc-in' }, h('span', { class: 'mc-face mc-back' }), front));
+  });
+  const el = h('div', { class: 'mem-grid', style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } }, cards);
+  return {
+    el,
+    update(v, canFlip) {
+      can = !!canFlip;
+      el.classList.toggle('mine', can);
+      let flips = 0;
+      v.cards.forEach((face, i) => {
+        const st = state[i], c = cards[i];
+        const up = face !== null, done = !!(v.owners && v.owners[i]);
+        if (up && !st.up) { fronts[i].textContent = face; c.classList.add('up'); flips++; }
+        if (!up && st.up) {
+          c.classList.remove('up');
+          setTimeout(() => { if (!state[i].up) fronts[i].textContent = ''; }, 500); // on efface la face une fois retournée
+        }
+        if (done !== st.done) c.classList.toggle('done', done);
+        c.classList.toggle('miss', v.phase === 'show' && up && !done);
+        st.up = up; st.done = done;
+        c.disabled = !can || up;
+      });
+      if (flips) sfx.card();
+    },
+  };
 }
 export function yamsSheet(players, sheets, { cur = null, dice = null, canScore = false, onScore = null, meLabel = null } = {}) {
   const head = h('tr', null, h('th', null, ''), players.map((p) => h('th', { class: p.pid === cur ? 'cur' : '' }, meLabel && p.pid === meLabel ? 'Toi' : p.name)));
@@ -109,21 +156,24 @@ export const batailleOnline = {
           const opp = k >= 0 ? 1 - k : 1;
           const myTurn = v.phase === 'play' && k === v.turn;
           let status;
-          if (v.phase === 'over') status = `🏆 ${name(g, v.duo[v.winner])} a coulé toute la flotte !`;
+          if (v.phase === 'over') status = v.duo[v.winner] === g.me && !g.hotseat ? '🏆 Tu as coulé toute la flotte !' : `🏆 ${g.nameOf(v.duo[v.winner])} a coulé toute la flotte !`;
           else status = myTurn ? '🎯 À toi de tirer !' : `⏳ ${name(g, v.duo[v.turn])} tire…`;
           const lastTxt = v.last ? `${name(g, v.duo[v.last.by])} : ${v.last.res === 'miss' ? 'à l\'eau 🌊' : v.last.res === 'hit' ? 'touché 🔥 (rejoue)' : `coulé 💥 (bateau de ${v.last.len})`}` : '';
+          // Le dernier tir est animé une seule fois (gerbe d'eau ou explosion) sur la grille qui l'a reçu.
+          const fresh = key !== lastKey && v.last && lastKey ? { i: v.last.i, res: v.last.res } : null;
+          const hitOn = v.last ? 1 - v.last.by : -1, mine = k >= 0 ? k : 0;
           parts.push(h('h2', { class: 'center' }, status), h('p', { class: 'center muted small' }, lastTxt),
             h('p', { class: 'center small' }, k >= 0 ? 'Chez l\'adversaire' : `🚢 ${g.nameOf(v.duo[1])}`),
-            bnGrid(v.shotsOn[opp], { ships: v.fleets ? v.fleets[opp] : null, onFire: myTurn ? (i) => { g.send({ type: 'fire', i }); } : null }),
+            bnGrid(v.shotsOn[opp], { ships: v.fleets ? v.fleets[opp] : null, onFire: myTurn ? (i) => { g.send({ type: 'fire', i }); } : null, fx: hitOn === opp ? fresh : null }),
             h('p', { class: 'center small' }, k >= 0 ? 'Ta flotte' : `🚢 ${g.nameOf(v.duo[0])}`),
-            bnGrid(v.shotsOn[k >= 0 ? k : 0], { ships: k >= 0 ? v.myFleet : (v.fleets ? v.fleets[0] : null), small: true }));
+            bnGrid(v.shotsOn[mine], { ships: k >= 0 ? v.myFleet : (v.fleets ? v.fleets[0] : null), small: true, fx: hitOn === mine ? fresh : null }));
           if (v.phase === 'over') {
             parts.push(h('p', { class: 'center' }, v.duo[1 - v.winner] === g.me ? `Tu prends ${sip(2)} !` : `${g.nameOf(v.duo[1 - v.winner])} prend ${sip(2)} !`),
               (g.isHost || k >= 0) ? actBtn(g, v.queue.length ? '🔁 Au suivant !' : '🔁 Revanche', 'again', 'btn-primary btn-big') : null);
           }
         }
         if (v.queue.length) parts.push(h('p', { class: 'center muted small' }, `⏳ Prochains capitaines : ${v.queue.map((p) => name(g, p)).join(', ')}`));
-        if (key !== lastKey && v.last && lastKey) { v.last.res === 'miss' ? sfx.swoosh() : v.last.res === 'hit' ? (sfx.boom(), buzz(60)) : (sfx.boom(), buzz([100, 50, 200])); }
+        if (key !== lastKey && v.last && lastKey) { v.last.res === 'miss' ? sfx.splash() : v.last.res === 'hit' ? (sfx.boom(), buzz(60)) : (sfx.boom(), buzz([100, 50, 200])); }
         if (key !== lastKey && v.phase === 'over') { v.duo[v.winner] === g.me ? sfx.fanfare() : sfx.end(); }
         lastKey = key;
         main.replaceChildren(...parts);
@@ -171,23 +221,34 @@ export const memoryOnline = {
     return { gid: s.gid, phase: s.phase, cur: s.cur, cards: s.deck.map((e, i) => (s.owner[i] || s.flipped.includes(i) ? e : null)), owners: s.owner, flipped: s.flipped.length, lastPair: s.lastPair, total: s.deck.length / 2 };
   },
   mount(root, g) {
-    const main = h('div', { class: 'col' });
+    const head = h('div', { class: 'row' }), slot = h('div'), chips = h('div', { class: 'chips', style: { justifyContent: 'center' } }), msg = h('p', { class: 'center muted small' });
+    const main = h('div', { class: 'col' }, head, slot, chips, msg);
     root.append(main);
-    let lastKey = null;
+    let lastKey = null, board = null, gid = null, endT = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g, 'Toutes les paires sont trouvées !')); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') {
+          if (lastKey === 'end') return;
+          lastKey = 'end';
+          // On laisse le temps de voir la dernière paire se retourner avant le classement.
+          if (board && gid === v.gid) board.update(v, false);
+          sfx.ok();
+          endT = setTimeout(() => { main.replaceChildren(...endScreen(r, g, 'Toutes les paires sont trouvées !')); sfx.fanfare(); board = null; gid = null; }, board ? 1100 : 0);
+          return;
+        }
+        clearTimeout(endT);
+        if (head.parentNode !== main) main.replaceChildren(head, slot, chips, msg);
+        if (!board || gid !== v.gid) { board = memBoard(v.cards.length, (i) => { buzz(8); g.send({ type: 'flip', i }); }); gid = v.gid; slot.replaceChildren(board.el); }
         const myTurn = v.cur === g.me && v.phase === 'play';
         const key = `${v.gid}:${v.cur}:${v.phase}:${Object.keys(v.owners).length}:${v.flipped}`;
-        main.replaceChildren(
-          h('div', { class: 'row' }, h('span', { class: 'pill' }, `🧩 ${Object.keys(v.owners).length / 2}/${v.total} paires`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, myTurn ? '👆 ' + yourTurn(g) : `⏳ ${g.nameOf(v.cur)}`)),
-          memGrid(v.cards, { onFlip: myTurn ? (i) => { g.send({ type: 'flip', i }); sfx.tick(); } : null, owners: v.owners }),
-          h('div', { class: 'chips', style: { justifyContent: 'center' } }, r.players.map((p) => h('span', { class: 'chip' + (p.pid === v.cur ? ' on' : '') }, `${name(g, p.pid)} · ${p.score}`))),
-          h('p', { class: 'center muted small' }, v.phase === 'show' ? '❌ Pas une paire…' : v.lastPair ? `✅ Paire pour ${name(g, v.lastPair)} : rejoue !` : 'Une paire trouvée = un point, et on rejoue.'));
-        if (key !== lastKey) { if (v.phase === 'show') sfx.bad(); else if (v.lastPair && lastKey) sfx.ok(); if (myTurn && v.flipped === 0) buzz(20); }
+        board.update(v, myTurn);
+        head.replaceChildren(h('span', { class: 'pill' }, `🧩 ${Object.keys(v.owners).length / 2}/${v.total} paires`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, myTurn ? '👆 ' + yourTurn(g) : `⏳ ${g.nameOf(v.cur)}`));
+        chips.replaceChildren(...r.players.map((p) => h('span', { class: 'chip' + (p.pid === v.cur ? ' on' : '') }, `${name(g, p.pid)} · ${p.score}`)));
+        msg.textContent = v.phase === 'show' ? '❌ Pas une paire…' : v.lastPair ? (name(g, v.lastPair) === 'Toi' ? '✅ Paire trouvée : rejoue !' : `✅ Paire pour ${g.nameOf(v.lastPair)} : rejoue !`) : 'Une paire trouvée = un point, et on rejoue.';
+        if (key !== lastKey) { if (v.phase === 'show') setTimeout(() => sfx.bad(), 300); else if (v.lastPair && lastKey) setTimeout(() => sfx.ok(), 250); if (myTurn && v.flipped === 0) buzz(20); }
         lastKey = key;
       },
-      destroy() {},
+      destroy() { clearTimeout(endT); },
     };
   },
 };
@@ -250,7 +311,7 @@ export const yamsOnline = {
           yamsSheet(players, v.sheets, { cur: v.cur, dice: v.dice, canScore: myTurn && v.rolls > 0, onScore: (c) => { g.send({ type: 'score', c }); sfx.pop(); }, meLabel: g.hotseat ? null : g.me }),
         ];
         main.replaceChildren(...parts);
-        if (v.anim !== lastAnim && v.rolls) { main.querySelectorAll('.ys-die:not(.held) .die').forEach((d) => d.classList.add('roll')); sfx.pop(); }
+        if (v.anim !== lastAnim && v.rolls) { main.querySelectorAll('.ys-die:not(.held) .die').forEach((d) => tumble(d)); sfx.rattle(); buzz(20); }
         if (v.cur !== lastCur && myTurn) { sfx.go(); buzz(30); }
         lastAnim = v.anim; lastCur = v.cur;
       },

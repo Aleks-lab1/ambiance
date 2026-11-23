@@ -2,6 +2,7 @@
 // Bataille, Memory, Yam's, le bandeau « en ligne » sur tous les jeux et le filtre « Nouveaux ».
 const { open, shot } = require('../lib/pw-helper.cjs');
 const { check, wait: W, run } = require('../lib/check.cjs');
+const { dragTo, shownOrder } = require('../lib/sort.cjs');
 
 run(async () => {
   const { browser, page, errors } = await open('');
@@ -33,13 +34,45 @@ run(async () => {
   check(/Tour suivant|Fin/.test(await scr()), 'Curseur : révélation puis tour suivant', await scr()); await shot(page, 'local-curseur');
 
   await go('ordre'); await big().click(); await W(200);
-  for (let i = 0; i < 4; i++) await page.locator('.rank-item').nth(i).click();
-  await page.getByRole('button', { name: /Vérifier/ }).click(); await W(200);
-  check(/\d{3,4}/.test(await scr()), 'Dans l\'ordre : années affichées');
+  const o1 = await shownOrder(page);
+  await dragTo(page, page, 3, 0);
+  const o2 = await shownOrder(page);
+  check(o2.length === 4 && o2[0] === o1[3] && o2[1] === o1[0], 'Dans l\'ordre : la dernière carte glissée tout en haut', [o1, o2]);
+  check((await page.locator('.sort-item .rk').allInnerTexts()).join('') === '1234', 'Dans l\'ordre : numéros à jour après le glissement');
+  await page.getByRole('button', { name: /Vérifier/ }).click(); await W(1600);
+  check(/\d{3,4}/.test(await scr()) && await page.locator('.sort-item.good, .sort-item.bad').count() === 4, 'Dans l\'ordre : correction en couleurs, années affichées');
+  await shot(page, 'local-ordre');
+
+  // 4 en ligne contre le téléphone : la main lâche le jeton, le téléphone répond.
+  await page.evaluate(() => localStorage.setItem('ambiance:morpion', JSON.stringify({ game: 'quatre', vs: 'ia', level: 'normal' })));
+  await go('morpion'); await big().click(); await W(400);
+  check(await page.locator('.c4-hand img').count() === 1 && /4 en ligne/.test(await scr()), '4 en ligne : plateau avec la main (et le bon nom)');
+  await page.locator('.c4-col').nth(3).click(); await W(2600);
+  check(await page.locator('.c4-discs .c4-disc.p0').count() === 1 && await page.locator('.c4-discs .c4-disc.p1').count() === 1, '4 en ligne : mon jeton puis celui du téléphone', await page.locator('.c4-discs .c4-disc').count());
+  await shot(page, 'local-quatre');
+  await page.evaluate(() => localStorage.setItem('ambiance:morpion', JSON.stringify({ game: 'morpion', vs: 'deux', level: 'normal' })));
+  await go('morpion'); await big().click(); await W(500);
+  for (const i of [0, 3, 1, 4, 2]) { await page.locator('.ttt-c').nth(i).click(); await W(450); }
+  check(/Alice gagne/.test(await scr()) && await page.locator('.ttt-line path').count() === 1, 'Morpion à deux : Alice gagne, ligne barrée', await scr());
+  await page.getByRole('button', { name: /Revanche/ }).click(); await W(600);
+  check(!(await page.locator('.ttt-c .mk').count()) && /Bob de jouer/.test(await scr()), 'Morpion : revanche sur une grille propre, Bob commence', await scr());
 
   await go('chifoumi'); await big().click(); await W(200);
   check(await page.locator('.chi-btn').count() === 3, 'Chifoumi : 3 boutons');
-  await page.locator('.chi-btn').first().click(); await W(200);
+  await page.locator('.chi-btn').first().click(); await W(400);
+  check(/Chi|Fou|Mi/.test(await page.locator('.chi-word').innerText()) && !(await page.locator('.chi-arena.done').count()), 'Chifoumi : « Chi… Fou… Mi ! » avant le résultat');
+  await W(1000);
+  check(await page.locator('.chi-arena.done').count() === 1 && /Gagné|Perdu|Égalité/.test(await scr()), 'Chifoumi : les deux choix révélés, puis le résultat');
+
+  await go('outils'); await page.getByRole('button', { name: /🎲 Lancer/ }).click(); await W(150);
+  check(await page.locator('.dice-row .die.tumble').count() > 0, 'Outils : les dés roulent');
+  await W(900);
+  const dice = await page.$$eval('.dice-row .die', (els) => els.map((e) => [Number(e.dataset.v), e.querySelectorAll('i.on').length]));
+  check(dice.length && dice.every(([v, n]) => v === n), 'Outils : chaque dé retombe sur sa valeur', dice);
+
+  await go('plusmoins'); await big().click(); await W(300);
+  await page.getByRole('button', { name: /Plus/ }).click(); await W(100);
+  check(await page.locator('.pc-table .flip3 .f3-back').count() === 1 && await page.locator('.pc-table .flip3 .f3-front').count() === 1, 'Plus ou moins : la carte tirée se retourne (dos puis face)');
 
   await go('bataille'); await big().click(); await W(200); await page.getByRole('button', { name: /Remélanger/ }).click(); await page.getByRole('button', { name: /attaque/ }).click(); await W(200);
   const free = page.locator('.bn-grid').first().locator('.bn-cell:not([disabled])');
@@ -47,7 +80,7 @@ run(async () => {
   await free.first().click(); await W(1200);
 
   await go('memory'); await big().click(); await W(300);
-  check(await page.locator('.mem-card').count() > 0 && /Alice|Bob/.test(await scr()), 'Memory : cartes + prénom du joueur (on se passe le téléphone)');
+  check(await page.locator('.mc').count() > 0 && /Alice|Bob/.test(await scr()), 'Memory : cartes + prénom du joueur (on se passe le téléphone)');
   check(!/\bToi\b/.test(await scr()), 'Memory : pas de « Toi » en mode téléphone partagé');
 
   await go('yams'); await big().click(); await W(300);

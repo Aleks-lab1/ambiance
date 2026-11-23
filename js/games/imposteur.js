@@ -47,7 +47,7 @@ export function start(ctx) {
         reveal.onclick = () => {
           sfx.pop();
           reveal.replaceWith(h('div', { class: 'col' },
-            h('div', { class: 'secret-btn', style: { borderStyle: 'solid' } },
+            h('div', { class: 'secret-btn reveal-in', style: { borderStyle: 'solid' } },
               w ? [h('span', { class: 'muted small' }, 'Ton mot secret'), h('div', { class: 'reveal-word' }, w)]
                 : [h('div', { class: 'emo' }, '🤐'), h('b', null, 'Tu n\'as pas de mot !'), h('span', { class: 'muted small' }, 'Tu es l\'imposteur. Bluffe !')]),
             h('button', { class: 'btn btn-primary btn-big btn-block', onclick: res }, 'Cacher et passer le téléphone')));
