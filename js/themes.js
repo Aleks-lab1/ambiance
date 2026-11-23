@@ -25,8 +25,8 @@ const COMIC = '"Comic Sans MS", "Comic Neue", "Chalkboard SE", "Marker Felt", cu
 export const THEMES = [
   // ---------- Classiques ----------
   {
-    id: 'ambiance', name: 'Ambiance', emoji: '🎉', cat: 'classique', base: '#4b2f9e', g1: '#ff4d8d', g2: '#7c5cff',
-    bg: [rad('rgba(124,92,255,.9)', '0%', '0%'), rad('rgba(255,77,141,.75)', '100%', '10%', '110vmax 80vmax', '55%'), rad('rgba(46,197,255,.55)', '50%', '110%', '120vmax 90vmax'), lin('#4b2f9e', '#6a2c8f 55%', '#2f3b9e')].join(','),
+    id: 'ambiance', name: 'Ambiance', emoji: '🎉', cat: 'classique', base: '#5a3cc0', g1: '#ff4d8d', g2: '#7c5cff',
+    bg: [rad('rgba(124,92,255,.9)', '0%', '0%'), rad('rgba(255,77,141,.75)', '100%', '10%', '110vmax 80vmax', '55%'), rad('rgba(46,197,255,.55)', '50%', '110%', '120vmax 90vmax'), lin('#5a3cc0', '#8a3aae 55%', '#3d50c4')].join(','),
   },
   {
     id: 'nuit', name: 'Nuit étoilée', emoji: '🌌', cat: 'classique', base: '#1d2a6b', g1: '#5b8cff', g2: '#b06bff',

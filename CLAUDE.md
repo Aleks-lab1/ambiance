@@ -151,6 +151,8 @@ export const monJeuOnline = {
 
 ## Préférences de l'utilisateur
 - Répondre **en français**, simplement, sans jargon.
+- Appli **claire et lumineuse** : l'utilisateur trouvait l'appli trop sombre. Ombres légères (`--shadow`, cases), voile du bas des cases discret,
+  pas de fonds plus foncés.
 - Jeux de mots : **tous les mots français acceptés** (prénoms, argot, verlan, mots récents des jeunes, anglicismes courants).
 - **Tester avant de publier**, et dire honnêtement ce qui a été testé ou non.
 - Ne jamais mettre d'informations personnelles dans le dépôt.

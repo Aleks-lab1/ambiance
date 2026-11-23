@@ -112,9 +112,9 @@ function draw({ id, items, W, H, fmt, q }) {
   const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
   const shadow = (s, on = true) => {
     if (!on) { ctx.shadowColor = 'transparent'; return; }
-    ctx.shadowColor = 'rgba(25, 5, 45, .38)';
-    ctx.shadowBlur = s * 0.16 * U;
-    ctx.shadowOffsetY = s * 0.07 * U;
+    ctx.shadowColor = 'rgba(25, 5, 45, .2)';
+    ctx.shadowBlur = s * 0.12 * U;
+    ctx.shadowOffsetY = s * 0.05 * U;
     ctx.shadowOffsetX = 0;
   };
 
