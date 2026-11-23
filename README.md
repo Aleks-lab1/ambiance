@@ -103,6 +103,7 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 | 🧰 | **Boîte à outils** | Dés, pile ou face, équipes, chrono, compteur de points |
 
 **En plus :**
+- 🖼️ **Accueil illustré** : chaque jeu a sa propre image (objets 3D, lumière, profondeur) dans une case rectangulaire, avec son nom incrusté en bas à gauche.
 - 👥 Liste de joueurs partagée par tous les jeux (prénoms utilisés dans les cartes, tours, équipes).
 - 🎨 **38 thèmes** dans les réglages : classiques, couleurs, stylés (Néon, Synthwave, Terminal, Arcade…), animés (aurore, disco, arc-en-ciel…) et marrants (pluie de chats, pizza, neige, Halloween…), avec fonds animés et particules désactivables. Le thème recolore aussi les cases des jeux et les écrans de jeu.
 - ⭐ **Favoris** : touche l'étoile d'un jeu pour le retrouver en haut de l'accueil et dans le filtre « Favoris ».
@@ -194,14 +195,20 @@ js/bonmot-core.js    dictionnaire et tirage des lettres du Bon Mot
 js/canvas.js         planche à dessin synchronisable
 js/turn.js           moteur des jeux en équipes
 js/data/*.js         tout le contenu
+img/jeux/            image de chaque jeu pour l'accueil (générée par scripts/gen-images.mjs)
+scripts/             gen-sw.mjs (service worker), gen-mots.mjs (dictionnaire), gen-images.mjs (images des jeux,
+                     compositions dans scripts/images/scenes.mjs, emojis 3D dans scripts/images/emoji/)
 vendor/              PeerJS 1.5.4 et qrcode-generator 1.4.4 (licences MIT)
 ```
+
+Les images des jeux sont composées à partir des emojis 3D [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) de Microsoft (licence MIT, voir `scripts/images/emoji/LICENSE`).
 
 ## Ajouter un jeu
 
 1. Créer `js/games/monjeu.js` qui exporte `start(ctx)` (dessine dans `ctx.root`, renvoie éventuellement une fonction de nettoyage).
 2. L'ajouter dans `js/games/index.js` (nom, emoji, couleurs, catégories, règles).
-3. `node scripts/gen-sw.mjs`.
+3. Son image pour l'accueil : ajouter sa composition dans `scripts/images/scenes.mjs`, puis `node scripts/gen-images.mjs monjeu` (→ `img/jeux/monjeu.webp` ; mode d'emploi en tête du script).
+4. `node scripts/gen-sw.mjs`.
 
 Pour un jeu en ligne : créer un module dans `js/online/` (sur le modèle de `vote.js`) avec `init`, `action`, `tick`, `view` (côté hôte) et `mount` (côté écran), puis l'ajouter à `js/online/games.js`.
 

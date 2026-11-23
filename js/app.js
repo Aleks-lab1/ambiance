@@ -42,6 +42,13 @@ function starButton(g, cls) {
   return btn;
 }
 
+/** Image d'un jeu (img/jeux/<id>.webp, générée par scripts/gen-images.mjs). En secours : l'emoji du jeu. */
+function gameArt(g) {
+  const img = h('img', { class: 'tile-art', src: `img/jeux/${g.id}.webp`, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' });
+  img.addEventListener('error', () => img.replaceWith(h('span', { class: 'tile-emo', 'aria-hidden': 'true' }, g.emoji)), { once: true });
+  return img;
+}
+
 // ---------------- Navigation ----------------
 let current = null;      // { cleanup, guard, state, url }
 let navToken = 0;
@@ -165,15 +172,15 @@ function renderHome() {
     grid.replaceChildren(...list.map((g) => {
       const star = starButton(g, 'fav-btn');
       star.addEventListener('click', () => { renderFavs(); if (filter === 'fav') renderGrid(); });
+      const [c1, c2] = gameColors(g.id, g.colors);
       return h('div', { class: 'tile-wrap' },
         h('button', {
-          class: 'tile', style: { '--g1': gameColors(g.id, g.colors)[0], '--g2': gameColors(g.id, g.colors)[1] },
+          class: 'tile', style: { '--g1': c1, '--g2': c2 },
           onclick: () => { sfx.unlock(); openScreen(g.id); },
         },
+          gameArt(g),
           h('div', { class: 'badges' }, (g.badges || []).slice(0, 1).map((b) => h('span', { class: 'badge' + (b === 'Nouveau' ? ' new' : '') }, b)), h('span', { class: 'badge' }, '👤 ' + g.players)),
-          h('div', { class: 'emo' }, g.emoji),
-          h('div', { class: 'name' }, g.name),
-          h('div', { class: 'desc' }, g.desc)),
+          h('div', { class: 'name' }, g.name)),
         star);
     }));
   }
@@ -188,7 +195,7 @@ function renderHome() {
       h('div', { class: 'scroll-x fav-row' }, favs.map((g) => h('button', {
         class: 'mini-tile', style: { '--g1': gameColors(g.id, g.colors)[0], '--g2': gameColors(g.id, g.colors)[1] },
         onclick: () => { sfx.unlock(); openScreen(g.id); },
-      }, h('span', { class: 'emo' }, g.emoji), h('span', { class: 'nm' }, g.name)))));
+      }, gameArt(g), h('span', { class: 'nm' }, g.name)))));
   }
 
   const playersBar = h('button', { class: 'players-bar', onclick: async () => { await editPlayers(); renderPlayers(); } });
@@ -287,6 +294,7 @@ async function openSettings() {
     h('button', { class: 'btn btn-soft', onclick: () => { resetSeen(); toast('Les cartes déjà vues pourront revenir'); } }, '🔄 Revoir toutes les cartes'),
     h('p', { class: 'muted tiny' }, 'Ambiance mémorise les cartes déjà tirées pour ne pas les répéter d\'une soirée à l\'autre.'),
     h('p', { class: 'muted tiny center' }, 'Ambiance · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC).'),
+    h('p', { class: 'muted tiny center' }, 'Illustrations des jeux : Fluent Emoji de Microsoft (licence MIT).'),
   );
   await modal({ title: '⚙️ Réglages', content, actions: [{ label: 'Fermer', value: true, primary: true }] });
   if (!current) renderHome();

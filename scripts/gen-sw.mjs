@@ -20,28 +20,44 @@ function walk(dir, out = []) {
 }
 
 const files = walk(root);
-const hash = createHash('sha256');
-for (const f of files) { hash.update(relative(root, f)); hash.update(readFileSync(f)); }
-const version = hash.digest('hex').slice(0, 10);
-const assets = ['./', ...files.map((f) => './' + relative(root, f).split('\\').join('/'))];
+const rel = (f) => './' + relative(root, f).split('\\').join('/');
+const digest = (list) => {
+  const hash = createHash('sha256');
+  for (const f of list) { hash.update(relative(root, f)); hash.update(readFileSync(f)); }
+  return hash.digest('hex').slice(0, 10);
+};
+// Les images (img/) ont leur propre cache, gardé d'une version à l'autre tant qu'elles ne changent pas.
+const isImage = (f) => rel(f).startsWith('./img/');
+const version = digest(files);
+const imgVersion = digest(files.filter(isImage));
+const assets = ['./', ...files.filter((f) => !isImage(f)).map(rel)];
+const images = files.filter(isImage).map(rel);
 
 const sw = `// Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
 const VERSION = '${version}';
 const CACHE = 'ambiance-' + VERSION;
+// Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
+const IMG_CACHE = 'ambiance-img-${imgVersion}';
 const ASSETS = ${JSON.stringify(assets, null, 2)};
+const IMAGES = ${JSON.stringify(images, null, 2)};
 
 self.addEventListener('install', (event) => {
   // cache: 'reload' : on télécharge les fichiers neufs, sans passer par le cache HTTP du navigateur
   // (sinon la nouvelle version pouvait embarquer d'anciens fichiers). Puis on s'active tout de suite.
-  event.waitUntil(caches.open(CACHE)
-    .then((cache) => cache.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' }))))
-    .then(() => self.skipWaiting()));
+  const fresh = (u) => new Request(u, { cache: 'reload' });
+  event.waitUntil(Promise.all([
+    caches.open(CACHE).then((cache) => cache.addAll(ASSETS.map(fresh))),
+    caches.open(IMG_CACHE).then(async (cache) => {
+      const have = new Set((await cache.keys()).map((r) => r.url));
+      await cache.addAll(IMAGES.filter((u) => !have.has(new URL(u, self.location.href).href)).map(fresh));
+    }),
+  ]).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('ambiance-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('ambiance-') && k !== CACHE && k !== IMG_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -69,4 +85,4 @@ self.addEventListener('fetch', (event) => {
 });
 `;
 writeFileSync(join(root, 'sw.js'), sw);
-console.log(`sw.js généré : version ${version}, ${assets.length} fichiers en cache.`);
+console.log(`sw.js généré : version ${version}, ${assets.length} fichiers + ${images.length} images (cache ${imgVersion}).`);
