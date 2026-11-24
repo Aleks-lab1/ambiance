@@ -39,8 +39,9 @@ async function relayWorld(opts = {}) {
   const browser = await chromium.launch();
   const broker = makeBroker(opts);
   const errors = [];
-  async function phone() {
-    const ctx = await browser.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
+  // ctxOpts : pour un autre appareil, ex. un écran télé { viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false }.
+  async function phone(ctxOpts = {}) {
+    const ctx = await browser.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block', ...ctxOpts });
     await serveRepo(ctx);
     await ctx.route(/peerjs\.com/, (r) => r.abort());
     await ctx.routeWebSocket(/peerjs\.com/, (ws) => ws.close());

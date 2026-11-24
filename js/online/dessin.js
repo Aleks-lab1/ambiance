@@ -1,6 +1,6 @@
 // « Je dessine, tu devines » en ligne.
 import { h, pick, norm, levenshtein, seg, toggleRow } from '../ui.js';
-import { drawNew } from './kit.js';
+import { drawNew, TV_PID, tvTimer, tvEnd } from './kit.js';
 import { createBoard, createTools, applyToLog, validOp } from '../canvas.js';
 import { podium } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -205,6 +205,66 @@ export default {
 
   onSync(room, s, pid, api) {
     api.sendTo(pid, { t: 'draw', op: { k: 'full', log: s.log } });
+  },
+
+  // Écran télé : le dessin se trace en direct en grand, le mot masqué, les propositions et le classement.
+  tvRelay: true, // les traits du dessin sont publics : la télé les reçoit (pas ceux du Téléphone dessiné)
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const board = createBoard({ editable: false });
+    const overlay = h('div', { class: 'overlay-card hidden' });
+    board.el.append(overlay);
+    const word = h('div', { class: 'tv-word' });
+    const tm = tvTimer(g);
+    const bar = h('div', { class: 'tv-bar' });
+    const chat = h('div', { class: 'chat', 'aria-live': 'polite' });
+    const play = h('div', { class: 'tv-draw' }, board.el, chat);
+    const endWrap = h('div', { class: 'tv-generic hidden' });
+    root.append(bar, word, play, endWrap);
+    let lastKey = null, lastMsg = 0;
+    return {
+      update(room, v) {
+        if (v.phase === 'end') {
+          tm.set(0); bar.classList.add('hidden'); word.classList.add('hidden'); play.classList.add('hidden'); endWrap.classList.remove('hidden');
+          if (lastKey !== 'end') { endWrap.replaceChildren(...tvEnd(room)); sfx.fanfare(); }
+          lastKey = 'end';
+          return;
+        }
+        bar.classList.remove('hidden'); word.classList.remove('hidden'); play.classList.remove('hidden'); endWrap.classList.add('hidden');
+        const key = v.round + ':' + v.drawer + ':' + v.phase;
+        bar.replaceChildren(h('span', { class: 'pill' }, `🎨 ${v.round}/${v.rounds}`), h('span', { class: 'pill' }, `✏️ ${g.nameOf(v.drawer)} dessine`), h('div', { class: 'grow' }), tm.el);
+        tm.set(v.phase === 'draw' || v.phase === 'choose' ? v.deadline : 0);
+        if (v.phase === 'draw') word.replaceChildren(v.mask ? h('span', { class: 'word-mask' }, v.mask) : '');
+        else if (v.phase === 'reveal') word.replaceChildren(v.summary?.word || '');
+        else word.replaceChildren(h('span', { class: 'muted' }, '…'));
+        if (v.phase === 'choose') {
+          overlay.classList.remove('hidden');
+          overlay.replaceChildren(h('div', { class: 'hero-emo' }, '🤔'), h('h3', null, `${g.nameOf(v.drawer)} choisit un mot…`), h('p', { class: 'muted small' }, 'Devinez sur vos téléphones dès que le dessin commence !'));
+        } else if (v.phase === 'reveal' && v.summary) {
+          const sm = v.summary;
+          const finders = Object.entries(sm.found).sort((a, b) => b[1] - a[1]);
+          overlay.classList.remove('hidden');
+          overlay.replaceChildren(h('p', { class: 'muted' }, sm.reason === 'left' ? 'Le dessinateur est parti…' : 'Le mot était'),
+            sm.word ? h('div', { class: 'reveal-word' }, sm.word) : null,
+            h('div', null, finders.length
+              ? finders.map(([pid, pts]) => h('div', null, `${g.nameOf(pid)} +${pts}`)).concat(h('div', { style: { color: 'var(--warn)' } }, `✏️ ${g.nameOf(sm.drawer)} +${sm.drawerPts}`))
+              : h('div', null, 'Personne n\'a trouvé 😅')));
+        } else overlay.classList.add('hidden');
+        chat.replaceChildren(...v.chat.map((m) => {
+          if (m.kind === 'sys') return h('div', { class: 'm sys' }, m.text);
+          if (m.kind === 'found') return h('div', { class: 'm found' }, m.text);
+          return h('div', { class: 'm' }, h('b', null, m.name + ' : '), m.text);
+        }));
+        chat.scrollTop = chat.scrollHeight;
+        for (const m of v.chat) if (m.id > lastMsg && lastMsg && m.kind === 'found') sfx.ok();
+        lastMsg = v.chat.length ? v.chat[v.chat.length - 1].id : lastMsg || 0.5;
+        if (key !== lastKey && v.phase === 'reveal') sfx.end();
+        if (key !== lastKey && v.phase === 'draw') sfx.go();
+        lastKey = key;
+      },
+      onDraw(op) { board.apply(op); },
+      destroy() { tm.stop(); },
+    };
   },
 
   view(room, s, pid) {

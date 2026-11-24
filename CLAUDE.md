@@ -14,7 +14,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
-| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
+| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `tv.js` (écran télé), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
 | `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
 | `img/ui/` | Images utilisées pendant les jeux : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow) |
@@ -95,6 +95,9 @@ export const monJeuOnline = {
   onJoin(room, s, pid, api) {}, onLeave(room, s, pid, api) {},   // facultatifs
   view(room, s, pid) { /* ce que voit CE joueur : ne jamais y mettre les secrets des autres */ },
   mount(root, g) { return { update(room, view) {}, destroy() {} }; },
+  // Facultatif : écran télé spécial (voir « Mode télé »). Sinon la télé montre l'écran commun.
+  tv(room, s) { return this.view(room, s, TV_PID); },   // vue d'un spectateur (TV_PID de kit.js) : aucun secret
+  tvMount(root, g) { return { update(room, tvView) {}, destroy() {} }; },
 };
 ```
 - **L'hôte fait autorité** : `init`, `action`, `tick` ne tournent que chez l'hôte. Les autres reçoivent `view(...)` et l'affichent dans `update`.
@@ -140,6 +143,24 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - **Règle d'or en ligne** : `update` est appelé à chaque changement (un autre joueur qui valide…). Un élément animé ou qu'on manipule
   (liste, plateau, cartes) doit **rester le même** d'un `update` à l'autre : ne remplacer que les textes autour, et n'animer que ce qui est
   nouveau (comparer avec l'état affiché, ex. `shown` du 4 en ligne, `lastKey`). Sinon l'animation repart ou le glissement en cours est coupé.
+
+## Mode télé (`js/online/tv.js`)
+- Un ordinateur ou une télé affiche la partie en grand, les téléphones servent de manettes. Accès : accueil (bandeau « Jouer en
+  ligne » → « 📺 Afficher en grand… »), écran « Jouer en ligne » → panneau **📺 Écran télé**, ou directement `#/tv/CODE`.
+- La télé se connecte comme un joueur (`Client`, `hello` avec `tv: true`) mais l'hôte la range à part (`Host.tvs`) : **elle n'est
+  pas un joueur** (ni dans `room.players`, ni dans les scores), ses actions sont ignorées. Elle reçoit `viewForTv()` :
+  - jeu avec écran télé : `mod.tv(room, s)` = **`view(room, s, TV_PID)`** (un spectateur qui ne connaît aucun secret) ;
+  - autres jeux : seulement `{ ended }` → écran commun (« 📱 À vous de jouer sur vos téléphones ! », podium à la fin).
+  **Ne jamais envoyer à la télé la vue d'un vrai joueur**, ni `settings`. `online/tele-secrets.test.cjs` vérifie, pour les 61 jeux,
+  que la télé ne reçoit aucun texte visible seulement par certains joueurs.
+- Traits de dessin (`api.relay`) et `onSync` : envoyés à la télé **seulement si le module a `tvRelay: true`** (Je dessine). Le
+  Téléphone dessiné relaie des dessins privés : il ne doit pas l'avoir.
+- Écrans spéciaux (11 jeux) : jeux de rapidité (`makeRace`, 6 jeux), Je dessine, Qui a écrit ça ?, Punchlines et Dico bluff
+  (`makeWrite`), Loup-garou (script du meneur en grand, nuit sombre / jour lumineux). Outils dans `kit.js` : `tvTimer(g)`
+  (compte à rebours), `tvEnd(room)` (podium), `tvWho()` (pastilles « ✓ a répondu », gardées d'une mise à jour à l'autre).
+  Même règle d'or qu'au téléphone : ne pas recréer ce qui est animé à chaque `update` (comparer une clé d'étape).
+- Mise en page : `body.tv-mode`, tailles en `em` sur `.tv` (`font-size` en `vw`) ; en dessous de 820 px ou en portrait, tout passe en
+  colonne. Classement à droite (points gagnés animés), code + QR en haut à droite, bouton ⛶ plein écran, messages en bas.
 
 ## Partie coupée, partie reprise (`js/online/save.js`)
 - L'hôte enregistre la partie dans son téléphone (`host-save` : salle, joueurs, scores, état du jeu) à chaque envoi (au plus 1 fois/s),
@@ -212,6 +233,8 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   message 4 fois (une par serveur). Le code doit le supporter (même demande = même connexion).
 - Après une reprise, un module qui garde quelque chose hors de l'état (WeakMap, variable du module) plante au premier coup s'il
   n'a pas de `restore`.
+- Écran télé : `tv()` est appelé comme méthode (`this.mod.tv(...)`), `this.view` y désigne bien le module. Le mot masqué de
+  Je dessine (« _ _ _ ») est public (tous les devineurs le voient) : le test des secrets l'ignore.
 
 ## Tests (`tests/`, détails dans `tests/README.md`)
 - Installation : `cd tests && npm install` (mqtt-packet). Playwright/Chromium sont déjà là dans l'environnement cloud.
@@ -220,7 +243,8 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - `tests/lib/mp.cjs` : simulateur multijoueur, n joueurs côte à côte branchés sur la logique de l'hôte. C'est l'outil pour tester un jeu en ligne.
 - `tests/lib/mock-relay.cjs` : faux serveur relais MQTT + PeerJS bloqué (`broker.stats.payloads` = ce qu'un curieux verrait).
   `relay/lobby-relay.test.cjs` fait une vraie partie par le salon ; `relay/reprise.test.cjs` coupe l'hôte en plein Quiz et reprend
-  (en **https://app.test/**, nécessaire pour `crypto.subtle` : `serveRepo` sert les deux).
+  (en **https://app.test/**, nécessaire pour `crypto.subtle` : `serveRepo` sert les deux). `phone(options)` crée aussi un écran
+  télé (`{ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false }`) : `relay/tele.test.cjs`.
 - `tests/relay/relay-real.manual.cjs` : manuel, avec les vrais serveurs relais (Internet, utilise `HTTPS_PROXY` si présent).
 - `tests/local/sw.test.cjs` : service worker et mode hors ligne, avec un vrai serveur web sur localhost.
 - `tests/unit/images.test.mjs` : une image (et une composition) par jeu.

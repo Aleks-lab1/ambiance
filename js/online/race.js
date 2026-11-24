@@ -2,6 +2,7 @@
 import { h, uid, seg } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
+import { TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
 import { sfx, buzz } from '../sfx.js';
 import { RACE_MODES, questionSource, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS, COUNT_LABEL } from '../race-core.js';
 import VF from '../data/vraifaux.js';
@@ -145,6 +146,74 @@ function makeRace(mode) {
         mine: mine ? (qcm ? { v: mine.v } : mine) : null,
         wrong: s.wrong[pid] || null,
         reveal: s.phase === 'reveal' && Q ? { ans: Q.ans, results: Object.entries(s.answers).map(([p, x]) => ({ pid: p, ...x })) } : null,
+      };
+    },
+
+    // Écran télé : la question et les 4 réponses en grand, qui a répondu, puis la bonne réponse et qui l'a trouvée.
+    tv(room, s) { return this.view(room, s, TV_PID); },
+    tvMount(root, g) {
+      const [c1, c2] = gameColors('mode-' + mode, M.colors);
+      const bar = h('div', { class: 'tv-bar' });
+      const cardSlot = h('div');
+      const optSlot = h('div');
+      const who = tvWho();
+      const whoSlot = h('div', null, who.el);
+      const after = h('div', { class: 'col', style: { gap: '.8em', alignItems: 'center' } });
+      const tm = tvTimer(g);
+      root.append(bar, cardSlot, optSlot, whoSlot, after);
+      let lastKey = null;
+      const style = { '--g1': c1, '--g2': c2 };
+      function tvCard(q) {
+        if (qcm) return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, q.theme || M.kicker), h('div', { class: 'q' }, q.q));
+        if (mode === 'calc') return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, M.kicker), h('div', { class: 'calc-big' }, q.q, ' = ?'));
+        if (mode === 'emoji') return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, q.cat || M.kicker), h('div', { class: 'emoji-big' }, q.e));
+        if (mode === 'anag') return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, `${M.kicker} · ${q.len} lettres`), h('div', { class: 'tiles' }, q.s.split('').map((c) => h('span', null, c))));
+        return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, M.kicker), h('div', { class: 'q' }, q.q), q.unit ? h('div', { class: 'kicker' }, `Réponse en : ${q.unit}`) : null);
+      }
+      function revealParts(v) {
+        const r = v.reveal;
+        const res = r.results.slice().sort((a, b) => (b.pts || 0) - (a.pts || 0));
+        const label = (x) => (mode === 'estim' ? (v.q.unit ? `${formatNumber(x.v)} ${v.q.unit}` : String(x.v)) : String(x.v));
+        return [
+          qcm && !r.ans.note ? null : h('div', { class: 'tv-answer' }, h('span', null, 'La réponse'), h('b', null, r.ans.text), r.ans.note ? h('span', null, r.ans.note) : null),
+          h('div', { class: 'tv-results' }, res.length
+            ? res.map((x) => h('span', { class: 'tv-res' + (x.pts ? ' ok' : '') }, `${x.pts ? '✅' : '❌'} ${g.nameOf(x.pid)}${qcm ? '' : ' · ' + label(x)}${x.pts ? ' +' + x.pts : ''}`))
+            : h('span', { class: 'tv-res' }, 'Personne n\'a répondu 😅')),
+        ];
+      }
+      return {
+        update(room, v) {
+          if (v.phase === 'end') {
+            tm.set(0); bar.replaceChildren(); cardSlot.replaceChildren(); optSlot.replaceChildren(); whoSlot.classList.add('hidden');
+            if (lastKey !== 'end') { after.replaceChildren(...tvEnd(room)); sfx.fanfare(); }
+            lastKey = 'end';
+            return;
+          }
+          const qKey = v.gid + ':' + v.i;
+          const key = qKey + ':' + v.phase;
+          bar.replaceChildren(h('span', { class: 'pill' }, `${M.emoji} Question ${v.i + 1}${v.n ? '/' + v.n : ''}`), h('div', { class: 'grow' }), tm.el);
+          tm.set(v.phase === 'q' ? v.deadline : 0);
+          if (cardSlot.dataset.k !== qKey) { cardSlot.dataset.k = qKey; cardSlot.replaceChildren(tvCard(v.q)); after.replaceChildren(); delete after.dataset.k; }
+          if (v.hint && !cardSlot.querySelector('.hint-line')) cardSlot.firstChild.append(h('div', { class: 'kicker hint-line' }, `💡 Indice : commence par « ${v.hint} »`));
+          if (qcm) {
+            if (optSlot.dataset.k !== qKey) {
+              optSlot.dataset.k = qKey;
+              optSlot.replaceChildren(h('div', { class: 'tv-opts' }, v.q.opts.map((o, i) => h('div', { class: 'tv-opt c' + i }, h('b', null, 'ABCD'[i]), h('span', { class: 't' }, o), h('span', { class: 'who' })))));
+            }
+            optSlot.querySelectorAll('.tv-opt').forEach((el, i) => {
+              const good = !!v.reveal && i === v.reveal.ans.i;
+              el.classList.toggle('good', good);
+              el.classList.toggle('dim', !!v.reveal && !good);
+              el.querySelector('.who').textContent = v.reveal ? v.reveal.results.filter((x) => x.v === i).map((x) => g.nameOf(x.pid)).join(', ') : '';
+            });
+          } else optSlot.replaceChildren();
+          whoSlot.classList.toggle('hidden', v.phase !== 'q');
+          who.set(room, v.answered);
+          if (v.phase === 'reveal' && after.dataset.k !== key) { after.dataset.k = key; after.replaceChildren(...revealParts(v).filter(Boolean)); }
+          if (key !== lastKey) { if (v.phase === 'q') sfx.go(); else if (v.phase === 'reveal') sfx.ok(); }
+          lastKey = key;
+        },
+        destroy() { tm.stop(); },
       };
     },
 

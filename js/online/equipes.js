@@ -2,7 +2,7 @@
 import { h, uid, shuffle, seg, chip } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, isOn, timerPill, actBtn, drawNew } from './kit.js';
+import { activePids, isOn, timerPill, actBtn, drawNew, TV_PID } from './kit.js';
 import { ROLES } from '../games/loup.js';
 import { ROUNDS as CH_ROUNDS } from '../games/chapeau.js';
 import CHAPEAU from '../data/chapeau.js';
@@ -326,6 +326,47 @@ export const loupOnline = {
     if (a.type === 'reveal') { s.over = true; return true; }
     return false;
   },
+  // Écran télé : le script du meneur en grand (nuit sombre, jour lumineux) et le village (rôles des morts révélés).
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const wrap = h('div', { class: 'tv-loup' });
+    const dayN = h('div', { class: 'day-n' });
+    const script = h('div', { class: 'script' });
+    const banner = h('div', { class: 'tv-win hidden' });
+    const village = h('div', { class: 'tv-village' });
+    wrap.append(dayN, script, banner, village);
+    root.append(wrap);
+    let lastStep = null;
+    return {
+      update(r, v) {
+        const day = v.step >= 4;
+        wrap.classList.toggle('day', day);
+        dayN.textContent = `🎙️ Meneur : ${g.nameOf(r.host)} · ${day ? 'Jour' : 'Nuit'} ${v.day}`;
+        const stepKey = v.gid + ':' + v.day + ':' + v.step + ':' + v.over;
+        if (stepKey !== lastStep) {
+          script.textContent = v.over ? '🏁 La partie est finie\u00a0: voici tous les rôles\u00a0!' : NIGHT[v.step];
+          script.style.animation = 'none'; void script.offsetWidth; script.style.animation = '';
+          if (lastStep) (day ? sfx.go : sfx.swoosh)();
+          lastStep = stepKey;
+        }
+        let win = null;
+        if (v.over && v.wolves) {
+          const aliveW = v.wolves.filter((p) => v.alive[p]).length;
+          const aliveAll = v.players.filter((p) => v.alive[p]).length;
+          win = aliveW === 0 ? '🎉 Le village a gagné !' : aliveW >= aliveAll - aliveW ? '🐺 Les loups-garous ont gagné !' : null;
+        }
+        banner.classList.toggle('hidden', !win);
+        banner.textContent = win || '';
+        village.replaceChildren(...v.players.map((p) => {
+          const R = v.roles[p] ? ROLES[v.roles[p]] : null;
+          return h('div', { class: 'tv-villager' + (v.alive[p] ? '' : ' dead') },
+            h('span', { class: 'e' }, R ? R.emoji : (v.alive[p] ? '🙂' : '💀')), h('span', null, g.nameOf(p) + (v.alive[p] ? '' : ' ✝')), R ? h('span', { class: 'r' }, R.name) : null);
+        }));
+      },
+      destroy() {},
+    };
+  },
+
   view(room, s, pid) {
     const host = pid === room.host;
     const myRole = s.role[pid] || null;

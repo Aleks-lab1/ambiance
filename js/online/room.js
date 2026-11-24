@@ -9,6 +9,7 @@ import { ONLINE_GAMES, onlineGame } from './games.js';
 import { RelayHub, relayConnect } from './relay.js';
 import { pack, unpack, shiftTimes, saveHost, loadHost, clearHost, saveSeat, loadSeat, clearSeat, resumeText } from './save.js';
 import { sfx, buzz } from '../sfx.js';
+import { createTvUi } from './tv.js';
 
 const LETTERS = 'BCDFGHJKLMNPQRSTVWXZ';
 const makeCode = () => Array.from({ length: 4 }, () => LETTERS[Math.floor(Math.random() * LETTERS.length)]).join('');
@@ -45,6 +46,23 @@ function myPid() {
   return pid;
 }
 
+/** Identifiant de l'écran télé (distinct de celui du joueur sur le même appareil). */
+function tvPid() {
+  let pid = null;
+  try { pid = sessionStorage.getItem('ambiance:tvpid'); } catch { /* ignore */ }
+  if (!pid) { pid = 'tv-' + uid(); try { sessionStorage.setItem('ambiance:tvpid', pid); } catch { /* ignore */ } }
+  return pid;
+}
+
+const joinUrl = (code) => location.origin + location.pathname + location.search + '#/join/' + code;
+/** Dessine le QR code d'un lien dans `el` (SVG qui suit la taille de l'élément). */
+function drawQr(el, url) {
+  loadScript('vendor/qrcode.js', 'qrcode').then((qrcode) => {
+    const q = qrcode(0, 'M'); q.addData(url); q.make();
+    el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  }).catch(() => el.remove());
+}
+
 function openPeer(Peer, id) {
   return new Promise((resolve, reject) => {
     const peer = id ? new Peer(id, peerOptions()) : new Peer(peerOptions());
@@ -78,6 +96,7 @@ class Host {
     this.deliver = deliver; // livre un message à l'interface locale de l'hôte
     this.room = { code, host: me.pid, pick: null, players: [{ pid: me.pid, name: me.name, score: 0, on: true }], game: null };
     this.conns = new Map();
+    this.tvs = new Map(); // écrans télé (pid → connexion) : ni joueurs, ni secrets, juste la vue publique
     this.mod = null;
     this.gs = null;
     if (saved) this.restore(saved);
@@ -142,7 +161,7 @@ class Host {
   }
 
   /** gone : la page se ferme (rechargement, appli tuée) ; sinon l'appli passe juste en arrière-plan. */
-  away(gone) { for (const c of this.conns.values()) this.safeSend(c, { t: 'away', gone }); }
+  away(gone) { for (const c of [...this.conns.values(), ...this.tvs.values()]) this.safeSend(c, { t: 'away', gone }); }
 
   scheduleSave() {
     if (this.saveT || this.dead) return;
@@ -184,6 +203,7 @@ class Host {
     if (m.t === 'hello') {
       let pid = String(m.pid || '').slice(0, 40);
       if (!pid || pid === this.room.host) return;
+      if (m.tv) { this.addTv(conn, pid); return; }
       let p = this.room.players.find((x) => x.pid === pid);
       if (!p) {
         // Même prénom qu'un joueur parti (appli rouverte depuis un autre onglet, Safari → appli installée…) :
@@ -222,9 +242,26 @@ class Host {
     if (m.t === 'act' && conn._pid && this.conns.get(conn._pid) === conn) this.handle(conn._pid, m.a);
   }
 
+  /** Un écran télé se branche : il reçoit la vue publique (jamais les secrets d'un joueur). */
+  addTv(conn, pid) {
+    const old = this.tvs.get(pid);
+    if (old && old !== conn) { old._replaced = true; try { old.close(); } catch { /* */ } }
+    conn._pid = pid;
+    conn._tv = true;
+    this.tvs.set(pid, conn);
+    this.safeSend(conn, { t: 'welcome', pid, tv: true });
+    // Le dessin en cours (seulement pour les jeux qui le montrent à la télé).
+    if (this.room.game && this.mod && this.mod.tvRelay && this.mod.onSync) { try { this.mod.onSync(this.room, this.gs, pid, this.api); } catch (e) { console.error(e); } }
+    this.broadcast();
+  }
+
   onClose(conn) {
     if (conn._replaced || conn._closed) return;
     conn._closed = true;
+    if (conn._tv) {
+      if (this.tvs.get(conn._pid) === conn) { this.tvs.delete(conn._pid); this.broadcast(); }
+      return;
+    }
     const pid = conn._pid;
     if (!pid || this.conns.get(pid) !== conn) return;
     this.conns.delete(pid);
@@ -239,7 +276,7 @@ class Host {
 
   heartbeat() {
     const now = Date.now();
-    for (const conn of [...this.conns.values()]) {
+    for (const conn of [...this.conns.values(), ...this.tvs.values()]) {
       if (now - conn._seen > 16000) { try { conn.close(); } catch { /* */ } this.onClose(conn); }
     }
     // Après une reprise : ceux qui ne sont pas revenus à temps sont comptés comme partis.
@@ -321,9 +358,26 @@ class Host {
   viewFor(pid) {
     const r = this.room;
     return {
-      code: r.code, host: r.host, pick: r.pick,
+      code: r.code, host: r.host, pick: r.pick, tvs: this.tvs.size,
       players: r.players.map((p) => ({ pid: p.pid, name: p.name, score: p.score, on: p.on })),
       game: r.game ? { type: r.game.type, settings: r.game.settings, v: this.mod.view(r, this.gs, pid) } : null,
+    };
+  }
+
+  /**
+   * Vue de la télé : uniquement ce que tout le monde a le droit de voir. Un jeu qui a un écran télé fournit
+   * tv(room, s) ; sinon la télé affiche un écran commun (jeu en cours, classement, podium à la fin).
+   */
+  viewForTv() {
+    const r = this.room;
+    let v = null;
+    if (r.game && this.mod) {
+      try { v = this.mod.tv ? this.mod.tv(r, this.gs) : { ended: !!this.gs && (this.gs.phase === 'end' || this.gs.over === true) }; } catch (e) { console.error(e); v = {}; }
+    }
+    return {
+      tv: true, code: r.code, host: r.host, pick: r.pick, tvs: this.tvs.size,
+      players: r.players.map((p) => ({ pid: p.pid, name: p.name, score: p.score, on: p.on })),
+      game: r.game ? { type: r.game.type, special: !!(this.mod && this.mod.tv), v } : null,
     };
   }
 
@@ -332,23 +386,26 @@ class Host {
   broadcast() {
     const now = Date.now();
     for (const [pid, c] of this.conns) this.safeSend(c, { t: 'state', now, room: this.viewFor(pid) });
+    if (this.tvs.size) { const tv = this.viewForTv(); for (const c of this.tvs.values()) this.safeSend(c, { t: 'state', now, room: tv }); }
     this.deliver({ t: 'state', now, room: this.viewFor(this.room.host) });
     this.scheduleSave();
   }
 
   relay(op, except) {
     for (const [pid, c] of this.conns) if (pid !== except) this.safeSend(c, { t: 'draw', op });
+    // La télé ne reçoit le dessin que des jeux où il est public (Je dessine) : pas celui du Téléphone dessiné.
+    if (this.mod && this.mod.tvRelay) for (const c of this.tvs.values()) this.safeSend(c, { t: 'draw', op });
     if (except !== this.room.host) this.deliver({ t: 'draw', op });
   }
 
   sendTo(pid, msg) {
     if (pid === this.room.host) { this.deliver(msg); return; }
-    const c = this.conns.get(pid);
+    const c = this.conns.get(pid) || this.tvs.get(pid);
     if (c) this.safeSend(c, msg);
   }
 
   toastAll(msg, except) {
-    for (const [pid, c] of this.conns) if (pid !== except) this.safeSend(c, { t: 'toast', msg });
+    for (const [pid, c] of [...this.conns, ...this.tvs]) if (pid !== except) this.safeSend(c, { t: 'toast', msg });
     if (except !== this.room.host) this.deliver({ t: 'toast', msg });
   }
 
@@ -364,7 +421,7 @@ class Host {
     clearTimeout(this.peerT);
     document.removeEventListener('visibilitychange', this.onHide);
     window.removeEventListener('pagehide', this.onPageHide);
-    for (const c of this.conns.values()) this.safeSend(c, { t: 'bye', reason: 'L\'hôte a fermé la partie.' });
+    for (const c of [...this.conns.values(), ...this.tvs.values()]) this.safeSend(c, { t: 'bye', reason: 'L\'hôte a fermé la partie.' });
     this.hub.destroy();
     setTimeout(() => { try { this.peer && this.peer.destroy(); } catch { /* */ } }, 400);
   }
@@ -449,7 +506,7 @@ class Client {
       if (conn._stale || this.conn !== conn) { try { conn.close(); } catch { /* */ } return; }
       clearTimeout(timeout);
       this.lastMsg = Date.now();
-      conn.send({ t: 'hello', pid: this.me.pid, name: this.me.name });
+      conn.send({ t: 'hello', pid: this.me.pid, name: this.me.name, ...(this.me.tv ? { tv: true } : {}) });
     });
     conn.on('data', (m) => {
       this.lastMsg = Date.now();
@@ -530,7 +587,10 @@ class Client {
 // =====================================================================
 export function start(ctx) {
   const { root, opts } = ctx;
-  const me = { pid: myPid(), name: getName() };
+  // Écran télé : rejoint la partie comme un écran (pas comme un joueur), affiche la vue publique en grand.
+  const tvMode = !!opts.tv;
+  const me = tvMode ? { pid: tvPid(), name: 'Écran télé', tv: true } : { pid: myPid(), name: getName() };
+  let tvUi = null;
   let net = null;
   let isHost = false;
   let room = null;
@@ -580,12 +640,37 @@ export function start(ctx) {
       h('h3', null, '🔑 Rejoindre une partie'),
       codeIn,
       h('button', { class: joinFirst ? 'btn btn-primary btn-block' : 'btn btn-soft btn-block', onclick: doJoin }, 'Rejoindre'));
+    const tvIn = h('input', {
+      class: 'input code-input', placeholder: 'CODE', maxlength: '4', value: opts.tv && opts.tv !== true ? opts.tv : '', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', enterkeyhint: 'go',
+      'aria-label': 'Code de la partie à afficher',
+      oninput: (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, ''); },
+      onkeydown: (e) => { if (e.key === 'Enter') doTv(); },
+    });
+    const doTv = () => {
+      const code = tvIn.value.trim().toUpperCase();
+      if (code.length !== 4) { toast('Le code fait 4 lettres'); tvIn.focus(); return; }
+      sfx.unlock();
+      ctx.open('online', { tv: code });
+    };
+    const tvPanel = h('div', { class: 'panel col' },
+      h('h3', null, '📺 Écran télé'),
+      h('p', { class: 'muted small' }, 'Sur un ordinateur ou une télé : la partie s\'affiche en grand pour tout le monde (questions, dessins, votes, classement) et les téléphones servent de manettes.'),
+      h('div', { class: 'row' }, tvIn, h('button', { class: 'btn btn-soft', style: { flex: 'none' }, onclick: doTv }, 'Afficher')));
+    if (tvMode) {
+      // Écran télé : seulement le code de la partie à afficher.
+      root.replaceChildren(header(), msg ? h('div', { class: 'conn-banner' }, msg) : null, tvPanel,
+        h('div', { class: 'panel rules' }, h('p', null, '1. Sur un téléphone, crée la partie (ou rejoins-la) : le code s\'affiche en haut.'),
+          h('p', null, '2. Tape ce code ici : la partie s\'affiche en grand. Astuce : ⛶ en haut à droite pour le plein écran.')));
+      setTimeout(() => tvIn.focus(), 50);
+      return;
+    }
     root.replaceChildren(
       header(),
       msg ? h('div', { class: 'conn-banner' }, msg) : null,
       resumePanel,
       h('label', { class: 'field' }, 'Ton prénom', nameIn),
       ...(joinFirst ? [joinPanel, createPanel] : [createPanel, joinPanel]),
+      tvPanel,
       h('div', { class: 'panel rules' },
         h('p', null, '📱 Chacun joue sur son téléphone. Pas besoin d\'installer l\'appli : le lien ou le QR code suffit.'),
         h('p', null, '📶 Marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.'),
@@ -599,8 +684,8 @@ export function start(ctx) {
   function header(extra) {
     return h('div', { class: 'topbar' },
       h('button', { class: 'icon-btn', 'aria-label': 'Retour', onclick: leave }, '←'),
-      h('span', { class: 'emo' }, '🌐'),
-      h('h1', null, room ? 'Partie ' : 'Jouer en ligne', room ? h('span', { class: 'code' }, room.code) : null),
+      h('span', { class: 'emo' }, tvMode ? '📺' : '🌐'),
+      h('h1', null, room ? 'Partie ' : tvMode ? 'Écran télé' : 'Jouer en ligne', room ? h('span', { class: 'code' }, room.code) : null),
       extra || null);
   }
 
@@ -670,7 +755,7 @@ export function start(ctx) {
   async function joinRoom(code) {
     busy(`Connexion à la partie ${code}…`);
     // Déjà venu dans cette partie avec ce téléphone : même identifiant, l'hôte nous rend notre place.
-    const seat = loadSeat(code);
+    const seat = !tvMode && loadSeat(code);
     if (seat) me.pid = seat.pid;
     try {
       let peer = null;
@@ -678,7 +763,7 @@ export function start(ctx) {
       isHost = false;
       net = new Client(peer, code, me, (m) => onMessage(m), onStatus);
       await net.connect();
-      ctx.setGuard('Quitter la partie ?');
+      ctx.setGuard(tvMode ? 'Quitter l\'écran télé ?' : 'Quitter la partie ?');
     } catch (e) {
       console.warn(e);
       net = null;
@@ -698,6 +783,7 @@ export function start(ctx) {
         ? `⏸️ ${hostName || 'L\'hôte'} a quitté l'appli un instant… La partie reprendra à son retour.`
         : '📶 Connexion à l\'hôte perdue… on réessaie. La partie reprendra toute seule.';
       if (banner) banner.textContent = text;
+      else if (room && tvMode) root.prepend(h('div', { class: 'conn-banner live' }, text));
       else if (room) root.insertBefore(h('div', { class: 'conn-banner live' }, text), root.children[1] || null);
     } else if (banner) banner.remove();
     if (s === 'closed') {
@@ -718,11 +804,12 @@ export function start(ctx) {
     switch (m.t) {
       case 'state':
         offset = m.now - Date.now();
-        if (!isHost && Date.now() - seatAt > 60000) { seatAt = Date.now(); saveSeat(m.room.code, me.pid); }
+        if (!isHost && !tvMode && Date.now() - seatAt > 60000) { seatAt = Date.now(); saveSeat(m.room.code, me.pid); }
         if (status === 'away') onStatus('online');
         render(m.room);
         break;
       case 'draw':
+        if (tvMode) { if (tvUi) tvUi.onDraw(m.op); break; }
         if (view && view.onDraw) view.onDraw(m.op); else if (pendingDraw.length < 500) pendingDraw.push(m.op);
         break;
       case 'toast':
@@ -734,6 +821,7 @@ export function start(ctx) {
       case 'welcome':
         if (m.name && m.name !== me.name) me.name = m.name;
         // L'hôte peut nous rendre l'identifiant d'un joueur parti du même prénom (= nous, depuis un autre onglet).
+        if (tvMode) break;
         if (m.pid && m.pid !== me.pid) { me.pid = m.pid; try { sessionStorage.setItem('ambiance:pid', m.pid); } catch { /* */ } }
         if (net && net.code) { seatAt = Date.now(); saveSeat(net.code, me.pid); }
         break;
@@ -783,6 +871,15 @@ export function start(ctx) {
   }
 
   function render(r) {
+    if (tvMode) {
+      room = r;
+      if (!tvUi || !root.querySelector('.tv')) {
+        if (tvUi) tvUi.destroy();
+        tvUi = createTvUi(root, { now: () => Date.now() + offset, joinUrl, qr: drawQr });
+      }
+      tvUi.render(r);
+      return;
+    }
     const prevPlayers = room ? room.players.length : 0;
     room = r;
     ensureShell();
@@ -822,12 +919,10 @@ export function start(ctx) {
   function renderLobby(prevCount) {
     if (!lobby) {
       body.replaceChildren();
-      const shareUrl = location.origin + location.pathname + location.search + '#/join/' + room.code;
+      const shareUrl = joinUrl(room.code);
       const qr = h('div', { class: 'qr', 'aria-label': 'QR code pour rejoindre' });
-      loadScript('vendor/qrcode.js', 'qrcode').then((qrcode) => {
-        const q = qrcode(0, 'M'); q.addData(shareUrl); q.make();
-        qr.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-      }).catch(() => qr.remove());
+      drawQr(qr, shareUrl);
+      const tvLine = h('p', { class: 'muted small center tv-hint' });
       const players = h('div', { class: 'lobby-players' });
       const pickWrap = h('div', { class: 'col' });
       const waiting = h('div', { class: 'panel center col' });
@@ -842,16 +937,21 @@ export function start(ctx) {
               else { await navigator.clipboard.writeText(shareUrl); toast('Lien copié 📋'); }
             } catch { /* annulé */ }
           },
-        }, '🔗 Partager le lien'));
+        }, '🔗 Partager le lien'),
+        tvLine);
       body.append(...[
         isHost ? codeCard : null,
         h('div', { class: 'col' }, h('div', { class: 'section-title' }, 'Joueurs'), players),
         isHost ? pickWrap : waiting,
       ].filter(Boolean));
-      lobby = { players, pickWrap, waiting, codeCard };
+      lobby = { players, pickWrap, waiting, codeCard, tvLine };
       lobbyArmed = null;
       if (isHost) renderPicker();
     }
+    // Écran télé : comment l'afficher, et combien sont branchés.
+    lobby.tvLine.replaceChildren(...(room.tvs
+      ? [`📺 ${room.tvs} écran${room.tvs > 1 ? 's' : ''} télé branché${room.tvs > 1 ? 's' : ''}`]
+      : ['📺 Sur une télé ou un ordi : Ambiance → Jouer en ligne → ', h('b', null, 'Écran télé'), ` → code ${room.code}`]));
     // joueurs
     lobby.players.replaceChildren(...room.players.map((p) => h('span', { class: 'lp' + (p.on ? '' : ' off') },
       (p.pid === room.host ? '👑 ' : '') + p.name + (p.pid === me.pid ? ' (toi)' : ''),
@@ -926,12 +1026,14 @@ export function start(ctx) {
 
   // ---------- Démarrage ----------
   const toResume = opts.resume && loadHost();
-  if (toResume) resumeRoom(toResume);
+  if (tvMode && typeof opts.tv === 'string' && opts.tv.length === 4) joinRoom(opts.tv);
+  else if (toResume) resumeRoom(toResume);
   else if (opts.create && me.name) createRoom();
   else if (opts.join && opts.join.length === 4 && me.name) joinRoom(opts.join);
   else entry();
 
   return () => {
+    if (tvUi) { tvUi.destroy(); tvUi = null; }
     destroyView();
     // On quitte l'écran de la partie (bouton retour confirmé) : rien à reprendre.
     if (net && !isHost) clearSeat();

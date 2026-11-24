@@ -1,7 +1,7 @@
 // Jeux d'écriture en ligne : Punchlines (réponse la plus drôle) et Dico bluff (fausses définitions).
 // Déroulé d'une manche : écrire → voter (anonyme) → révélation des auteurs et des points.
 import { h, uid, shuffle, seg, norm } from '../ui.js';
-import { drawNew } from './kit.js';
+import { drawNew, TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 import PUNCH from '../data/punchlines.js';
@@ -143,6 +143,68 @@ function makeWrite(mode) {
         myVote: s.votes[pid] || null,
         voted: Object.keys(s.votes),
         reveal: s.phase === 'reveal' ? { options: s.options.map((o) => ({ ...o, voters: votersOf(o.id) })), gains: s.gains, knew: s.knew, real: s.real } : null,
+      };
+    },
+
+    // Écran télé : la phrase (ou le mot), puis toutes les réponses en grand pour le vote, puis qui a écrit quoi.
+    tv(room, s) { return this.view(room, s, TV_PID); },
+    tvMount(root, g) {
+      const style = dico ? { '--g1': '#3d2c8d', '--g2': '#916dd5' } : { '--g1': '#ff0844', '--g2': '#ff7a59' };
+      const tm = tvTimer(g);
+      const who = tvWho();
+      const bar = h('div', { class: 'tv-bar' });
+      const promptSlot = h('div');
+      const body = h('div', { class: 'col', style: { gap: '1em' } });
+      const status = h('p', { class: 'tv-status' });
+      root.append(bar, promptSlot, body, status);
+      let lastKey = null;
+      const promptCard = (v, small) => {
+        if (dico) return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, small ? 'Le mot' : 'Que veut dire… ? Inventez une définition sur vos téléphones'), h('div', { class: 'q', style: small ? { fontSize: '1.6em' } : { fontSize: '3.2em' } }, v.prompt));
+        const parts = String(v.prompt).split('___');
+        return h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, small ? 'La phrase' : 'Complétez la phrase sur vos téléphones'),
+          h('div', { class: 'q', style: small ? { fontSize: '1.4em' } : null }, parts.map((t, i) => [t, i < parts.length - 1 ? h('span', { class: 'blank' }, '______') : null])));
+      };
+      return {
+        update(room, v) {
+          if (v.phase === 'end') {
+            tm.set(0); bar.replaceChildren(); promptSlot.replaceChildren(); status.textContent = '';
+            if (lastKey !== 'end') { body.replaceChildren(...tvEnd(room)); sfx.fanfare(); }
+            lastKey = 'end';
+            return;
+          }
+          const key = v.gid + ':' + v.round + ':' + v.phase;
+          const total = room.players.filter((p) => p.on).length;
+          tm.set(v.phase === 'write' || v.phase === 'vote' ? v.deadline : 0);
+          if (key !== lastKey) {
+            bar.replaceChildren(h('span', { class: 'pill' }, `${dico ? '📖' : '✍️'} Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), tm.el);
+            promptSlot.replaceChildren(promptCard(v, v.phase !== 'write'));
+            if (v.phase === 'write') { body.replaceChildren(who.el); sfx.go(); }
+            if (v.phase === 'vote') {
+              body.replaceChildren(h('div', { class: 'tv-options' }, v.options.map((o, i) => h('div', { class: 'tv-option', style: { animationDelay: i * 0.12 + 's' } },
+                h('span', { class: 'n' }, `Réponse ${i + 1}`), h('span', null, o.text)))));
+              sfx.swoosh();
+            }
+            if (v.phase === 'reveal') {
+              const r = v.reveal;
+              const max = Math.max(0, ...r.options.map((o) => o.voters.length));
+              body.replaceChildren(
+                r.knew.length ? h('p', { class: 'tv-status' }, `🤓 ${r.knew.map(g.nameOf).join(', ')} connaissai${r.knew.length > 1 ? 'ent' : 't'} le mot (+200)`) : '',
+                h('div', { class: 'tv-options' }, r.options.slice().sort((a, b) => b.voters.length - a.voters.length).map((o, i) => {
+                  const real = o.author === REAL;
+                  return h('div', { class: 'tv-option' + (real ? ' real' : '') + (!real && max && o.voters.length === max ? ' top' : ''), style: { animationDelay: i * 0.12 + 's' } },
+                    h('span', { class: 'by' }, real ? '📖 La vraie définition' : `✍️ ${g.nameOf(o.author)}${r.gains[o.author] ? ' · +' + r.gains[o.author] : ''}`),
+                    h('span', null, o.text),
+                    h('div', { class: 'votes' }, o.voters.length ? o.voters.map((p) => h('span', null, '👍 ' + g.nameOf(p))) : h('span', null, 'Aucun vote')));
+                })));
+              sfx.end();
+            }
+          }
+          if (v.phase === 'write') { who.set(room, v.submitted); status.textContent = `✍️ ${v.submitted.length}/${total} ont écrit`; }
+          else if (v.phase === 'vote') status.textContent = `🗳️ ${v.voted.length} vote${v.voted.length > 1 ? 's' : ''} · ${dico ? 'Laquelle est la vraie définition ?' : 'Votez pour la plus drôle !'}`;
+          else status.textContent = '';
+          lastKey = key;
+        },
+        destroy() { tm.stop(); },
       };
     },
 

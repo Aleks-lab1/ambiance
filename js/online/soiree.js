@@ -4,7 +4,7 @@ import { gameColors } from '../themes.js';
 import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew, TV_PID, tvTimer, tvEnd } from './kit.js';
 import { sortList } from '../sortable.js';
 import { matches } from '../race-core.js';
 import QAE from '../data/quiaecrit.js';
@@ -77,6 +77,49 @@ export const quiaecritOnline = {
     return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, prompt: s.prompt, deadline: s.deadline, mine: s.answers[pid] || null, nAns: Object.keys(s.answers).length,
       idx: s.idx, total: s.list ? s.list.length : 0, text: cur ? cur.text : null, isMine: cur ? cur.pid === pid : false, myVote: s.votes ? s.votes[pid] || null : null,
       nVotes: s.votes ? Object.keys(s.votes).length : 0, author: s.phase === 'reveal' ? cur.pid : null, votes: s.phase === 'reveal' ? s.votes : null };
+  },
+  // Écran télé : la question, puis chaque réponse anonyme en grand, et la révélation de l'auteur avec les votes.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('quiaecrit', ['#8e2de2', '#4a00e0']);
+    const style = { '--g1': colors[0], '--g2': colors[1] };
+    const tm = tvTimer(g);
+    const main = h('div', { class: 'col', style: { gap: '1em' } });
+    root.append(main);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (v.phase === 'end') { tm.set(0); if (lastKey !== 'end') { main.replaceChildren(...tvEnd(r)); sfx.fanfare(); } lastKey = 'end'; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}:${v.idx}`;
+        tm.set(v.phase === 'write' || v.phase === 'guess' ? v.deadline : 0);
+        const n = r.players.filter((p) => p.on).length;
+        const statusText = v.phase === 'write' ? `✍️ ${v.nAns}/${n} réponse${v.nAns > 1 ? 's' : ''}`
+          : `Réponse ${v.idx + 1}/${v.total} · Qui a écrit ça ? · 🗳️ ${v.nVotes} vote${v.nVotes > 1 ? 's' : ''}`;
+        // Même étape : seul le compteur change (la carte et la réponse ne rejouent pas leur animation).
+        if (key === lastKey) { const st = main.querySelector('.tv-status'); if (st) st.textContent = statusText; return; }
+        const bar = h('div', { class: 'tv-bar' }, h('span', { class: 'pill' }, `🕵️‍♀️ Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), tm.el);
+        if (v.phase === 'write') {
+          main.replaceChildren(bar, h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, 'Répondez en secret sur vos téléphones…'), h('div', { class: 'q' }, v.prompt)),
+            h('p', { class: 'tv-status' }, statusText));
+        } else {
+          const parts = [bar, h('div', { class: 'tv-card', style: { ...style, padding: '.8em 1.2em' } }, h('div', { class: 'kicker' }, 'La question était'), h('div', { class: 'q', style: { fontSize: '1.4em' } }, v.prompt)),
+            h('div', { class: 'tv-quote' }, `« ${v.text} »`)];
+          if (v.phase === 'guess') {
+            parts.push(h('p', { class: 'tv-status' }, statusText));
+          } else {
+            const votes = Object.entries(v.votes || {});
+            parts.push(h('div', { class: 'tv-author' }, `✍️ C'est ${g.nameOf(v.author)} !`),
+              h('div', { class: 'tv-results' }, votes.length
+                ? votes.map(([p, x]) => h('span', { class: 'tv-res' + (x === v.author ? ' ok' : '') }, `${x === v.author ? '✅' : '❌'} ${g.nameOf(p)} → ${g.nameOf(x)}`))
+                : h('span', { class: 'tv-res' }, 'Personne n\'a voté')));
+          }
+          main.replaceChildren(...parts);
+        }
+        if (key !== lastKey) { if (v.phase === 'write' || v.phase === 'guess') sfx.go(); if (v.phase === 'reveal') sfx.end(); }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
+    };
   },
   mount(root, g) {
     const colors = gameColors('quiaecrit', ['#8e2de2', '#4a00e0']);

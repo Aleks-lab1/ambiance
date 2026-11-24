@@ -64,7 +64,7 @@ function teardown() {
 }
 
 function urlFor(id, opts) {
-  if (id === 'online') return opts?.join ? '#/join/' + opts.join : '#/online';
+  if (id === 'online') return opts?.join ? '#/join/' + opts.join : opts?.tv ? '#/tv' + (typeof opts.tv === 'string' ? '/' + opts.tv : '') : '#/online';
   return '#/' + id + (opts?.online ? '/online' : '');
 }
 
@@ -137,6 +137,7 @@ function parseHash() {
   const [a, b] = raw.split('/');
   if (a === 'join') return { id: 'online', opts: { join: (b || '').toUpperCase().slice(0, 4) } };
   if (a === 'online') return { id: 'online', opts: {} };
+  if (a === 'tv') return { id: 'online', opts: { tv: (b || '').toUpperCase().slice(0, 4) || true } };
   if (gameById(a)) return { id: a, opts: b === 'online' ? { online: true } : {} };
   return null;
 }
@@ -341,7 +342,8 @@ function renderHome() {
       h('p', null, `Les ${GAMES.length} jeux se jouent aussi en ligne, chacun sur son téléphone : quiz, dessin, équipes, bluff…`),
       h('div', { class: 'row' },
         h('button', { class: 'btn grow', onclick: () => openScreen('online', { create: true }) }, 'Créer une partie'),
-        h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre'))),
+        h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre')),
+      h('button', { class: 'tv-link', onclick: () => openScreen('online', { tv: true }) }, '📺 Afficher en grand sur une télé ou un ordi')),
     installSlot,
     searchBox,
     filters,
