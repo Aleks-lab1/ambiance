@@ -63,20 +63,26 @@ run(async () => {
     return (await caches.keys()).includes('ambiance-test0update') && reg && !reg.installing && !reg.waiting && reg.active?.state === 'activated';
   });
   await W(1500); // rechargement automatique de l'accueil après la mise à jour
-  await page.waitForSelector('.tile');
+  await page.waitForSelector('.mode-card');
   const caches2 = await page.evaluate(async () => (await caches.keys()).sort());
   check(caches2.includes('ambiance-test0update') && caches2.includes(imgCache) && !caches2.includes(mainCache), 'mise à jour : nouveau cache, ancien supprimé, cache d\'images gardé', caches2);
   const imgHits = hits.filter((p) => p.startsWith('/img/'));
   check(hits.includes('/js/app.js') && imgHits.length === 0, `mise à jour : fichiers retéléchargés sauf les images (${hits.length} fichiers, ${imgHits.length} image)`, imgHits.slice(0, 5));
 
-  // Hors ligne : l'accueil s'affiche avec toutes ses images.
+  // Hors ligne : l'accueil (3 modes illustrés) puis la liste des jeux « Local » s'affichent avec toutes leurs images.
   online = false;
   await page.reload();
+  await page.waitForSelector('.mode-card');
+  await W(500);
+  const modes = await page.evaluate(() => [...document.querySelectorAll('img.mode-art')].filter((i) => i.complete && i.naturalWidth > 0).length);
+  check(modes === 3, `hors ligne : les 3 cases de l'accueil illustrées (${modes}/3)`);
+  await page.locator('.mode-card', { hasText: 'Local' }).click();
   await page.waitForSelector('.tile');
+  const nLocal = await page.evaluate(async () => (await import('/js/games/index.js')).LOCAL_GAMES.length);
   for (let y = 0; y < 12000; y += 700) { await page.evaluate((v) => window.scrollTo(0, v), y); await W(40); }
   await W(500);
   const img = await page.evaluate(() => { const l = [...document.querySelectorAll('img.tile-art')]; return { n: l.length, ok: l.filter((i) => i.complete && i.naturalWidth > 0).length, emo: document.querySelectorAll('.tile-emo').length }; });
-  check(img.n >= nTiles && img.ok === img.n && !img.emo, `hors ligne : ${img.ok}/${img.n} images affichées`, img);
+  check(img.n >= nLocal && nTiles >= img.n && img.ok === img.n && !img.emo, `hors ligne : ${img.ok}/${img.n} images des jeux « Local » affichées`, img);
   const hand = await page.evaluate(() => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i.naturalWidth > 0); i.onerror = () => ok(false); i.src = 'img/ui/main.webp'; }));
   check(hand, 'hors ligne : image de la main (4 en ligne) disponible');
   check(!errors.length, 'aucune erreur JS', errors);

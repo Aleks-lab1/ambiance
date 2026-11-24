@@ -1,7 +1,7 @@
 // Point d'entrée : accueil, navigation, réglages, installation PWA.
 import { h, mount, modal, toast, toggleRow, confirmBox, keepAwake } from './ui.js';
 import { settings, saveSettings, get, set, resetSeen, getPlayers } from './store.js';
-import { GAMES, FILTERS, gameById } from './games/index.js';
+import { GAMES, LOCAL_GAMES, FILTERS, gameById } from './games/index.js';
 import { editPlayers } from './players.js';
 import { ensureAdult } from './common.js';
 import { getFavs, isFav, toggleFav } from './favorites.js';
@@ -11,10 +11,10 @@ import { COUNTS, countLabel, fitsCount, matchSearch, getCount, setCount, getRece
 import { loadHost, clearHost, loadSeat, clearSeat, resumeText } from './online/save.js';
 
 const ONLINE_META = {
-  id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
+  id: 'online', name: 'Online', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
   rules: [
-    'Un joueur <b>crée la partie</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre</b> et entrent ce code : chacun joue sur son propre téléphone.',
-    `Tous les jeux d'Ambiance se jouent en ligne : l'hôte choisit parmi les ${GAMES.length} jeux (dessin, quiz, bluff, votes, jeux en équipes, Loup-garou avec rôles secrets, Bataille navale, Yam's, Action ou vérité, La Bouteille…).`,
+    'Un joueur <b>crée le salon</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre le salon</b> et entrent ce code : chacun joue sur son propre téléphone.',
+    `Tous les jeux d'Ambiance se jouent en ligne : celui qui a créé le salon lance les jeux parmi les ${GAMES.length}, les autres votent pour ceux qu'ils veulent (dessin, quiz, bluff, jeux en équipes, Loup-garou, Bataille navale, Yam's…).`,
     'Dans certains jeux, un seul joueur agit à la fois (celui dont c\'est le tour, ou l\'hôte) : les autres suivent la partie en direct sur leur téléphone.',
     'Ça marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit. Si l\'hôte ferme l\'appli (ou si son téléphone se verrouille), il reprend la partie là où elle en était : les autres patientent et reviennent tout seuls, avec leurs points.',
   ],
@@ -64,14 +64,16 @@ function teardown() {
 }
 
 function urlFor(id, opts) {
+  if (id === 'local') return '#/local';
   if (id === 'online') return opts?.join ? '#/join/' + opts.join : opts?.tv ? '#/tv' + (typeof opts.tv === 'string' ? '/' + opts.tv : '') : '#/online';
   return '#/' + id + (opts?.online ? '/online' : '');
 }
 
 async function openScreen(id, opts = {}, push = true) {
-  const meta = id === 'online' ? ONLINE_META : gameById(id);
+  const menu = id === 'online' || id === 'local'; // écrans de mode, pas des jeux
+  const meta = id === 'online' ? ONLINE_META : id === 'local' ? LOCAL_META : gameById(id);
   if (!meta) { renderHome(); return; }
-  if (id !== 'online') pushRecent(id);
+  if (!menu) pushRecent(id);
   teardown();
   const state = { screen: id, opts };
   const url = urlFor(id, opts);
@@ -81,7 +83,7 @@ async function openScreen(id, opts = {}, push = true) {
   const root = h('div', { class: 'screen game-screen', style: { '--g1': gc[0], '--g2': gc[1] } });
   mount(root);
   document.title = `${meta.name} — Ambiance`;
-  document.body.classList.add('in-game');
+  if (id !== 'local') document.body.classList.add('in-game');
   let mod;
   try { mod = await meta.load(); } catch (e) {
     console.error(e);
@@ -95,9 +97,9 @@ async function openScreen(id, opts = {}, push = true) {
     exit: () => { bypassGuard = true; goHome(); },
     setGuard: (msg) => { if (current) current.guard = msg; },
     open: (gid, o) => openScreen(gid, o, true),
-    favButton: id === 'online' ? null : () => starButton(meta, 'icon-btn fav-top'),
+    favButton: menu ? null : () => starButton(meta, 'icon-btn fav-top'),
   };
-  keepAwake(true);
+  if (id !== 'local') keepAwake(true);
   try {
     current.cleanup = mod.start(ctx) || null;
   } catch (e) {
@@ -137,6 +139,7 @@ function parseHash() {
   const [a, b] = raw.split('/');
   if (a === 'join') return { id: 'online', opts: { join: (b || '').toUpperCase().slice(0, 4) } };
   if (a === 'online') return { id: 'online', opts: {} };
+  if (a === 'local') return { id: 'local', opts: {} };
   if (a === 'tv') return { id: 'online', opts: { tv: (b || '').toUpperCase().slice(0, 4) || true } };
   if (gameById(a)) return { id: a, opts: b === 'online' ? { online: true } : {} };
   return null;
@@ -147,8 +150,15 @@ let deferredInstall = null;
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-function renderHome() {
-  document.title = 'Ambiance — jeux de soirée';
+// ---------------- Local : les jeux sur un seul téléphone (#/local) ----------------
+const LOCAL_META = {
+  id: 'local', name: 'Local', emoji: '📱', colors: ['#ff7a59', '#ff4d8d'],
+  load: () => Promise.resolve({ start: (ctx) => renderLocal(ctx) }),
+};
+const isLocal = (g) => g && !g.onlineOnly;
+
+function renderLocal(ctx) {
+  document.title = 'Local — Ambiance';
   let filter = get('filter', 'all');
   if (!FILTERS.some((f) => f.id === filter)) filter = 'all'; // ancien filtre supprimé (ex. « En ligne »)
   let count = getCount(); // « On est combien ? » (0 = peu importe)
@@ -162,7 +172,7 @@ function renderHome() {
       onclick: () => { filter = f.id; set('filter', filter); renderFilters(); renderGrid(); renderFavs(); },
     }, f.label)));
   }
-  const favGames = () => getFavs().map((id) => gameById(id)).filter(Boolean);
+  const favGames = () => getFavs().map((id) => gameById(id)).filter(isLocal);
 
   // ---- Recherche ----
   const searchIn = h('input', {
@@ -197,7 +207,7 @@ function renderHome() {
   function currentList() {
     const base = filter === 'fav'
       ? favGames()
-      : GAMES.filter((g) => filter === 'all' || (filter === 'new' ? g.new : g.tags.includes(filter)));
+      : LOCAL_GAMES.filter((g) => filter === 'all' || (filter === 'new' ? g.new : g.tags.includes(filter)));
     return base.filter((g) => fitsCount(g, count) && matchSearch(g, query, tagWords(g)));
   }
   function resetFilters() {
@@ -223,7 +233,7 @@ function renderHome() {
     if (!n) {
       const q = query.trim();
       // Le jeu cherché existe, mais pas pour ce nombre de joueurs (« loup » à 4 : Loup-garou se joue à 6+).
-      const otherCount = count && q && GAMES.filter((g) => matchSearch(g, query, tagWords(g)));
+      const otherCount = count && q && LOCAL_GAMES.filter((g) => matchSearch(g, query, tagWords(g)));
       const title = q ? `Aucun jeu ne correspond à « ${q} »${count ? ` pour ${countLabel(count)} joueurs` : ''}` : `Aucun jeu ici${count ? ` pour ${countLabel(count)} joueurs` : ''}`;
       grid.replaceChildren(h('div', { class: 'panel center col empty-find', style: { gridColumn: '1 / -1' } },
         h('div', { class: 'hero-emo', style: { fontSize: '44px' } }, '🤷'),
@@ -269,7 +279,7 @@ function renderHome() {
   const recentSlot = h('div', { class: 'col', style: { gap: '8px' } });
   function renderRecent() {
     const favs = getFavs();
-    const list = getRecent().filter((id) => !favs.includes(id)).map((id) => gameById(id)).filter(Boolean).slice(0, 6);
+    const list = getRecent().filter((id) => !favs.includes(id)).map((id) => gameById(id)).filter(isLocal).slice(0, 6);
     if (!list.length) { recentSlot.replaceChildren(); recentSlot.classList.add('hidden'); return; }
     recentSlot.classList.remove('hidden');
     recentSlot.replaceChildren(
@@ -277,6 +287,53 @@ function renderHome() {
       h('div', { class: 'scroll-x recent-row' }, list.map(miniTile)));
   }
 
+
+  const playersBar = h('button', { class: 'players-bar', onclick: async () => { await editPlayers(); renderPlayers(); } });
+  function renderPlayers() {
+    const l = getPlayers();
+    playersBar.replaceChildren(
+      h('span', { style: { fontSize: '22px' } }, '👥'),
+      h('span', { class: 'names' }, l.length ? [h('b', null, `${l.length} joueurs`), ' · ' + l.join(', ')] : [h('b', null, 'Ajouter les joueurs'), ' — pour personnaliser les jeux']),
+      h('span', { class: 'chip' }, l.length ? 'Modifier' : 'Ajouter'));
+  }
+  renderPlayers();
+
+
+  ctx.root.replaceChildren(
+    h('div', { class: 'topbar' },
+      h('button', { class: 'icon-btn', 'aria-label': 'Retour', onclick: () => ctx.exit() }, '←'),
+      h('span', { class: 'emo' }, '📱'),
+      h('h1', null, 'Local'),
+      h('span', { class: 'pill' }, `${LOCAL_GAMES.length} jeux`)),
+    h('p', { class: 'muted small local-sub' }, 'Un seul téléphone, qu\'on se passe ou qu\'on pose au milieu de la table.'),
+    playersBar,
+    favSlot,
+    recentSlot,
+    searchBox,
+    filters,
+    counts,
+    resultBar,
+    grid,
+    h('p', { class: 'footer' }, settings.drink ? '🍻 Mode soirée : les pénalités se boivent. Avec modération !' : '🧃 Mode sans alcool : les pénalités sont des points de gage.',
+      h('br'), h('button', { class: 'btn btn-ghost btn-sm', style: { marginTop: '8px' }, onclick: openSettings }, 'Changer dans les réglages')),
+  );
+  ctx.root.classList.add('local-screen');
+  renderFilters();
+  renderCounts();
+  renderGrid();
+  renderFavs();
+  renderRecent();
+}
+
+// ---------------- Accueil : 3 grandes cases Local / Online / TV Mode ----------------
+const MODES = [
+  { id: 'local', name: 'Local', sub: 'Un seul téléphone qu\'on se passe', more: `${LOCAL_GAMES.length} jeux`, colors: ['#ff8a4c', '#ff4d8d'], go: () => openScreen('local') },
+  { id: 'online', name: 'Online', sub: 'Chacun joue sur son téléphone', more: 'Créer ou rejoindre un salon', colors: ['#2a7bff', '#7c5cff'], go: () => openScreen('online') },
+  { id: 'tv', name: 'TV Mode', sub: 'La télé affiche, les téléphones jouent', more: 'On scanne le QR code', colors: ['#7c3aed', '#14b8a6'], go: () => openScreen('online', { tv: true }) },
+];
+
+function renderHome() {
+  document.title = 'Ambiance — jeux de soirée';
   // Partie en ligne coupée (appli fermée, téléphone verrouillé…) : on propose de la reprendre.
   const resumeSlot = h('div');
   function renderResume() {
@@ -297,17 +354,6 @@ function renderHome() {
     } else resumeSlot.replaceChildren();
   }
   renderResume();
-
-  const playersBar = h('button', { class: 'players-bar', onclick: async () => { await editPlayers(); renderPlayers(); } });
-  function renderPlayers() {
-    const l = getPlayers();
-    playersBar.replaceChildren(
-      h('span', { style: { fontSize: '22px' } }, '👥'),
-      h('span', { class: 'names' }, l.length ? [h('b', null, `${l.length} joueurs`), ' · ' + l.join(', ')] : [h('b', null, 'Ajouter les joueurs'), ' — pour personnaliser les jeux']),
-      h('span', { class: 'chip' }, l.length ? 'Modifier' : 'Ajouter'));
-  }
-  renderPlayers();
-
   const installSlot = h('div');
   function renderInstall() {
     installSlot.replaceChildren();
@@ -327,37 +373,22 @@ function renderHome() {
   }
   renderInstall();
   homeInstallRefresh = renderInstall;
-
+  const cards = MODES.map((m) => {
+    const [c1, c2] = gameColors('mode-' + m.id, m.colors);
+    const img = h('img', { class: 'mode-art', src: `img/ui/mode-${m.id}.webp`, alt: '', decoding: 'async', draggable: 'false' });
+    img.addEventListener('error', () => img.remove(), { once: true });
+    return h('button', { class: 'mode-card mode-' + m.id, style: { '--g1': c1, '--g2': c2 }, onclick: () => { sfx.unlock(); sfx.pop(); m.go(); } },
+      img,
+      h('span', { class: 'mode-txt' }, h('b', { class: 'mode-name' }, m.name), h('span', { class: 'mode-sub' }, m.sub), h('span', { class: 'mode-more' }, m.more)));
+  });
   const screen = h('div', { class: 'screen home' },
     h('div', { class: 'home-head' },
       h('div', null, h('div', { class: 'logo' }, 'Ambiance'), h('div', { class: 'tagline' }, `${GAMES.length} jeux pour mettre le feu à ta soirée 🎉`)),
       h('button', { class: 'icon-btn', 'aria-label': 'Réglages', onclick: openSettings }, '⚙️')),
     resumeSlot,
-    playersBar,
-    favSlot,
-    recentSlot,
-    h('div', { class: 'online-banner' },
-      h('div', { class: 'deco' }, '📱'),
-      h('h2', null, '🌐 Jouer en ligne'),
-      h('p', null, `Les ${GAMES.length} jeux se jouent aussi en ligne, chacun sur son téléphone : quiz, dessin, équipes, bluff…`),
-      h('div', { class: 'row' },
-        h('button', { class: 'btn grow', onclick: () => openScreen('online', { create: true }) }, 'Créer une partie'),
-        h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre')),
-      h('button', { class: 'tv-link', onclick: () => openScreen('online', { tv: true }) }, '📺 Afficher en grand sur une télé ou un ordi')),
+    h('div', { class: 'modes' }, cards),
     installSlot,
-    searchBox,
-    filters,
-    counts,
-    resultBar,
-    grid,
-    h('p', { class: 'footer' }, settings.drink ? '🍻 Mode soirée : les pénalités se boivent. Avec modération !' : '🧃 Mode sans alcool : les pénalités sont des points de gage.',
-      h('br'), h('button', { class: 'btn btn-ghost btn-sm', style: { marginTop: '8px' }, onclick: openSettings }, 'Changer dans les réglages')),
   );
-  renderFilters();
-  renderCounts();
-  renderGrid();
-  renderFavs();
-  renderRecent();
   mount(screen);
 }
 
@@ -490,7 +521,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 // ---------------- Démarrage ----------------
 applyTheme();
 // Changement de thème depuis les réglages : l'accueil se recolore aussitôt.
-document.addEventListener('theme-changed', () => { if (!current && document.querySelector('.grid')) renderHome(); });
+document.addEventListener('theme-changed', () => { if (!current && document.querySelector('.home')) renderHome(); });
 document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
 const target = parseHash();
 history.replaceState({ screen: 'home' }, '', location.pathname + location.search);

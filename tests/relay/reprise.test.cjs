@@ -35,13 +35,13 @@ run(async () => {
   const host = await phone(), bob = await phone(), chloe = await phone();
   await host.goto(URL + '#/online'); await W(host, 600);
   await host.getByPlaceholder('Ton prénom').fill('Alice');
-  await host.getByRole('button', { name: 'Créer la partie' }).click();
+  await host.getByRole('button', { name: 'Créer le salon' }).click();
   await host.waitForSelector('.room-code', { timeout: 30000 });
   const code = (await host.locator('.room-code').innerText()).trim();
   for (const [p, n] of [[bob, 'Bob'], [chloe, 'Chloé']]) {
     await p.goto(URL + '#/join/' + code);
     await p.getByPlaceholder('Ton prénom').fill(n);
-    await p.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+    await p.getByRole('button', { name: 'Rejoindre le salon' }).click();
   }
   await host.waitForFunction(() => /Bob/.test(document.body.innerText) && /Chloé/.test(document.body.innerText), null, { timeout: 45000 });
   check(true, `Bob et Chloé ont rejoint la partie ${code} par le relais`);
@@ -137,7 +137,7 @@ run(async () => {
   const bob2 = await phone();
   await bob2.goto(URL + '#/join/' + code);
   await bob2.getByPlaceholder('Ton prénom').fill('Bob');
-  await bob2.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+  await bob2.getByRole('button', { name: 'Rejoindre le salon' }).click();
   await W(bob2, 5000);
   st = await hostState(host2);
   check(st.players.length === 3 && st.players.find((p) => p.name === 'Bob').on, 'Bob (autre navigateur, même prénom) a retrouvé sa place', st.players);

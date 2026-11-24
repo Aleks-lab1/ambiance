@@ -100,13 +100,22 @@ run(async () => {
   }
   check(!missing.length, 'chaque jeu propose le mode en ligne', missing);
 
+  // Accueil : 3 grandes cases Local / Online / TV Mode, de haut en bas.
   await go('');
+  const modes = await page.locator('.mode-card .mode-name').allInnerTexts();
+  const ys = await page.locator('.mode-card').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  check(JSON.stringify(modes) === '["Local","Online","TV Mode"]' && ys[0] < ys[1] && ys[1] < ys[2], 'accueil : Local, Online, TV Mode, de haut en bas', modes);
+  check(!(await page.locator('.tile').count()), 'accueil : pas de liste de jeux (elle est dans « Local »)');
+  const localIds = await page.evaluate(async () => (await import('/js/games/index.js')).LOCAL_GAMES.map((g) => g.id));
+  check(localIds.length === ids.length - 7 && !['quiaecrit', 'danssatete', 'quisuisje', 'punchlines', 'telephone', 'dico', 'menteur'].some((x) => localIds.includes(x)), `Local : ${localIds.length} jeux, sans les 7 jeux qui n'existent qu'en ligne`);
+  await page.locator('.mode-card', { hasText: 'Local' }).click(); await W(600);
+  check(/#\/local$/.test(page.url()), 'Local : adresse #/local');
   check(!(await page.locator('.chip', { hasText: /En ligne/ }).count()), 'plus de filtre « En ligne »');
   check(!(await page.locator('.tile .badge', { hasText: /En ligne/ }).count()), 'plus de badge « En ligne » sur les jeux');
 
   // Accueil : chaque case montre l'image du jeu et son nom (en bas à gauche), sans la description.
   const tiles = await page.locator('.tile').count();
-  check(tiles === ids.length && !(await page.locator('.tile .desc').count()), `accueil : ${tiles} cases, sans description`);
+  check(tiles === localIds.length && !(await page.locator('.tile .desc').count()), `Local : ${tiles} cases, sans description`);
   for (let y = 0; y < 15000; y += 700) { await page.evaluate((v) => window.scrollTo(0, v), y); await W(30); }
   await W(400);
   const art = await page.evaluate(() => {
@@ -119,7 +128,7 @@ run(async () => {
   check(box.width / box.height > 1.4, `accueil : cases rectangulaires (${Math.round(box.width)} × ${Math.round(box.height)})`);
   check(name.x - box.x < 20 && box.y + box.height - (name.y + name.height) < 20, 'accueil : nom du jeu en bas à gauche de la case');
   await page.evaluate(() => localStorage.setItem('ambiance:favs', JSON.stringify(['quiz', 'roi'])));
-  await go(''); await page.reload(); await W(500);
+  await go('local'); await page.reload(); await W(500);
   check(await page.locator('.fav-row .mini-tile img.tile-art').count() === 2, 'favoris : les mini-cases ont aussi leur image');
   const recent = await page.locator('.recent-row .mini-tile .nm').allInnerTexts();
   check(recent.length > 0 && recent.length <= 6 && !recent.includes('Le Quiz') && !recent.includes('Le Roi'), 'joués récemment : les derniers jeux ouverts (sans répéter les favoris)', recent);
@@ -131,7 +140,7 @@ run(async () => {
   await page.locator('.search-box input').fill('dés'); await W(200);
   check((await names()).includes('Yam\'s') && !(await names()).includes('Je dessine, tu devines'), 'recherche « dés » → jeux de dés', await names());
   await page.locator('.search-clear').click(); await W(200);
-  check(await page.locator('.tile').count() === ids.length, 'recherche effacée : tous les jeux');
+  check(await page.locator('.tile').count() === localIds.length, 'recherche effacée : tous les jeux');
   await page.locator('.count-row .chip', { hasText: /^2$/ }).click(); await W(200);
   const two = await page.locator('.tile').count();
   const badges = await page.locator('.tile .badge', { hasText: '👤' }).allInnerTexts();
@@ -148,7 +157,7 @@ run(async () => {
   await page.locator('.reel-wrap button', { hasText: 'Jouer' }).click(); await W(800);
   check((await page.title()).startsWith(picked), 'au hasard : « Jouer » ouvre ce jeu', await page.title());
 
-  await go(''); await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
+  await go('local'); await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
   const n = await page.locator('.tile').count();
   check(n > 0 && n <= 12, 'filtre Nouveaux : uniquement le dernier lot', n);
   check(!errors.length, 'aucune erreur JS', errors);

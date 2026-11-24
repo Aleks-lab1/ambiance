@@ -7,7 +7,7 @@ const { check, done } = createRequire(import.meta.url)('../lib/check.cjs');
 
 const ROOT = new URL('../../', import.meta.url);
 const { GAMES } = await import('../../js/games/index.js');
-const { SCENES } = await import('../../scripts/images/scenes.mjs');
+const { SCENES, MODE_SCENES } = await import('../../scripts/images/scenes.mjs');
 const ids = GAMES.map((g) => g.id);
 
 const noScene = ids.filter((id) => !SCENES[id]);
@@ -39,7 +39,7 @@ check(!orphans.length, 'aucune image en trop dans img/jeux/', orphans);
 const have = new Set(readdirSync(new URL('scripts/images/emoji/', ROOT)));
 const code = (ch) => [...ch].map((c) => c.codePointAt(0).toString(16)).join('-');
 const missing = [];
-for (const [id, items] of Object.entries(SCENES)) {
+for (const [id, items] of Object.entries({ ...SCENES, ...MODE_SCENES })) {
   for (const it of items) {
     if (it.k !== 'e') continue;
     const c = code(it.ch);
@@ -48,4 +48,7 @@ for (const [id, items] of Object.entries(SCENES)) {
 }
 check(!missing.length, 'tous les emojis des compositions sont dans scripts/images/emoji/', missing);
 check(have.has('LICENSE'), 'licence des emojis Fluent (MIT) présente');
+// Les 3 grandes cases de l'accueil (Local, Online, TV Mode) : img/ui/mode-<id>.webp (node scripts/gen-images.mjs modes).
+const modeBad = ['local', 'online', 'tv'].filter((m) => { const f = new URL(`img/ui/mode-${m}.webp`, ROOT); const sz = existsSync(f) && webpSize(readFileSync(f)); return !(MODE_SCENES['mode-' + m] && sz && sz[0] === 540 && sz[1] === 360); });
+check(!modeBad.length, 'accueil : une composition et une image pour chacun des 3 modes', modeBad);
 done();

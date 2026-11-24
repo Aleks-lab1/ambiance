@@ -27,14 +27,14 @@ run(async () => {
   const host = await phone(), cli = await phone();
   await host.goto(APP + '#/online');
   await host.getByPlaceholder('Ton prénom').fill('Alice');
-  await host.getByRole('button', { name: 'Créer la partie' }).click();
+  await host.getByRole('button', { name: 'Créer le salon' }).click();
   await host.waitForSelector('.room-code', { timeout: 30000 });
   const code = (await host.locator('.room-code').innerText()).trim();
   await host.waitForTimeout(800);
   const t1 = Date.now();
   await cli.goto(APP + '#/join/' + code);
   await cli.getByPlaceholder('Ton prénom').fill('Bob');
-  await cli.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+  await cli.getByRole('button', { name: 'Rejoindre le salon' }).click();
   await host.waitForFunction(() => /Bob/.test(document.body.innerText), null, { timeout: 45000 });
   check(true, `Bob a rejoint en ${Date.now() - t1} ms`);
   await host.locator('.game-pick button', { hasText: 'Le Bon Mot' }).click(); await host.waitForTimeout(300);

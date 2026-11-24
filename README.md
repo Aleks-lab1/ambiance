@@ -3,6 +3,14 @@
 Une application web installable (PWA) avec **61 jeux de soirée** en français, **tous jouables en ligne, chacun sur son téléphone** (ou sur un seul téléphone qu'on se passe).
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
+## L'accueil : 3 modes
+
+| | Mode | Pour quoi |
+|---|---|---|
+| 📱 | **Local** | Un seul téléphone qu'on se passe : 54 jeux (quiz, Sur le front, À vue de nez, jeux de cartes…), avec recherche, « On est combien ? », 🎲 au hasard, favoris et joués récemment. |
+| 🌐 | **Online** | Chacun sur son téléphone : **Créer le salon** ou **Rejoindre le salon** (code ou QR code). Celui qui a créé le salon lance les jeux, les autres **votent** pour ceux qu'ils veulent. |
+| 📺 | **TV Mode** | Sur un ordinateur ou une télé : **▶ Lancer la télé**, chacun scanne le QR code avec son téléphone. Le premier arrivé est le **chef 👑** (il lance les jeux, les autres votent), la télé affiche tout en grand. |
+
 ## Les jeux
 
 ### 🌐 En ligne : tous les jeux (chacun sur son téléphone)
@@ -155,7 +163,7 @@ Le script liste tous les fichiers et calcule un numéro de version. Les utilisat
 - Code à 4 lettres + QR code + lien de partage. Reconnexion automatique si un joueur perd le réseau ou recharge la page (le dessin en cours est restauré).
 - **Partie coupée, partie reprise** (`js/online/save.js`) : le téléphone de l'hôte enregistre la partie en continu (joueurs, scores, jeu en cours). S'il ferme l'appli, si son téléphone se verrouille ou si la page se recharge, l'accueil propose « 🔁 Reprendre la partie » : même code, mêmes scores, le jeu repart au même point (les minuteurs sont mis en pause). Les autres sont prévenus (« Alice a quitté l'appli un instant… »), patientent jusqu'à 5 minutes et reviennent tout seuls.
 - **Un joueur qui revient retrouve sa place et ses points** : bandeau « 🔌 Revenir dans la partie » sur l'accueil, et l'hôte reconnaît aussi un joueur parti qui revient avec le même prénom depuis un autre navigateur.
-- 📺 **Mode télé** (`js/online/tv.js`) : sur un ordinateur ou une télé, « Jouer en ligne » → **Écran télé** → code de la partie (ou `#/tv/CODE`). La partie s'affiche en grand pour tout le monde (code et QR pour rejoindre, classement en direct, podium) et les téléphones servent de manettes. Écrans spéciaux pour le Quiz et les jeux de rapidité (question et 4 grandes réponses, qui a répondu quoi), Je dessine (le dessin se trace en direct, mot caché), Qui a écrit ça ?, Punchlines, Dico bluff et Loup-garou (le script du meneur en grand, nuit et jour). La télé ne reçoit jamais de secret (mot, rôle, réponse pas encore révélée).
+- 📺 **Mode télé** (`js/online/tv.js`) : accueil → **TV Mode** → « ▶ Lancer la télé » (la télé crée le salon, les téléphones scannent le QR code, le premier arrivé est le chef 👑), ou « Afficher un salon déjà créé » (code, ou `#/tv/CODE`). La partie s'affiche en grand pour tout le monde (code et QR pour rejoindre, classement en direct, podium) et les téléphones servent de manettes. Écrans spéciaux pour le Quiz et les jeux de rapidité (question et 4 grandes réponses, qui a répondu quoi), Je dessine (le dessin se trace en direct, mot caché), Qui a écrit ça ?, Punchlines, Dico bluff et Loup-garou (le script du meneur en grand, nuit et jour). La télé ne reçoit jamais de secret (mot, rôle, réponse pas encore révélée).
 - Ça marche en Wi-Fi comme en 4G/5G, même à distance (relais automatique, voir ci-dessous).
 
 ### En 4G/5G ou sur des Wi-Fi différents
@@ -188,7 +196,7 @@ Les niveaux d'intensité sont définis dans `js/data/levels.js`.
 ```
 index.html, manifest.webmanifest, sw.js (généré)
 css/style.css
-js/app.js            accueil, navigation, réglages, installation
+js/app.js            accueil (Local, Online, TV Mode), écran Local, navigation, réglages, installation
 js/games/index.js    catalogue des jeux
 js/games/*.js        un module par jeu (chargé à la demande)
 js/online/room.js    salon en ligne, hôte, clients, reconnexion

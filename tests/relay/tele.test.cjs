@@ -15,23 +15,25 @@ run(async () => {
   const { browser, phone, errors } = await relayWorld();
   const host = await phone(), bob = await phone(), chloe = await phone();
   const tv = await phone({ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false, deviceScaleFactor: 1 });
-  await host.goto(URL + '#/online'); await W(host, 500);
+  await host.goto(URL); await W(host, 500);
+  await host.locator('.mode-card', { hasText: 'Online' }).click(); await W(host, 400);
   await host.getByPlaceholder('Ton prénom').fill('Alice');
-  await host.getByRole('button', { name: 'Créer la partie' }).click();
+  await host.getByRole('button', { name: 'Créer le salon' }).click();
   await host.waitForSelector('.room-code', { timeout: 30000 });
   const code = (await host.locator('.room-code').innerText()).trim();
 
   // ---- La télé se branche avec le code ----
-  await tv.goto(URL + '#/online'); await W(tv, 400);
-  await tv.locator('.panel', { hasText: 'Écran télé' }).locator('input').fill(code);
-  await tv.getByRole('button', { name: 'Afficher' }).click();
+  await tv.goto(URL); await W(tv, 400);
+  await tv.locator('.mode-card', { hasText: 'TV Mode' }).click(); await W(tv, 400);
+  await tv.locator('.panel', { hasText: 'Afficher un salon déjà créé' }).locator('input').fill(code);
+  await tv.getByRole('button', { name: 'Afficher', exact: true }).click();
   await tv.waitForSelector('.tv-bigcode', { timeout: 30000 });
   check((await tv.locator('.tv-bigcode').innerText()).trim() === code && await tv.locator('.tv-bigqr svg').count() === 1, `télé : grand code ${code} et QR code pour rejoindre`);
   check(/#\/tv\//.test(tv.url()), 'télé : adresse #/tv/CODE (à recharger si besoin)', tv.url());
   for (const [p, n] of [[bob, 'Bob'], [chloe, 'Chloé']]) {
     await p.goto(URL + '#/join/' + code);
     await p.getByPlaceholder('Ton prénom').fill(n);
-    await p.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+    await p.getByRole('button', { name: 'Rejoindre le salon' }).click();
   }
   await tv.waitForFunction(() => /Chloé/.test(document.querySelector('.tv-bubbles')?.innerText || ''), null, { timeout: 45000 });
   check(true, 'télé : Bob et Chloé apparaissent dans le salon');

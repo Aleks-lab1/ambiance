@@ -43,6 +43,7 @@ export const GAMES = [
       'Une question perso s\'affiche (« Ton plus gros mensonge à tes parents »). Chacun écrit sa réponse en secret sur son téléphone.',
       'Les réponses sont ensuite révélées une par une, anonymement : votez pour celui ou celle qui l\'a écrite ! +1 si tu trouves, et l\'auteur gagne +1 par joueur piégé.',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('quiaecrit')),
   },
   {
@@ -63,6 +64,7 @@ export const GAMES = [
       'Un thème et 5 éléments s\'affichent (« Les pires corvées »). Le joueur désigné les classe selon SES goûts, en secret.',
       'Les autres essaient de deviner son classement : +1 par élément à la bonne place. Le joueur désigné gagne 1 point par ami qui en a trouvé au moins 3.',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('danssatete')),
   },
   {
@@ -83,6 +85,7 @@ export const GAMES = [
       'Chaque joueur reçoit une identité secrète (célébrité, personnage, animal…) que tous les autres voient sur leur téléphone, mais pas lui !',
       'À tour de rôle, pose une question fermée à voix haute (« Suis-je une femme ? »), les autres répondent oui ou non. Quand tu crois savoir, tape ta réponse : les premiers à trouver marquent le plus.',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('quisuisje')),
   },
   {
@@ -140,6 +143,7 @@ export const GAMES = [
       'Les réponses sont affichées anonymement et tout le monde vote pour sa préférée (pas la sienne !). Chaque vote reçu rapporte 100 points.',
       'Trois niveaux : Fun, Trash (18+) et Hot++.',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('write-punch')),
   },
   {
@@ -149,6 +153,7 @@ export const GAMES = [
       'Chacun écrit une phrase. Elle passe au joueur suivant qui doit la <b>dessiner</b>. Le suivant voit seulement le dessin et écrit ce qu\'il croit voir. Le suivant le redessine… et ainsi de suite.',
       'À la fin, on révèle chaque chaîne étape par étape : fous rires garantis quand « un chat qui fait du ski » devient « une banane au volant ».',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('telephone')),
   },
   {
@@ -158,6 +163,7 @@ export const GAMES = [
       'Un mot rare s\'affiche (« callipyge », « billevesée »…). Chacun invente une définition crédible sur son téléphone.',
       'Toutes les définitions, plus la vraie, sont mélangées. Vote pour celle que tu crois vraie : +200 points si tu trouves, et +100 points pour chaque joueur piégé par ta fausse définition.',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('write-dico')),
   },
   {
@@ -167,6 +173,7 @@ export const GAMES = [
       'Chacun voit ses dés en secret sur son téléphone. À tour de rôle, on annonce combien de dés d\'une valeur il y a <b>en tout sur la table</b> (ex. « cinq 4 »). Chaque annonce doit être plus haute que la précédente.',
       'Si tu penses que le joueur précédent exagère, dis « Menteur ! ». On révèle tous les dés : si l\'annonce est fausse, il perd un dé, sinon c\'est toi. Les 1 sont des jokers (désactivable). Le dernier à avoir des dés gagne.',
     ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
     load: () => import('./enligne.js').then((m) => m.launcher('menteur')),
   },
   {
@@ -589,3 +596,6 @@ export const GAMES = [
 ];
 
 export function gameById(id) { return GAMES.find((g) => g.id === id); }
+
+/** Jeux qui se jouent sur un seul téléphone (section « Local » de l'accueil). */
+export const LOCAL_GAMES = GAMES.filter((g) => !g.onlineOnly);

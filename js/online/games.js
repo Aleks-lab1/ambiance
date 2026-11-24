@@ -27,3 +27,14 @@ export const ONLINE_GAMES = [dessin, imposteur, raceQuiz, writePunch, telephone,
   actionOnline, capOnline, etsiOnline, confidencesOnline, bouteilleOnline, roueOnline, roiOnline, plusmoinsOnline, busOnline,
   chapeauOnline, frontOnline, niouiOnline, histoireOnline, penduOnline, sequenceOnline, doigtOnline, outilsOnline];
 export const onlineGame = (id) => ONLINE_GAMES.find((g) => g.id === id);
+
+// Jeu du catalogue (js/games/index.js) qui correspond à chaque jeu en ligne : image de la case, couleurs,
+// catégories et nombre de joueurs, pour le choix illustré du salon. Même identifiant sauf ceux-ci :
+const LOCAL_OF = {
+  'race-quiz': 'quiz', 'race-emoji': 'emojis', 'race-anag': 'anagrammes', 'race-estim': 'estimations', 'race-vf': 'vraifaux', 'race-calc': 'calcul',
+  'write-punch': 'punchlines', 'write-dico': 'dico',
+  'vote-tp': 'tupreferes', 'vote-dix': 'dix', 'vote-qui': 'qui', 'vote-op': 'opinions', 'vote-jamais': 'jamais',
+  'eq-mi': 'motsinterdits', 'eq-mime': 'mime', 'eq-fredonne': 'fredonne', 'eq-disle': 'disle',
+  reflexes: 'duel',
+};
+export const localIdOf = (onlineId) => LOCAL_OF[onlineId] || onlineId;

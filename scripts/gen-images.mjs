@@ -2,6 +2,7 @@
 // La composition de chaque image est dans scripts/images/scenes.mjs.
 //   node scripts/gen-images.mjs              → toutes les images
 //   node scripts/gen-images.mjs quiz roi     → seulement ces jeux
+//   node scripts/gen-images.mjs modes        → les 3 grandes cases de l'accueil (Local, Online, TV Mode) → img/ui/mode-<id>.webp
 // Les illustrations 3D viennent de Fluent Emoji (Microsoft, licence MIT, voir scripts/images/emoji/LICENSE),
 // copiées dans scripts/images/emoji/ (une image par emoji, nommée d'après ses codes Unicode, ex. 1f3b2.webp).
 // Pour un emoji qui n'y est pas encore, récupérer le paquet complet (3 400 emojis, images seulement) puis relancer
@@ -16,7 +17,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SCENES } from './images/scenes.mjs';
+import { SCENES, MODE_SCENES } from './images/scenes.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -46,14 +47,17 @@ function emojiFile(ch) {
   throw new Error(`Emoji introuvable : ${ch} (${code}). Voir en tête de scripts/gen-images.mjs (EMOJI_DIR).`);
 }
 
-const ids = process.argv.slice(2);
+const ALL = { ...SCENES, ...MODE_SCENES };
+const ids = process.argv.slice(2).flatMap((x) => (x === 'modes' ? Object.keys(MODE_SCENES) : [x]));
 const todo = ids.length ? ids : Object.keys(SCENES);
-for (const id of todo) if (!SCENES[id]) throw new Error('Jeu inconnu dans scenes.mjs : ' + id);
+for (const id of todo) if (!ALL[id]) throw new Error('Jeu inconnu dans scenes.mjs : ' + id);
+// Images des 3 modes de l'accueil : dans img/ui/ (les images des jeux restent seules dans img/jeux/).
+const outFor = (id) => (MODE_SCENES[id] ? join(root, 'img/ui') : OUT);
 
 // Images sources (en data: URL pour les passer au navigateur).
 const files = new Map();
 for (const id of todo) {
-  for (const it of SCENES[id]) {
+  for (const it of ALL[id]) {
     if (it.k !== 'e') continue;
     const f = emojiFile(it.ch);
     it.file = f;
@@ -76,24 +80,27 @@ await page.evaluate(async (srcs) => {
   await document.fonts.load('800 40px Inter');
 }, Object.fromEntries(files));
 
-mkdirSync(OUT, { recursive: true });
 const tmp = mkdtempSync(join(tmpdir(), 'ambiance-img-'));
 for (const id of todo) {
-  const url = await page.evaluate(draw, { id, items: SCENES[id], W, H, fmt: 'image/png' });
+  const url = await page.evaluate(draw, { id, items: ALL[id], W, H, fmt: 'image/png' });
   writeFileSync(join(tmp, id + '.png'), Buffer.from(url.split(',')[1], 'base64'));
 }
-const py = spawnSync('python3', ['-I', '-c', PY, tmp, OUT, ...todo], { encoding: 'utf8' });
-if (py.status !== 0) {
-  console.warn('⚠️ Pillow indisponible (pip install pillow) : encodage par Chromium, images plus lourdes.\n' + (py.stderr || py.error || ''));
-  for (const id of todo) {
-    const url = await page.evaluate(draw, { id, items: SCENES[id], W, H, fmt: 'image/webp', q: 0.8 });
-    writeFileSync(join(OUT, id + '.webp'), Buffer.from(url.split(',')[1], 'base64'));
+for (const dir of new Set(todo.map(outFor))) {
+  mkdirSync(dir, { recursive: true });
+  const group = todo.filter((id) => outFor(id) === dir);
+  const py = spawnSync('python3', ['-I', '-c', PY, tmp, dir, ...group], { encoding: 'utf8' });
+  if (py.status !== 0) {
+    console.warn('⚠️ Pillow indisponible (pip install pillow) : encodage par Chromium, images plus lourdes.\n' + (py.stderr || py.error || ''));
+    for (const id of group) {
+      const url = await page.evaluate(draw, { id, items: ALL[id], W, H, fmt: 'image/webp', q: 0.8 });
+      writeFileSync(join(dir, id + '.webp'), Buffer.from(url.split(',')[1], 'base64'));
+    }
   }
 }
 await browser.close();
 rmSync(tmp, { recursive: true, force: true });
-const total = todo.reduce((n, id) => n + statSync(join(OUT, id + '.webp')).size, 0);
-console.log(`${todo.length} image(s) dans ${OUT} (${Math.round(total / 1024)} Ko au total).`);
+const total = todo.reduce((n, id) => n + statSync(join(outFor(id), id + '.webp')).size, 0);
+console.log(`${todo.length} image(s) (${Math.round(total / 1024)} Ko au total).`);
 
 // ---------------------------------------------------------------------------------------------------
 // Dessin d'une image (exécuté dans le navigateur).

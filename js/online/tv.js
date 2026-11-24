@@ -19,13 +19,14 @@ export function createTvUi(root, g) {
   const code = h('div', { class: 'tv-code' });
   const qr = h('div', { class: 'tv-qr', 'aria-hidden': 'true' });
   const fs = h('button', { class: 'icon-btn tv-fs', 'aria-label': 'Plein écran', title: 'Plein écran', onclick: toggleFullscreen }, '⛶');
+  const quit = h('button', { class: 'icon-btn tv-fs', 'aria-label': g.host ? 'Fermer la télé' : 'Quitter l\'écran télé', title: 'Quitter', onclick: () => g.leave && g.leave() }, '✕');
   const sideTitle = h('div', { class: 'section-title' });
   const board = h('div', { class: 'tv-board' });
   const stage = h('div', { class: 'tv-stage' });
   root.replaceChildren(h('div', { class: 'tv' },
     h('header', { class: 'tv-head' },
       h('div', { class: 'logo' }, 'Ambiance'), title,
-      h('div', { class: 'tv-join' }, h('div', { class: 'tv-join-txt' }, h('span', null, 'Pour jouer'), code), qr), fs),
+      h('div', { class: 'tv-join' }, h('div', { class: 'tv-join-txt' }, h('span', null, 'Pour jouer'), code), qr), fs, quit),
     h('div', { class: 'tv-main' }, stage, h('aside', { class: 'tv-side' }, sideTitle, board))));
 
   let room = null;
@@ -57,15 +58,15 @@ export function createTvUi(root, g) {
       const bigQr = h('div', { class: 'tv-bigqr' });
       const url = g.joinUrl(room.code);
       g.qr(bigQr, url);
-      lobby = { players: h('div', { class: 'tv-bubbles' }), next: h('div', { class: 'tv-next' }), seen: new Set() };
+      lobby = { players: h('div', { class: 'tv-bubbles' }), next: h('div', { class: 'tv-next' }), votes: h('div', { class: 'tv-votes' }), seen: new Set() };
       stage.append(
         h('div', { class: 'tv-invite' },
           h('div', { class: 'col' },
             h('h1', null, 'Rejoignez la partie !'),
-            h('p', null, '📱 Scannez le QR code, ou ouvrez ', h('b', null, shortUrl()), ', touchez « Rejoindre » et tapez le code :'),
+            h('p', null, '📱 Scannez le QR code avec l\'appareil photo, ou ouvrez ', h('b', null, shortUrl()), ' → Online → Rejoindre le salon, et tapez le code :'),
             h('div', { class: 'tv-bigcode' }, room.code)),
           bigQr),
-        lobby.next, lobby.players);
+        lobby.next, lobby.players, lobby.votes);
     }
     const pl = room.players;
     lobby.players.replaceChildren(...pl.map((p) => {
@@ -74,9 +75,21 @@ export function createTvUi(root, g) {
       return h('span', { class: 'tv-bubble' + (p.on ? '' : ' off') + (fresh ? ' pop-in' : '') }, (p.pid === room.host ? '👑 ' : '') + p.name);
     }));
     const next = room.pick && onlineGame(room.pick);
+    const chef = pl.find((p) => p.pid === room.host);
     lobby.next.replaceChildren(...(next
       ? [h('span', { class: 'muted' }, 'Prochain jeu'), h('b', null, `${next.emoji} ${next.name}`), h('span', { class: 'muted' }, next.short || '')]
-      : [h('span', { class: 'muted' }, `${pl.find((p) => p.pid === room.host)?.name || 'L\'hôte'} choisit le jeu…`)]));
+      : chef ? [h('span', null, `👑 ${chef.name} choisit le jeu, les autres votent sur leur téléphone`)]
+        : [h('span', { class: 'muted' }, '👑 Le premier joueur arrivé sera le chef : il choisira les jeux.')]));
+    // Votes des joueurs : barres qui grandissent.
+    const counts = {};
+    for (const [pid, gid] of Object.entries(room.votes || {})) if (pl.some((p) => p.pid === pid && p.on)) counts[gid] = (counts[gid] || 0) + 1;
+    const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const max = ranked.length ? ranked[0][1] : 1;
+    lobby.votes.replaceChildren(...(ranked.length ? [h('div', { class: 'section-title' }, '🗳️ Les votes'), ...ranked.map(([gid, n]) => {
+      const gm = onlineGame(gid);
+      return h('div', { class: 'tv-vote' }, h('span', { class: 'nm' }, gm ? `${gm.emoji} ${gm.name}` : gid),
+        h('span', { class: 'bar' }, h('span', { style: { width: Math.round((n / max) * 100) + '%' } })), h('b', null, String(n)));
+    })] : []));
   }
 
   // ---------- Écran commun (jeux sans écran télé spécial) ----------
@@ -127,7 +140,7 @@ export function createTvUi(root, g) {
         return;
       }
       const mod = r.game && onlineGame(r.game.type);
-      title.replaceChildren(...(mod ? [h('span', null, mod.emoji), ' ', mod.name] : [h('span', { class: 'muted' }, `Partie ${r.code}`)]));
+      title.replaceChildren(...(mod ? [h('span', null, mod.emoji), ' ', mod.name] : [h('span', { class: 'muted' }, `${r.tvHost ? '📺 TV Mode · ' : ''}Salon ${r.code}`)]));
       if (!r.game || !mod) renderLobby();
       else if (r.game.special && mod.tvMount) {
         if (setMode('special', mod.id) || !gameView) {

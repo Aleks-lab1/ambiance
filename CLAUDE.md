@@ -10,7 +10,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | Dossier | Rôle |
 |---|---|
 | `index.html`, `manifest.webmanifest`, `sw.js` | Page unique, manifeste PWA, service worker (**généré**, ne pas modifier à la main) |
-| `js/` | Cœur : `app.js` (accueil, routes `#/…`, réglages), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
+| `js/` | Cœur : `app.js` (accueil 3 modes, écran Local `#/local`, routes `#/…`, réglages), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
@@ -54,8 +54,26 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
   Dico bluff : uniquement des mots **rares** (sinon pas de bluff possible). Dans l'ordre : `[événement, année]`, année négative = av. J.-C.
 - Hot / Hot++ : réservé aux adultes (confirmation 18+), toujours consentant ; garder « chacun peut refuser ».
 
-## Accueil : trouver le bon jeu (`js/finder.js`)
-- Sous le bandeau « Jouer en ligne » : recherche, catégories, **« 👥 On est »** (2…8, 10+ : jeux dont `players` contient ce
+## Accueil : 3 modes (Local, Online, TV Mode)
+- L'accueil (`renderHome`, `js/app.js`) : logo + ⚙️, bandeau de reprise, puis **3 grandes cases empilées de haut en bas**
+  (`.mode-card`, illustrations `img/ui/mode-<id>.webp` générées par `node scripts/gen-images.mjs modes`, compositions
+  `MODE_SCENES` dans `scenes.mjs`, illustration à droite car le texte est à gauche) :
+  - **Local** → `#/local` (`renderLocal`, `LOCAL_META`) : les jeux à un seul téléphone = `LOCAL_GAMES` (`GAMES` sans les 7 jeux
+    `onlineOnly: true` : Qui a écrit ça, Dans sa tête, Qui suis-je, Punchlines, Téléphone dessiné, Dico bluff, Menteur).
+  - **Online** → `#/online` : prénom, puis « Créer le salon » / « Rejoindre le salon » (code).
+  - **TV Mode** → `#/tv` : « ▶ Lancer la télé » (la télé crée le salon), « Je suis un joueur » (code), « Afficher un salon déjà créé ».
+- Les écrans `local` et `online` sont des « menus » pour `openScreen` (pas de « joué récemment », pas d'étoile favori).
+
+## Salon en ligne : le chef lance, les autres votent
+- Tout le monde voit les jeux en ligne illustrés (`.game-pick` > `.pick-tile`, image du jeu du catalogue via `localIdOf` de
+  `js/online/games.js`, catégories du jeu local). **Le chef** (`room.host`) touche un jeu pour le choisir, une 2e fois pour le
+  lancer (barre du bas : ⚙️ réglages dans une fenêtre, « ▶ Lancer … »). **Les autres votent** (`lobby:vote`, toucher encore = retirer) :
+  `room.votes` { pid: jeu }, badge « 🗳️ n » sur les cases, bande « 🗳️ Demandés », votes effacés au lancement. Jeux qui demandent
+  plus de joueurs que de connectés : case pâlie « 👥 n+ ».
+- `g.isHost` (dans `mount` des jeux) = **est le chef** (`room.host === me.pid`), pas « cet appareil fait tourner la partie ».
+
+## Accueil : trouver le bon jeu dans « Local » (`js/finder.js`)
+- Dans l'écran Local : recherche, catégories, **« 👥 On est »** (2…8, 10+ : jeux dont `players` contient ce
   nombre, choix gardé 6 h), puis « N jeux » + **🎲 Au hasard** (modale où les jeux défilent puis s'arrêtent, évite les 3 derniers joués).
 - Recherche : chaque mot tapé = début d'un mot du nom, de la description ou des catégories. Sans accent, les accents sont ignorés ;
   **avec un accent, il compte** (« dés » ne doit pas trouver tous les jeux contenant « des »). Taper bascule sur « Tous ».
@@ -78,9 +96,6 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 - Service worker : `img/` a son propre cache (`IMG_CACHE`, versionné sur les images seulement), les images ne sont donc pas
   retéléchargées à chaque mise à jour de l'appli. Testé par `local/sw.test.cjs`.
 
-## Salon en ligne
-- L'hôte touche un jeu une fois pour le choisir (réglages affichés), **une 2e fois pour le lancer** (`lobbyArmed` dans `room.js`).
-  Le bouton « ▶ Lancer » reste disponible.
 
 ## Ajouter un jeu en ligne
 Créer un objet dans un fichier de `js/online/`, puis l'ajouter à `ONLINE_GAMES` dans `js/online/games.js`.
@@ -145,8 +160,14 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   nouveau (comparer avec l'état affiché, ex. `shown` du 4 en ligne, `lastKey`). Sinon l'animation repart ou le glissement en cours est coupé.
 
 ## Mode télé (`js/online/tv.js`)
-- Un ordinateur ou une télé affiche la partie en grand, les téléphones servent de manettes. Accès : accueil (bandeau « Jouer en
-  ligne » → « 📺 Afficher en grand… »), écran « Jouer en ligne » → panneau **📺 Écran télé**, ou directement `#/tv/CODE`.
+- Un ordinateur ou une télé affiche la partie en grand, les téléphones servent de manettes. Deux façons :
+  - **TV Mode** (`#/tv` → « ▶ Lancer la télé ») : **la télé fait tourner la partie** (`new Host(…, { tvHost: true })`, `this.self = null` :
+    elle n'est pas un joueur, `room.players` est vide au départ, `room.tvHost`). Les téléphones scannent le QR code (`#/join/CODE`).
+    **Le premier arrivé est le chef** (`room.host`, `ensureLeader`) ; s'il se déconnecte, ou n'est plus connecté depuis 15 s
+    (`leaderGone`, par ex. après le rechargement de la télé), le suivant prend la relève (« 👑 Chloé est le chef »). La télé affiche
+    `viewForTv()` en local (`deliver`), les traits de dessin seulement si `tvRelay`. Reprise : la sauvegarde garde `tvHost`.
+  - **Afficher un salon déjà créé** (TV Mode → code, ou `#/tv/CODE`) : un téléphone a créé le salon (Online), la télé s'y branche.
+- Dans `Host`, ne pas confondre `this.self` (joueur de l'appareil, `null` pour la télé) et `room.host` (le chef).
 - La télé se connecte comme un joueur (`Client`, `hello` avec `tv: true`) mais l'hôte la range à part (`Host.tvs`) : **elle n'est
   pas un joueur** (ni dans `room.players`, ni dans les scores), ses actions sont ignorées. Elle reçoit `viewForTv()` :
   - jeu avec écran télé : `mod.tv(room, s)` = **`view(room, s, TV_PID)`** (un spectateur qui ne connaît aucun secret) ;
@@ -244,7 +265,8 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - `tests/lib/mock-relay.cjs` : faux serveur relais MQTT + PeerJS bloqué (`broker.stats.payloads` = ce qu'un curieux verrait).
   `relay/lobby-relay.test.cjs` fait une vraie partie par le salon ; `relay/reprise.test.cjs` coupe l'hôte en plein Quiz et reprend
   (en **https://app.test/**, nécessaire pour `crypto.subtle` : `serveRepo` sert les deux). `phone(options)` crée aussi un écran
-  télé (`{ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false }`) : `relay/tele.test.cjs`.
+  télé (`{ viewport: { width: 1280, height: 720 }, isMobile: false, hasTouch: false }`) : `relay/tele.test.cjs` (télé branchée sur
+  un salon Online) et `relay/tvmode.test.cjs` (la télé crée le salon, chef, votes, rechargement de la télé, relève du chef).
 - `tests/relay/relay-real.manual.cjs` : manuel, avec les vrais serveurs relais (Internet, utilise `HTTPS_PROXY` si présent).
 - `tests/local/sw.test.cjs` : service worker et mode hors ligne, avec un vrai serveur web sur localhost.
 - `tests/unit/images.test.mjs` : une image (et une composition) par jeu.

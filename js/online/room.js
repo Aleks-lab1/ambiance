@@ -5,7 +5,9 @@
 import { h, toast, modal, confirmBox, uid, chip } from '../ui.js';
 import { getName, setName, get, set } from '../store.js';
 import { CONFIG } from '../config.js';
-import { ONLINE_GAMES, onlineGame } from './games.js';
+import { ONLINE_GAMES, onlineGame, localIdOf } from './games.js';
+import { FILTERS, gameById } from '../games/index.js';
+import { gameColors } from '../themes.js';
 import { RelayHub, relayConnect } from './relay.js';
 import { pack, unpack, shiftTimes, saveHost, loadHost, clearHost, saveSeat, loadSeat, clearSeat, resumeText } from './save.js';
 import { sfx, buzz } from '../sfx.js';
@@ -89,12 +91,18 @@ function errText(e) {
 // =====================================================================
 class Host {
   // saved : partie enregistrée dans le téléphone (save.js) à reprendre, ou rien pour une nouvelle partie.
-  constructor(peer, code, me, deliver, saved) {
+  // tvHost : cet appareil est la télé du TV Mode. Il fait tourner la partie mais n'est pas un joueur : le chef
+  // (room.host, qui choisit les jeux et a les boutons « hôte » des jeux) est le premier téléphone arrivé.
+  constructor(peer, code, me, deliver, saved, { tvHost = false } = {}) {
     this.peer = null;
     this.code = code;
     this.me = me;
+    this.tvHost = !!(tvHost || (saved && saved.room && saved.room.tvHost));
+    this.self = this.tvHost ? null : me.pid; // joueur de cet appareil (aucun pour la télé)
     this.deliver = deliver; // livre un message à l'interface locale de l'hôte
-    this.room = { code, host: me.pid, pick: null, players: [{ pid: me.pid, name: me.name, score: 0, on: true }], game: null };
+    this.room = this.tvHost
+      ? { code, host: null, pick: null, players: [], game: null, votes: {}, tvHost: true }
+      : { code, host: me.pid, pick: null, players: [{ pid: me.pid, name: me.name, score: 0, on: true }], game: null, votes: {} };
     this.conns = new Map();
     this.tvs = new Map(); // écrans télé (pid → connexion) : ni joueurs, ni secrets, juste la vue publique
     this.mod = null;
@@ -141,8 +149,9 @@ class Host {
   restore(saved) {
     const r = unpack(saved.room);
     r.code = this.code;
-    r.host = this.me.pid;
-    for (const p of r.players) if (p.pid === r.host) p.on = true;
+    if (this.self) r.host = this.self; // en TV Mode, le chef reste celui d'avant
+    r.votes = r.votes || {};
+    for (const p of r.players) if (p.pid === this.self) p.on = true;
     this.room = r;
     // Les joueurs qui étaient là ont un moment pour revenir avant d'être comptés comme partis.
     this.graceUntil = Date.now() + (CONFIG.rejoinGrace || 45000);
@@ -202,14 +211,14 @@ class Host {
     if (m.t === 'ping') { this.safeSend(conn, { t: 'pong' }); return; }
     if (m.t === 'hello') {
       let pid = String(m.pid || '').slice(0, 40);
-      if (!pid || pid === this.room.host) return;
+      if (!pid || pid === this.self) return;
       if (m.tv) { this.addTv(conn, pid); return; }
       let p = this.room.players.find((x) => x.pid === pid);
       if (!p) {
         // Même prénom qu'un joueur parti (appli rouverte depuis un autre onglet, Safari → appli installée…) :
         // c'est sûrement lui, il retrouve sa place et ses points.
         const nm = cleanName(m.name).toLowerCase();
-        p = this.room.players.find((x) => !x.on && x.pid !== this.room.host && x.name.toLowerCase() === nm && !this.conns.has(x.pid)) || null;
+        p = this.room.players.find((x) => !x.on && x.pid !== this.self && x.name.toLowerCase() === nm && !this.conns.has(x.pid)) || null;
         if (p) pid = p.pid;
       }
       if (!p) {
@@ -234,6 +243,7 @@ class Host {
       if (old && old !== conn) { old._replaced = true; try { old.close(); } catch { /* */ } }
       conn._pid = pid;
       this.conns.set(pid, conn);
+      this.ensureLeader();
       this.safeSend(conn, { t: 'welcome', pid, name: p.name });
       this.broadcast();
       if (this.room.game && this.mod.onSync) this.mod.onSync(this.room, this.gs, pid, this.api);
@@ -270,8 +280,20 @@ class Host {
       p.on = false;
       this.toastAll(`📴 ${p.name} s'est déconnecté`);
       if (this.room.game && this.mod.onLeave) this.mod.onLeave(this.room, this.gs, pid, this.api);
+      this.ensureLeader();
       this.broadcast();
     }
+  }
+
+  /** TV Mode : il faut toujours un chef connecté (le premier arrivé ; s'il part, le suivant prend la relève). */
+  ensureLeader() {
+    if (!this.tvHost) return;
+    const cur = this.room.players.find((x) => x.pid === this.room.host);
+    if (cur && cur.on) return;
+    const next = this.room.players.find((x) => x.on);
+    if (!next || next.pid === this.room.host) return;
+    this.room.host = next.pid;
+    this.toastAll(`👑 ${next.name} est le chef : il choisit les jeux`);
   }
 
   heartbeat() {
@@ -284,12 +306,26 @@ class Host {
       this.graceUntil = 0;
       let changed = false;
       for (const p of this.room.players) {
-        if (p.on && p.pid !== this.room.host && !this.conns.has(p.pid)) {
+        if (p.on && p.pid !== this.self && !this.conns.has(p.pid)) {
           p.on = false; changed = true;
           if (this.room.game && this.mod && this.mod.onLeave) { try { this.mod.onLeave(this.room, this.gs, p.pid, this.api); } catch (e) { console.error(e); } }
         }
       }
-      if (changed) this.broadcast();
+      if (changed) { this.ensureLeader(); this.broadcast(); }
+    }
+    // TV Mode : un chef qui n'est plus connecté depuis 15 s (par ex. il n'est pas revenu après le rechargement
+    // de la télé) passe la main à un joueur connecté.
+    if (this.tvHost && this.room.host) {
+      if (this.conns.has(this.room.host)) this.leaderGone = 0;
+      else if (!this.leaderGone) this.leaderGone = now;
+      else if (now - this.leaderGone > 15000) {
+        const next = this.room.players.find((x) => x.on && this.conns.has(x.pid));
+        if (next) {
+          this.room.host = next.pid; this.leaderGone = 0;
+          this.toastAll(`👑 ${next.name} est le chef : il choisit les jeux`);
+          this.broadcast();
+        }
+      }
     }
     // Pendant un jeu, les minuteurs avancent sans forcément tout renvoyer : on enregistre régulièrement.
     if (now - (this.lastSave || 0) > (this.room.game ? 4000 : 30000)) this.saveNow();
@@ -302,6 +338,14 @@ class Host {
       case 'lobby:pick':
         if (isHost) { this.room.pick = a.game; this.broadcast(); }
         return;
+      case 'lobby:vote': {
+        // Chaque joueur vote pour le jeu qu'il veut (toucher encore = retirer son vote). Le chef décide.
+        if (this.room.game || !this.room.players.some((x) => x.pid === pid)) return;
+        if (!a.game || !onlineGame(a.game) || this.room.votes[pid] === a.game) delete this.room.votes[pid];
+        else this.room.votes[pid] = a.game;
+        this.broadcast();
+        return;
+      }
       case 'lobby:start':
         if (isHost) this.startGame(a.game, a.settings);
         return;
@@ -312,11 +356,12 @@ class Host {
         if (isHost) { this.room.game = null; this.gs = null; this.mod = null; this.broadcast(); }
         return;
       case 'kick':
-        if (isHost && a.pid && a.pid !== this.room.host) {
+        if (isHost && a.pid && a.pid !== pid && a.pid !== this.self) {
           const c = this.conns.get(a.pid);
           if (c) { c._replaced = true; this.safeSend(c, { t: 'bye', reason: 'L\'hôte t\'a retiré de la partie.' }); setTimeout(() => { try { c.close(); } catch { /* */ } }, 400); }
           this.conns.delete(a.pid);
           this.room.players = this.room.players.filter((p) => p.pid !== a.pid);
+          delete this.room.votes[a.pid];
           if (this.room.game && this.mod.onLeave) this.mod.onLeave(this.room, this.gs, a.pid, this.api);
           this.broadcast();
         }
@@ -341,6 +386,8 @@ class Host {
     // On retire les joueurs partis depuis longtemps.
     this.room.players = this.room.players.filter((p) => p.on);
     this.room.players.forEach((p) => { p.score = 0; });
+    this.room.votes = {};
+    this.ensureLeader();
     const s = { ...mod.defaults, ...(settings || {}) };
     this.mod = mod;
     this.room.pick = type;
@@ -358,7 +405,7 @@ class Host {
   viewFor(pid) {
     const r = this.room;
     return {
-      code: r.code, host: r.host, pick: r.pick, tvs: this.tvs.size,
+      code: r.code, host: r.host, pick: r.pick, tvs: this.tvs.size, tvHost: !!r.tvHost, votes: r.votes || {},
       players: r.players.map((p) => ({ pid: p.pid, name: p.name, score: p.score, on: p.on })),
       game: r.game ? { type: r.game.type, settings: r.game.settings, v: this.mod.view(r, this.gs, pid) } : null,
     };
@@ -375,7 +422,7 @@ class Host {
       try { v = this.mod.tv ? this.mod.tv(r, this.gs) : { ended: !!this.gs && (this.gs.phase === 'end' || this.gs.over === true) }; } catch (e) { console.error(e); v = {}; }
     }
     return {
-      tv: true, code: r.code, host: r.host, pick: r.pick, tvs: this.tvs.size,
+      tv: true, code: r.code, host: r.host, pick: r.pick, tvs: this.tvs.size, tvHost: !!r.tvHost, votes: r.votes || {},
       players: r.players.map((p) => ({ pid: p.pid, name: p.name, score: p.score, on: p.on })),
       game: r.game ? { type: r.game.type, special: !!(this.mod && this.mod.tv), v } : null,
     };
@@ -387,7 +434,8 @@ class Host {
     const now = Date.now();
     for (const [pid, c] of this.conns) this.safeSend(c, { t: 'state', now, room: this.viewFor(pid) });
     if (this.tvs.size) { const tv = this.viewForTv(); for (const c of this.tvs.values()) this.safeSend(c, { t: 'state', now, room: tv }); }
-    this.deliver({ t: 'state', now, room: this.viewFor(this.room.host) });
+    // Écran de cet appareil : la vue de son joueur, ou celle de la télé (TV Mode).
+    this.deliver({ t: 'state', now, room: this.self ? this.viewFor(this.self) : this.viewForTv() });
     this.scheduleSave();
   }
 
@@ -395,21 +443,21 @@ class Host {
     for (const [pid, c] of this.conns) if (pid !== except) this.safeSend(c, { t: 'draw', op });
     // La télé ne reçoit le dessin que des jeux où il est public (Je dessine) : pas celui du Téléphone dessiné.
     if (this.mod && this.mod.tvRelay) for (const c of this.tvs.values()) this.safeSend(c, { t: 'draw', op });
-    if (except !== this.room.host) this.deliver({ t: 'draw', op });
+    if (this.self ? except !== this.self : this.mod && this.mod.tvRelay) this.deliver({ t: 'draw', op });
   }
 
   sendTo(pid, msg) {
-    if (pid === this.room.host) { this.deliver(msg); return; }
+    if (pid && pid === this.self) { this.deliver(msg); return; }
     const c = this.conns.get(pid) || this.tvs.get(pid);
     if (c) this.safeSend(c, msg);
   }
 
   toastAll(msg, except) {
     for (const [pid, c] of [...this.conns, ...this.tvs]) if (pid !== except) this.safeSend(c, { t: 'toast', msg });
-    if (except !== this.room.host) this.deliver({ t: 'toast', msg });
+    if (!this.self || except !== this.self) this.deliver({ t: 'toast', msg });
   }
 
-  send(a) { this.handle(this.room.host, a); }
+  send(a) { if (this.self) this.handle(this.self, a); }
 
   // keep = garder la partie enregistrée (fermeture involontaire) ; sinon l'hôte a quitté : plus rien à reprendre.
   destroy(keep) {
@@ -591,6 +639,9 @@ export function start(ctx) {
   const tvMode = !!opts.tv;
   const me = tvMode ? { pid: tvPid(), name: 'Écran télé', tv: true } : { pid: myPid(), name: getName() };
   let tvUi = null;
+  let tvHostMode = false; // cet appareil est la télé du TV Mode et fait tourner la partie
+  const asTv = () => { tvHostMode = true; Object.assign(me, { pid: tvPid(), name: 'Écran télé', tv: true }); };
+  const isLeader = () => !!room && !!me.pid && room.host === me.pid; // le chef : choisit les jeux, a les boutons « hôte »
   let net = null;
   let isHost = false;
   let room = null;
@@ -606,12 +657,7 @@ export function start(ctx) {
   // ---------- Écran d'entrée ----------
   function entry(msg) {
     ctx.setGuard(null);
-    const nameIn = h('input', { class: 'input', placeholder: 'Ton prénom', maxlength: '16', value: me.name, autocomplete: 'nickname', enterkeyhint: 'next' });
-    const codeIn = h('input', {
-      class: 'input code-input', placeholder: 'CODE', maxlength: '4', value: opts.join || '', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', enterkeyhint: 'go',
-      oninput: (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, ''); },
-      onkeydown: (e) => { if (e.key === 'Enter') doJoin(); },
-    });
+    const nameIn = h('input', { class: 'input', placeholder: 'Ton prénom', maxlength: '16', value: tvMode ? '' : me.name, autocomplete: 'nickname', enterkeyhint: 'next' });
     const getNameOk = () => {
       const n = cleanName(nameIn.value);
       if (!nameIn.value.trim()) { toast('Entre ton prénom'); nameIn.focus(); return null; }
@@ -619,58 +665,78 @@ export function start(ctx) {
       return n;
     };
     const doCreate = () => { if (getNameOk()) createRoom(); };
-    const doJoin = () => {
-      if (!getNameOk()) return;
-      const code = codeIn.value.trim().toUpperCase();
-      if (code.length !== 4) { toast('Le code fait 4 lettres'); codeIn.focus(); return; }
-      joinRoom(code);
-    };
     const joinFirst = !!opts.join || opts.joinPrompt;
     const saved = loadHost();
-    const resumePanel = saved ? h('div', { class: 'panel col resume-card' },
-      h('h3', null, `🔁 Reprendre ta partie ${saved.code}`),
+    // Partie enregistrée sur cet appareil : proposée dans le bon mode (télé du TV Mode, ou salon Online).
+    const resumePanel = saved && !!saved.room.tvHost === tvMode ? h('div', { class: 'panel col resume-card' },
+      h('h3', null, `🔁 Reprendre ${saved.room.tvHost ? 'la télé' : 'ta partie'} ${saved.code}`),
       h('p', { class: 'muted small' }, resumeText(saved)),
       h('button', { class: 'btn btn-primary btn-block', onclick: () => resumeRoom(saved) }, 'Reprendre la partie'),
       h('button', { class: 'btn btn-ghost btn-sm', onclick: () => { clearHost(); resumePanel.remove(); } }, 'Non merci, l\'oublier')) : null;
-    const createPanel = h('div', { class: 'panel col' },
-      h('h3', null, '🎉 Créer une partie'),
-      h('p', { class: 'muted small' }, 'Tu seras l\'hôte : tu choisis les jeux et tu partages le code aux autres.'),
-      h('button', { class: 'btn btn-primary btn-block', onclick: doCreate }, 'Créer la partie'));
-    const joinPanel = h('div', { class: 'panel col' },
-      h('h3', null, '🔑 Rejoindre une partie'),
-      codeIn,
-      h('button', { class: joinFirst ? 'btn btn-primary btn-block' : 'btn btn-soft btn-block', onclick: doJoin }, 'Rejoindre'));
-    const tvIn = h('input', {
-      class: 'input code-input', placeholder: 'CODE', maxlength: '4', value: opts.tv && opts.tv !== true ? opts.tv : '', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', enterkeyhint: 'go',
-      'aria-label': 'Code de la partie à afficher',
-      oninput: (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, ''); },
-      onkeydown: (e) => { if (e.key === 'Enter') doTv(); },
-    });
-    const doTv = () => {
-      const code = tvIn.value.trim().toUpperCase();
-      if (code.length !== 4) { toast('Le code fait 4 lettres'); tvIn.focus(); return; }
-      sfx.unlock();
-      ctx.open('online', { tv: code });
+    const codeBox = (value, onGo, label) => {
+      const el = h('input', {
+        class: 'input code-input', placeholder: 'CODE', maxlength: '4', value: value || '', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false', enterkeyhint: 'go',
+        'aria-label': label,
+        oninput: (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, ''); },
+        onkeydown: (e) => { if (e.key === 'Enter') onGo(); },
+      });
+      return el;
     };
-    const tvPanel = h('div', { class: 'panel col' },
-      h('h3', null, '📺 Écran télé'),
-      h('p', { class: 'muted small' }, 'Sur un ordinateur ou une télé : la partie s\'affiche en grand pour tout le monde (questions, dessins, votes, classement) et les téléphones servent de manettes.'),
-      h('div', { class: 'row' }, tvIn, h('button', { class: 'btn btn-soft', style: { flex: 'none' }, onclick: doTv }, 'Afficher')));
+    const readCode = (el) => {
+      const code = el.value.trim().toUpperCase();
+      if (code.length !== 4) { toast('Le code fait 4 lettres'); el.focus(); return null; }
+      return code;
+    };
+    const banner = msg ? h('div', { class: 'conn-banner' }, msg) : null;
+
     if (tvMode) {
-      // Écran télé : seulement le code de la partie à afficher.
-      root.replaceChildren(header(), msg ? h('div', { class: 'conn-banner' }, msg) : null, tvPanel,
-        h('div', { class: 'panel rules' }, h('p', null, '1. Sur un téléphone, crée la partie (ou rejoins-la) : le code s\'affiche en haut.'),
-          h('p', null, '2. Tape ce code ici : la partie s\'affiche en grand. Astuce : ⛶ en haut à droite pour le plein écran.')));
-      setTimeout(() => tvIn.focus(), 50);
+      // ---------- TV Mode : la télé crée le salon, les téléphones scannent le QR code ----------
+      const showIn = codeBox(opts.tv && opts.tv !== true ? opts.tv : '', () => doShow(), 'Code du salon à afficher');
+      const doShow = () => { const c = readCode(showIn); if (c) { sfx.unlock(); ctx.open('online', { tv: c }); } };
+      const playIn = codeBox('', () => doPlay(), 'Code affiché sur la télé');
+      const doPlay = () => { const c = readCode(playIn); if (c) ctx.open('online', { join: c }); };
+      const narrow = matchMedia('(max-width: 700px)').matches;
+      root.replaceChildren(header(), banner, resumePanel,
+        narrow ? h('p', { class: 'conn-banner soft' }, '📱 Tu es sur un téléphone ? Lance la télé depuis l\'ordinateur ou la télé, ou rejoins comme joueur plus bas.') : null,
+        h('div', { class: 'tvmode-hero' },
+          h('div', { class: 'tvmode-emo' }, '📺'),
+          h('h2', null, 'Cet écran est la télé'),
+          h('p', null, 'La partie s\'affiche ici en grand. Chacun rejoint avec son téléphone en scannant le QR code : rien à installer.'),
+          h('button', { class: 'btn btn-big tvmode-go', onclick: () => { sfx.unlock(); createRoom({ tvHost: true }); } }, '▶ Lancer la télé')),
+        h('ol', { class: 'panel tvmode-steps' },
+          h('li', null, h('b', null, 'Lance la télé'), ' sur l\'ordinateur ou la télé (navigateur), ou sur un téléphone envoyé sur la télé (AirPlay, Chromecast).'),
+          h('li', null, h('b', null, 'Chacun scanne le QR code'), ' affiché à l\'écran et tape son prénom.'),
+          h('li', null, 'Le premier arrivé est le ', h('b', null, 'chef 👑'), ' : il lance les jeux, les autres votent pour ceux qu\'ils veulent.')),
+        h('div', { class: 'panel col' },
+          h('h3', null, '📱 Je suis un joueur'),
+          h('p', { class: 'muted small' }, 'Scanne le QR code de la télé avec l\'appareil photo, ou tape le code affiché.'),
+          h('div', { class: 'row' }, playIn, h('button', { class: 'btn btn-soft', style: { flex: 'none' }, onclick: doPlay }, 'Rejoindre'))),
+        h('div', { class: 'panel col' },
+          h('h3', null, '🔗 Afficher un salon déjà créé'),
+          h('p', { class: 'muted small' }, 'Un téléphone a déjà créé le salon (mode Online) ? Affiche-le ici en grand avec son code.'),
+          h('div', { class: 'row' }, showIn, h('button', { class: 'btn btn-soft', style: { flex: 'none' }, onclick: doShow }, 'Afficher'))));
       return;
     }
+
+    // ---------- Online : créer ou rejoindre un salon ----------
+    const codeIn = codeBox(opts.join || '', () => doJoin(), 'Code du salon');
+    const doJoin = () => {
+      if (!getNameOk()) return;
+      const code = readCode(codeIn);
+      if (code) joinRoom(code);
+    };
+    const createCard = h('div', { class: 'online-choice create' },
+      h('div', { class: 'oc-head' }, h('span', { class: 'oc-emo' }, '🎉'), h('div', null, h('h2', null, 'Créer le salon'), h('p', null, 'Tu lances les jeux, les autres votent pour ceux qu\'ils veulent.'))),
+      h('button', { class: 'btn btn-big btn-block', onclick: doCreate }, 'Créer le salon'));
+    const joinCard = h('div', { class: 'online-choice join' },
+      h('div', { class: 'oc-head' }, h('span', { class: 'oc-emo' }, '🔑'), h('div', null, h('h2', null, 'Rejoindre le salon'), h('p', null, 'Tape le code, ou scanne le QR code de celui qui a créé le salon.'))),
+      codeIn, h('button', { class: 'btn btn-big btn-block', onclick: doJoin }, 'Rejoindre le salon'));
     root.replaceChildren(
       header(),
-      msg ? h('div', { class: 'conn-banner' }, msg) : null,
+      banner,
       resumePanel,
       h('label', { class: 'field' }, 'Ton prénom', nameIn),
-      ...(joinFirst ? [joinPanel, createPanel] : [createPanel, joinPanel]),
-      tvPanel,
+      ...(joinFirst ? [joinCard, createCard] : [createCard, joinCard]),
       h('div', { class: 'panel rules' },
         h('p', null, '📱 Chacun joue sur son téléphone. Pas besoin d\'installer l\'appli : le lien ou le QR code suffit.'),
         h('p', null, '📶 Marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.'),
@@ -685,7 +751,7 @@ export function start(ctx) {
     return h('div', { class: 'topbar' },
       h('button', { class: 'icon-btn', 'aria-label': 'Retour', onclick: leave }, '←'),
       h('span', { class: 'emo' }, tvMode ? '📺' : '🌐'),
-      h('h1', null, room ? 'Partie ' : tvMode ? 'Écran télé' : 'Jouer en ligne', room ? h('span', { class: 'code' }, room.code) : null),
+      h('h1', null, room ? 'Salon ' : tvMode ? 'TV Mode' : 'Online', room ? h('span', { class: 'code' }, room.code) : null),
       extra || null);
   }
 
@@ -697,8 +763,10 @@ export function start(ctx) {
     return loadScript('vendor/peerjs.min.js', 'Peer');
   }
 
-  async function createRoom() {
-    busy('Création de la partie…');
+  // tvHost : la télé du TV Mode crée le salon (elle n'est pas un joueur, le premier téléphone arrivé est le chef).
+  async function createRoom({ tvHost = false } = {}) {
+    if (tvHost) asTv();
+    busy(tvHost ? 'Préparation de la télé…' : 'Création du salon…');
     try {
       const Peer = await getPeer();
       let peer = null, code = null;
@@ -711,8 +779,8 @@ export function start(ctx) {
         }
       }
       isHost = true;
-      net = new Host(peer, code, me, hostDeliver);
-      ctx.setGuard('Quitter la partie ? Elle sera fermée pour tout le monde.');
+      net = new Host(peer, code, me, hostDeliver, null, { tvHost });
+      ctx.setGuard(tvHost ? 'Fermer la télé ? La partie sera fermée pour tout le monde.' : 'Quitter la partie ? Elle sera fermée pour tout le monde.');
       net.broadcast();
       if (opts.game) {
         lobbyPick = opts.game;
@@ -729,9 +797,12 @@ export function start(ctx) {
   async function resumeRoom(saved) {
     busy(`Reprise de la partie ${saved.code}…`);
     const code = saved.code;
-    const hostP = (saved.room.players || []).find((p) => p.pid === saved.room.host);
-    me.pid = saved.room.host;
-    if (hostP) me.name = hostP.name;
+    if (saved.room.tvHost) asTv();
+    else {
+      const hostP = (saved.room.players || []).find((p) => p.pid === saved.room.host);
+      me.pid = saved.room.host;
+      if (hostP) me.name = hostP.name;
+    }
     let Peer = null, peer = null;
     try {
       Peer = await getPeer();
@@ -746,7 +817,7 @@ export function start(ctx) {
     isHost = true;
     net = new Host(peer, code, me, hostDeliver, saved);
     if (!peer && Peer) net.retryPeer(Peer);
-    ctx.setGuard('Quitter la partie ? Elle sera fermée pour tout le monde.');
+    ctx.setGuard(tvHostMode ? 'Fermer la télé ? La partie sera fermée pour tout le monde.' : 'Quitter la partie ? Elle sera fermée pour tout le monde.');
     lobbyPick = net.room.pick;
     net.broadcast();
     toast(net.resumedGame ? '🔁 Partie reprise ! Les joueurs reviennent automatiquement.' : '🔁 Partie reprise au salon : les joueurs reviennent automatiquement.', 3500);
@@ -783,7 +854,7 @@ export function start(ctx) {
         ? `⏸️ ${hostName || 'L\'hôte'} a quitté l'appli un instant… La partie reprendra à son retour.`
         : '📶 Connexion à l\'hôte perdue… on réessaie. La partie reprendra toute seule.';
       if (banner) banner.textContent = text;
-      else if (room && tvMode) root.prepend(h('div', { class: 'conn-banner live' }, text));
+      else if (room && (tvMode || tvHostMode)) root.prepend(h('div', { class: 'conn-banner live' }, text));
       else if (room) root.insertBefore(h('div', { class: 'conn-banner live' }, text), root.children[1] || null);
     } else if (banner) banner.remove();
     if (s === 'closed') {
@@ -809,7 +880,7 @@ export function start(ctx) {
         render(m.room);
         break;
       case 'draw':
-        if (tvMode) { if (tvUi) tvUi.onDraw(m.op); break; }
+        if (tvMode || tvHostMode) { if (tvUi) tvUi.onDraw(m.op); break; }
         if (view && view.onDraw) view.onDraw(m.op); else if (pendingDraw.length < 500) pendingDraw.push(m.op);
         break;
       case 'toast':
@@ -839,7 +910,7 @@ export function start(ctx) {
   const send = (a) => { if (net) net.send(a); };
   const gctx = {
     get me() { return me.pid; },
-    get isHost() { return isHost; },
+    get isHost() { return isLeader(); }, // le chef a les boutons « hôte » des jeux (en TV Mode, ce n'est pas l'appareil hôte)
     send,
     now: () => Date.now() + offset,
     get room() { return room; },
@@ -848,7 +919,7 @@ export function start(ctx) {
   };
 
   function hostBar() {
-    if (!isHost) return h('p', { class: 'status-line' }, '⏳ En attente de l\'hôte…');
+    if (!isLeader()) return h('p', { class: 'status-line' }, `⏳ ${room && room.tvHost ? 'En attente du chef 👑' : 'En attente de l\'hôte'}…`);
     return h('div', { class: 'row' },
       h('button', { class: 'btn btn-soft grow', onclick: () => send({ type: 'lobby:end' }) }, '🎮 Changer de jeu'),
       h('button', { class: 'btn btn-primary grow', onclick: () => send({ type: 'lobby:restart' }) }, '🔁 Rejouer'));
@@ -871,11 +942,11 @@ export function start(ctx) {
   }
 
   function render(r) {
-    if (tvMode) {
+    if (tvMode || tvHostMode) {
       room = r;
       if (!tvUi || !root.querySelector('.tv')) {
         if (tvUi) tvUi.destroy();
-        tvUi = createTvUi(root, { now: () => Date.now() + offset, joinUrl, qr: drawQr });
+        tvUi = createTvUi(root, { now: () => Date.now() + offset, joinUrl, qr: drawQr, host: tvHostMode, leave });
       }
       tvUi.render(r);
       return;
@@ -913,95 +984,182 @@ export function start(ctx) {
   }
 
   // ---------- Salon ----------
+  // Tout le monde voit les jeux en ligne (avec leur image) : le chef en touche un pour le choisir, une 2e fois
+  // pour le lancer ; les autres touchent celui qu'ils veulent pour voter. Les votes s'affichent chez tous.
   let lobbyPick = null;
-  let lobbyArmed = null; // jeu déjà touché une fois par l'hôte : un 2e appui le lance
+  let lobbyArmed = null; // jeu déjà touché une fois par le chef : un 2e appui le lance
+  let pickFilter = 'all';
   const lobbySettings = {};
+  const PICK_FILTERS = [{ id: 'all', label: '✨ Tous' }, { id: 'votes', label: '🗳️ Votés' }, ...FILTERS.filter((f) => !['all', 'fav', 'new'].includes(f.id))];
+  const metaOf = (g) => gameById(localIdOf(g.id)) || { id: g.id, colors: ['#7c5cff', '#ff4d8d'], tags: [] };
+  const onCount = () => room.players.filter((p) => p.on).length;
+  /** Votes des joueurs connectés : { jeu: [pid…] }. */
+  function voteMap() {
+    const out = {};
+    for (const [pid, gid] of Object.entries(room.votes || {})) {
+      if (!room.players.some((p) => p.pid === pid && p.on)) continue;
+      (out[gid] || (out[gid] = [])).push(pid);
+    }
+    return out;
+  }
+
   function renderLobby(prevCount) {
-    if (!lobby) {
+    const lead = isLeader();
+    if (!lobby || lobby.lead !== lead) {
       body.replaceChildren();
       const shareUrl = joinUrl(room.code);
       const qr = h('div', { class: 'qr', 'aria-label': 'QR code pour rejoindre' });
       drawQr(qr, shareUrl);
       const tvLine = h('p', { class: 'muted small center tv-hint' });
-      const players = h('div', { class: 'lobby-players' });
-      const pickWrap = h('div', { class: 'col' });
-      const waiting = h('div', { class: 'panel center col' });
       const codeCard = h('div', { class: 'panel col center' },
-        h('p', { class: 'muted small' }, 'Code de la partie'),
+        h('p', { class: 'muted small' }, 'Code du salon'),
         h('div', { class: 'room-code' }, room.code),
         qr,
         h('button', {
           class: 'btn btn-soft', onclick: async () => {
             try {
-              if (navigator.share) await navigator.share({ title: 'Ambiance', text: `Rejoins ma partie sur Ambiance ! Code : ${room.code}`, url: shareUrl });
+              if (navigator.share) await navigator.share({ title: 'Ambiance', text: `Rejoins mon salon sur Ambiance ! Code : ${room.code}`, url: shareUrl });
               else { await navigator.clipboard.writeText(shareUrl); toast('Lien copié 📋'); }
             } catch { /* annulé */ }
           },
         }, '🔗 Partager le lien'),
         tvLine);
+      const players = h('div', { class: 'lobby-players' });
+      const info = h('p', { class: 'pick-info' });
+      const top = h('div', { class: 'col', style: { gap: '8px' } });
+      const chips = h('div', { class: 'scroll-x' });
+      const grid = h('div', { class: 'game-pick' });
+      const bar = h('div', { class: 'lobby-bar' });
+      const tiles = new Map();
+      for (const g of ONLINE_GAMES) {
+        const m = metaOf(g);
+        const [c1, c2] = gameColors(m.id, m.colors);
+        const img = h('img', { class: 'tile-art', src: `img/jeux/${m.id}.webp`, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' });
+        img.addEventListener('error', () => img.replaceWith(h('span', { class: 'tile-emo', 'aria-hidden': 'true' }, g.emoji)), { once: true });
+        const votes = h('span', { class: 'vote-badge hidden' });
+        const lock = h('span', { class: 'badge lock hidden' });
+        const go = h('span', { class: 'go hidden' }, '▶ Touche encore pour lancer');
+        const el = h('button', { class: 'pick-tile', style: { '--g1': c1, '--g2': c2 }, onclick: () => onTile(g) },
+          img, h('span', { class: 'badges' }, lock), votes, h('span', { class: 'nm' }, g.name), go);
+        tiles.set(g.id, { el, votes, lock, go, g, m });
+        grid.append(el);
+      }
+      const inTv = !!room.tvHost;
       body.append(...[
-        isHost ? codeCard : null,
+        isHost && !inTv ? codeCard : null,
+        inTv ? h('p', { class: 'conn-banner soft' }, '📺 Le code, les votes et les jeux s\'affichent en grand sur la télé.') : null,
         h('div', { class: 'col' }, h('div', { class: 'section-title' }, 'Joueurs'), players),
-        isHost ? pickWrap : waiting,
+        h('div', { class: 'section-title' }, lead ? '🎮 Choisis le jeu' : '🗳️ Vote pour ton jeu'),
+        info, top, chips, grid, bar,
       ].filter(Boolean));
-      lobby = { players, pickWrap, waiting, codeCard, tvLine };
+      lobby = { lead, players, info, top, chips, grid, bar, tiles, tvLine };
       lobbyArmed = null;
-      if (isHost) renderPicker();
+      renderChips();
     }
-    // Écran télé : comment l'afficher, et combien sont branchés.
+    // Écran télé (mode Online) : comment l'afficher, et combien sont branchés.
     lobby.tvLine.replaceChildren(...(room.tvs
       ? [`📺 ${room.tvs} écran${room.tvs > 1 ? 's' : ''} télé branché${room.tvs > 1 ? 's' : ''}`]
-      : ['📺 Sur une télé ou un ordi : Ambiance → Jouer en ligne → ', h('b', null, 'Écran télé'), ` → code ${room.code}`]));
+      : ['📺 Une télé ? Ambiance → ', h('b', null, 'TV Mode'), ' → Afficher un salon déjà créé → code ', h('b', null, room.code)]));
     // joueurs
     lobby.players.replaceChildren(...room.players.map((p) => h('span', { class: 'lp' + (p.on ? '' : ' off') },
       (p.pid === room.host ? '👑 ' : '') + p.name + (p.pid === me.pid ? ' (toi)' : ''),
-      isHost && p.pid !== me.pid ? h('button', {
+      lead && p.pid !== me.pid ? h('button', {
         class: 'kick', 'aria-label': 'Retirer ' + p.name,
         onclick: async () => { if (await confirmBox(`Retirer ${p.name} de la partie ?`)) send({ type: 'kick', pid: p.pid }); },
       }, '✕') : null)));
     if (room.players.length > prevCount && prevCount) { sfx.pop(); buzz(20); }
-    if (!isHost) {
-      const g = room.pick && onlineGame(room.pick);
-      lobby.waiting.replaceChildren(
-        h('div', { class: 'hero-emo' }, g ? g.emoji : '⏳'),
-        h('h3', null, g ? `Prochain jeu : ${g.name}` : 'En attente de l\'hôte'),
-        h('p', { class: 'muted small' }, `${room.players.find((p) => p.pid === room.host)?.name || 'L\'hôte'} choisit le jeu et lance la partie.`));
-    }
+    updatePicker();
   }
 
-  function renderPicker() {
-    const wrap = lobby.pickWrap;
-    if (!lobbyPick) lobbyPick = room.pick || ONLINE_GAMES[0].id;
+  function renderChips() {
+    lobby.chips.replaceChildren(...PICK_FILTERS.map((f) => h('button', {
+      class: 'chip' + (pickFilter === f.id ? ' on' : ''),
+      onclick: () => { pickFilter = f.id; renderChips(); updatePicker(); },
+    }, f.label)));
+  }
+
+  function onTile(g) {
+    if (!isLeader()) {
+      // Vote (toucher encore = retirer son vote).
+      send({ type: 'lobby:vote', game: g.id });
+      sfx.pop(); buzz(15);
+      return;
+    }
+    const armed = lobbyPick === g.id && lobbyArmed === g.id;
+    if (armed) { sfx.go(); launch(); return; }
+    lobbyPick = g.id; lobbyArmed = g.id;
+    send({ type: 'lobby:pick', game: g.id });
+    sfx.pop();
+    updatePicker();
+  }
+
+  function launch() {
     const mod = onlineGame(lobbyPick);
+    if (!mod) return;
     const st = lobbySettings[lobbyPick] || (lobbySettings[lobbyPick] = { ...mod.defaults });
-    const launch = () => send({ type: 'lobby:start', game: lobbyPick, settings: st });
-    // 1er appui : on choisit le jeu (et ses réglages s'affichent) ; 2e appui sur le même jeu : il se lance.
-    const grid = h('div', { class: 'game-pick' }, ONLINE_GAMES.map((g) => {
-      const armed = g.id === lobbyPick && lobbyArmed === g.id;
-      return h('button', {
-        class: (g.id === lobbyPick ? 'on' : '') + (armed ? ' armed' : ''),
-        onclick: () => {
-          if (armed) { sfx.go(); launch(); return; }
-          lobbyPick = g.id; lobbyArmed = g.id;
-          send({ type: 'lobby:pick', game: g.id });
-          sfx.pop();
-          renderPicker();
-        },
-      }, h('span', { class: 'emo' }, g.emoji), h('span', { class: 'nm' }, g.name), h('span', { class: 'muted tiny' }, g.short),
-      armed ? h('span', { class: 'go' }, '▶ Touche encore pour lancer') : null);
-    }));
-    wrap.replaceChildren(
-      h('div', { class: 'section-title' }, 'Choisis le jeu'),
-      h('p', { class: 'muted small' }, '👆👆 Touche deux fois un jeu pour le lancer directement.'),
-      grid,
-      h('div', { class: 'panel col' }, h('h3', null, `${mod.emoji} Réglages`), mod.settingsForm(st, (ns) => { Object.assign(st, ns); })),
-      h('button', { class: 'btn btn-primary btn-big btn-block', onclick: launch }, `▶ Lancer ${mod.name}`),
-      h('p', { class: 'muted small center' }, `Minimum ${mod.minPlayers} joueurs connectés.`));
+    send({ type: 'lobby:start', game: lobbyPick, settings: st });
+  }
+
+  async function openSettings() {
+    const mod = onlineGame(lobbyPick);
+    if (!mod) return;
+    const st = lobbySettings[lobbyPick] || (lobbySettings[lobbyPick] = { ...mod.defaults });
+    const ok = await modal({
+      title: `${mod.emoji} ${mod.name}`,
+      content: h('div', { class: 'col' }, h('p', { class: 'muted small' }, mod.short || ''), mod.settingsForm(st, (ns) => { Object.assign(st, ns); }),
+        h('p', { class: 'muted small' }, `Minimum ${mod.minPlayers} joueurs connectés.`)),
+      actions: [{ label: 'Fermer', value: false }, { label: `▶ Lancer`, value: true, primary: true }],
+    });
+    if (ok) launch();
+  }
+
+  function updatePicker() {
+    if (!lobby) return;
+    const lead = lobby.lead;
+    const votes = voteMap();
+    const n = onCount();
+    const myVote = room.votes && room.votes[me.pid];
+    if (lead && !lobbyPick) lobbyPick = room.pick || null;
+    for (const t of lobby.tiles.values()) {
+      const id = t.g.id;
+      const nv = (votes[id] || []).length;
+      const tooFew = t.g.minPlayers > n;
+      const show = pickFilter === 'all' || (pickFilter === 'votes' ? nv > 0 : (t.m.tags || []).includes(pickFilter));
+      t.el.classList.toggle('hidden', !show);
+      t.el.classList.toggle('on', lead ? id === lobbyPick : id === myVote);
+      t.el.classList.toggle('armed', lead && id === lobbyPick && lobbyArmed === id);
+      t.el.classList.toggle('few', tooFew);
+      t.go.classList.toggle('hidden', !(lead && id === lobbyPick && lobbyArmed === id));
+      t.votes.classList.toggle('hidden', !nv);
+      if (nv) t.votes.textContent = `🗳️ ${nv}`;
+      t.lock.classList.toggle('hidden', !tooFew);
+      if (tooFew) t.lock.textContent = `👥 ${t.g.minPlayers}+`;
+    }
+    // Les plus demandés (touche = choisir pour le chef, voter pour les autres).
+    const ranked = Object.entries(votes).sort((a, b) => b[1].length - a[1].length).slice(0, 4);
+    lobby.top.replaceChildren(...(ranked.length ? [h('div', { class: 'scroll-x vote-strip' },
+      h('span', { class: 'count-label' }, '🗳️ Demandés'),
+      ranked.map(([gid, pids]) => { const g = onlineGame(gid); return g ? h('button', { class: 'chip' + (lead ? (gid === lobbyPick ? ' on' : '') : (gid === myVote ? ' on' : '')), onclick: () => onTile(g) }, `${g.emoji} ${g.name} · ${pids.length}`) : null; }))] : []));
+    const chef = room.players.find((p) => p.pid === room.host);
+    const picked = room.pick && onlineGame(room.pick);
+    if (lead) {
+      lobby.info.textContent = '👆 Touche un jeu pour le choisir, une 2e fois pour le lancer. 🗳️ = votes des joueurs.';
+      const mod = lobbyPick && onlineGame(lobbyPick);
+      lobby.bar.replaceChildren(...(mod
+        ? [h('span', { class: 'lb-name' }, h('span', null, mod.emoji), ' ', mod.name, mod.minPlayers > n ? h('small', null, ` · ${mod.minPlayers} joueurs min.`) : null),
+          h('button', { class: 'icon-btn', 'aria-label': 'Réglages du jeu', onclick: openSettings }, '⚙️'),
+          h('button', { class: 'btn btn-primary', onclick: () => { sfx.go(); launch(); } }, `▶ Lancer ${mod.name}`)]
+        : [h('span', { class: 'lb-name muted' }, 'Choisis un jeu pour le lancer')]));
+    } else {
+      lobby.info.textContent = `👑 ${chef ? chef.name : 'Le chef'} lance le jeu.${picked ? ` Il a choisi : ${picked.emoji} ${picked.name}.` : ''} Touche un jeu pour voter !`;
+      const mine = myVote && onlineGame(myVote);
+      lobby.bar.replaceChildren(h('span', { class: 'lb-name' }, mine ? `🗳️ Ton vote : ${mine.emoji} ${mine.name}` : '🗳️ Touche le jeu que tu veux pour voter'));
+    }
   }
 
   async function roomMenu() {
     const actions = [];
-    if (isHost && room && room.game) actions.push({ label: '🎮 Retour au salon', value: 'lobby' });
+    if (isLeader() && room && room.game) actions.push({ label: '🎮 Retour au salon', value: 'lobby' });
     actions.push({ label: '🚪 Quitter', value: 'leave', cls: 'btn-bad' });
     const share = room ? location.origin + location.pathname + location.search + '#/join/' + room.code : '';
     const v = await modal({
@@ -1018,7 +1176,7 @@ export function start(ctx) {
 
   async function leave() {
     if (net) {
-      const ok = await confirmBox(isHost ? 'Quitter ? La partie sera fermée pour tout le monde.' : 'Quitter la partie ?', { ok: 'Quitter', cancel: 'Rester' });
+      const ok = await confirmBox(isHost ? `${tvHostMode ? 'Fermer la télé' : 'Quitter'} ? La partie sera fermée pour tout le monde.` : tvMode ? 'Quitter l\'écran télé ?' : 'Quitter la partie ?', { ok: 'Quitter', cancel: 'Rester' });
       if (!ok) return;
     }
     ctx.exit();

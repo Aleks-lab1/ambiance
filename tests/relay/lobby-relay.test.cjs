@@ -10,17 +10,24 @@ run(async () => {
   await host.goto('http://app.test/#/quiaecrit'); await host.waitForTimeout(800);
   await host.locator('.online-banner .btn', { hasText: 'Créer une partie' }).click();
   await host.getByPlaceholder('Ton prénom').fill('Alice');
-  await host.getByRole('button', { name: 'Créer la partie' }).click();
+  await host.getByRole('button', { name: 'Créer le salon' }).click();
   await host.waitForSelector('.room-code', { timeout: 30000 });
   const code = (await host.locator('.room-code').innerText()).trim();
   check(/^[A-Z0-9]{4,}$/.test(code), 'code de partie affiché', code);
   for (const [p, n] of [[c1, 'Bob'], [c2, 'Chloé']]) {
     await p.goto('http://app.test/#/join/' + code);
     await p.getByPlaceholder('Ton prénom').fill(n);
-    await p.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+    await p.getByRole('button', { name: 'Rejoindre le salon' }).click();
   }
   await host.waitForFunction(() => /Bob/.test(document.body.innerText) && /Chloé/.test(document.body.innerText), null, { timeout: 45000 });
   check(true, 'Bob et Chloé ont rejoint par le relais');
+  // Les joueurs votent pour le jeu qu'ils veulent ; l'hôte (le chef) voit les votes.
+  await c1.waitForSelector('.game-pick', { timeout: 15000 });
+  check(/Vote pour ton jeu/i.test(await c1.locator('body').innerText()), 'Bob (joueur) : « Vote pour ton jeu »');
+  await c1.locator('.pick-tile', { hasText: 'Bataille navale' }).click();
+  await host.waitForFunction(() => /🗳️ 1/.test([...document.querySelectorAll('.pick-tile')].find((t) => /Bataille navale/.test(t.innerText))?.innerText || ''), null, { timeout: 10000 })
+    .then(() => check(true, 'l\'hôte voit le vote de Bob (« 🗳️ 1 » sur Bataille navale)'), () => check(false, 'l\'hôte voit le vote de Bob'));
+  check(/Bataille navale · 1/.test(await host.locator('.vote-strip').innerText().catch(() => '')), 'hôte : « Demandés : Bataille navale · 1 »');
   const picks = await host.locator('.game-pick button').count();
   console.log('  (jeux proposés dans le salon : ' + picks + ')');
   check(picks >= 40, 'le salon propose les jeux en ligne', picks);
