@@ -107,6 +107,7 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 - 👥 Liste de joueurs partagée par tous les jeux (prénoms utilisés dans les cartes, tours, équipes).
 - 🎨 **38 thèmes** dans les réglages : classiques, couleurs, stylés (Néon, Synthwave, Terminal, Arcade…), animés (aurore, disco, arc-en-ciel…) et marrants (pluie de chats, pizza, neige, Halloween…), avec fonds animés et particules désactivables. Le thème recolore aussi les cases des jeux et les écrans de jeu.
 - ⭐ **Favoris** : touche l'étoile d'un jeu pour le retrouver en haut de l'accueil et dans le filtre « Favoris ».
+- 🔎 **Trouver vite le bon jeu** : recherche (« loup », « dés », « équipe »…), « 👥 On est combien ? » (seulement les jeux jouables à ce nombre), bouton **🎲 Au hasard** (les jeux défilent et s'arrêtent sur l'un d'eux, en évitant les derniers joués) et ligne **🕘 Joués récemment**.
 - 🍻 / 🧃 **Mode avec ou sans alcool** : les pénalités sont des gorgées ou des points de gage.
 - 🔞 Contenu 18+ verrouillé derrière une confirmation d'âge, et niveau 😈 **Hot++** (très explicite) derrière une seconde confirmation.
 - ✍️ **Cartes personnalisées** pour tous les jeux de questions et Le Chapeau.
@@ -152,13 +153,15 @@ Le script liste tous les fichiers et calcule un numéro de version. Les utilisat
 - Connexion **pair-à-pair** (WebRTC) via [PeerJS](https://peerjs.com). Le serveur public gratuit `0.peerjs.com` sert seulement à mettre les téléphones en relation, puis les données passent directement entre eux.
 - L'**hôte** (celui qui crée la partie) fait tourner le jeu : il garde l'état complet et envoie à chaque joueur uniquement ce qu'il a le droit de voir (le mot à dessiner n'est envoyé qu'au dessinateur, chaque joueur ne reçoit que son mot à L'Imposteur…).
 - Code à 4 lettres + QR code + lien de partage. Reconnexion automatique si un joueur perd le réseau ou recharge la page (le dessin en cours est restauré).
-- L'hôte doit garder l'appli ouverte. Ça marche en Wi-Fi comme en 4G/5G, même à distance (relais automatique, voir ci-dessous).
+- **Partie coupée, partie reprise** (`js/online/save.js`) : le téléphone de l'hôte enregistre la partie en continu (joueurs, scores, jeu en cours). S'il ferme l'appli, si son téléphone se verrouille ou si la page se recharge, l'accueil propose « 🔁 Reprendre la partie » : même code, mêmes scores, le jeu repart au même point (les minuteurs sont mis en pause). Les autres sont prévenus (« Alice a quitté l'appli un instant… »), patientent jusqu'à 5 minutes et reviennent tout seuls.
+- **Un joueur qui revient retrouve sa place et ses points** : bandeau « 🔌 Revenir dans la partie » sur l'accueil, et l'hôte reconnaît aussi un joueur parti qui revient avec le même prénom depuis un autre navigateur.
+- Ça marche en Wi-Fi comme en 4G/5G, même à distance (relais automatique, voir ci-dessous).
 
 ### En 4G/5G ou sur des Wi-Fi différents
 
 La connexion directe entre téléphones (WebRTC) est souvent bloquée par les opérateurs mobiles ou entre deux box. Dans ce cas, l'appli bascule toute seule sur un **relais** (`js/online/relay.js`) : les messages passent par des serveurs MQTT publics et gratuits (shiftr.io sur le port 443, qui passe même sur les réseaux filtrés, puis EMQX, HiveMQ et Mosquitto ; liste dans `js/config.js`). L'hôte écoute sur tous ; un joueur essaie la connexion directe pendant 8 secondes puis passe au relais, sur le premier serveur où l'hôte répond. Si le serveur PeerJS est injoignable, tout passe par le relais.
 
-Ces serveurs publics n'offrent aucune garantie (et les messages y transitent en clair, ce qui est sans conséquence pour un jeu de soirée). Pour une fiabilité maximale, tu peux aussi ajouter un serveur TURN dans `js/config.js` (par ex. un compte gratuit Metered, Twilio ou ton propre `coturn`), ou remplacer `relayBrokers` par ton propre serveur MQTT.
+Les messages qui passent par ces serveurs publics sont **chiffrés** : chaque connexion commence par un échange de clés (ECDH P-256, la clé secrète n'est jamais envoyée), puis tout est chiffré en AES-GCM. Un curieux qui écoute le relais ne voit ni les prénoms, ni les mots secrets, ni les rôles. (La connexion directe WebRTC est déjà chiffrée par le navigateur.) Ces serveurs n'offrent en revanche aucune garantie de disponibilité. Pour une fiabilité maximale, tu peux aussi ajouter un serveur TURN dans `js/config.js` (par ex. un compte gratuit Metered, Twilio ou ton propre `coturn`), ou remplacer `relayBrokers` par ton propre serveur MQTT.
 
 Tu peux aussi héberger ton propre serveur de mise en relation PeerJS :
 
@@ -188,6 +191,9 @@ js/app.js            accueil, navigation, réglages, installation
 js/games/index.js    catalogue des jeux
 js/games/*.js        un module par jeu (chargé à la demande)
 js/online/room.js    salon en ligne, hôte, clients, reconnexion
+js/online/save.js    partie enregistrée chez l'hôte (reprise) et place du joueur
+js/online/relay.js   relais MQTT de secours, messages chiffrés
+js/finder.js         accueil : nombre de joueurs, recherche, au hasard, joués récemment
 js/online/*.js       jeux en ligne (dessin, imposteur, votes, quiz/rapidité, écriture,
                      téléphone dessiné, bingo, menteur, cartes, paquet, hasard, oral…)
 js/race-core.js      logique partagée des jeux de rapidité (local + en ligne)

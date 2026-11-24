@@ -7,6 +7,7 @@ import { getName, setName, get, set } from '../store.js';
 import { CONFIG } from '../config.js';
 import { ONLINE_GAMES, onlineGame } from './games.js';
 import { RelayHub, relayConnect } from './relay.js';
+import { pack, unpack, shiftTimes, saveHost, loadHost, clearHost, saveSeat, loadSeat, clearSeat, resumeText } from './save.js';
 import { sfx, buzz } from '../sfx.js';
 
 const LETTERS = 'BCDFGHJKLMNPQRSTVWXZ';
@@ -69,8 +70,9 @@ function errText(e) {
 // HÔTE
 // =====================================================================
 class Host {
-  constructor(peer, code, me, deliver) {
-    this.peer = peer;
+  // saved : partie enregistrée dans le téléphone (save.js) à reprendre, ou rien pour une nouvelle partie.
+  constructor(peer, code, me, deliver, saved) {
+    this.peer = null;
     this.code = code;
     this.me = me;
     this.deliver = deliver; // livre un message à l'interface locale de l'hôte
@@ -78,15 +80,86 @@ class Host {
     this.conns = new Map();
     this.mod = null;
     this.gs = null;
+    if (saved) this.restore(saved);
     this.iv = setInterval(() => this.tick(), 250);
     this.hb = setInterval(() => this.heartbeat(), 4000);
-    if (peer) {
-      peer.on('connection', (conn) => this.attach(conn));
-      peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (!this.dead && peer.disconnected) peer.reconnect(); } catch { /* */ } }, 1500); });
-      peer.on('error', (e) => console.warn('peer host error', e && e.type));
-    }
+    if (peer) this.attachPeer(peer);
     // Les joueurs dont la connexion directe échoue arrivent par le relais.
     this.hub = new RelayHub(code, (conn) => this.attach(conn));
+    // La partie est enregistrée dans le téléphone : si l'appli est fermée (téléphone verrouillé, appli
+    // tuée, page rechargée…), l'hôte la reprend au même point. Enregistrement immédiat quand on quitte l'écran.
+    // Les joueurs sont prévenus tout de suite (« Alice a quitté l'appli un instant… »).
+    this.onHide = () => {
+      if (this.dead) return;
+      if (document.visibilityState === 'hidden') { this.saveNow(); this.away(false); } else this.broadcast();
+    };
+    this.onPageHide = () => { if (this.dead) return; this.saveNow(); this.away(true); };
+    document.addEventListener('visibilitychange', this.onHide);
+    window.addEventListener('pagehide', this.onPageHide);
+    this.saveNow();
+  }
+
+  attachPeer(peer) {
+    this.peer = peer;
+    peer.on('connection', (conn) => this.attach(conn));
+    peer.on('disconnected', () => { if (!this.dead) setTimeout(() => { try { if (!this.dead && peer.disconnected) peer.reconnect(); } catch { /* */ } }, 1500); });
+    peer.on('error', (e) => console.warn('peer host error', e && e.type));
+  }
+
+  /** Reprise : l'adresse directe est encore réservée par l'ancienne session. On réessaie en fond (le relais marche déjà). */
+  retryPeer(Peer, left = 12) {
+    if (this.dead || this.peer || left <= 0) return;
+    this.peerT = setTimeout(async () => {
+      try {
+        const peer = await openPeer(Peer, CONFIG.idPrefix + this.code);
+        if (this.dead) { try { peer.destroy(); } catch { /* */ } return; }
+        this.attachPeer(peer);
+      } catch { this.retryPeer(Peer, left - 1); }
+    }, 5000);
+  }
+
+  /** Reprend une partie enregistrée : joueurs, scores, jeu en cours (minuteurs décalés de la durée de la coupure). */
+  restore(saved) {
+    const r = unpack(saved.room);
+    r.code = this.code;
+    r.host = this.me.pid;
+    for (const p of r.players) if (p.pid === r.host) p.on = true;
+    this.room = r;
+    // Les joueurs qui étaient là ont un moment pour revenir avant d'être comptés comme partis.
+    this.graceUntil = Date.now() + (CONFIG.rejoinGrace || 45000);
+    const mod = r.game && onlineGame(r.game.type);
+    this.resumedGame = false;
+    if (mod && saved.game && saved.game.gs) {
+      try {
+        const gs = shiftTimes(unpack(saved.game.gs), saved.at, Date.now() - saved.at);
+        if (mod.restore) mod.restore(r, gs, this.api);
+        this.mod = mod;
+        this.gs = gs;
+        this.resumedGame = true;
+      } catch (e) { console.warn('reprise du jeu impossible', e); }
+    }
+    if (!this.resumedGame) { r.game = null; this.mod = null; this.gs = null; }
+  }
+
+  /** gone : la page se ferme (rechargement, appli tuée) ; sinon l'appli passe juste en arrière-plan. */
+  away(gone) { for (const c of this.conns.values()) this.safeSend(c, { t: 'away', gone }); }
+
+  scheduleSave() {
+    if (this.saveT || this.dead) return;
+    this.saveT = setTimeout(() => { this.saveT = null; this.saveNow(); }, 1000);
+  }
+
+  saveNow() {
+    if (this.dead) return;
+    clearTimeout(this.saveT); this.saveT = null;
+    let game = null;
+    if (this.room.game && this.mod) {
+      let gs = null;
+      try { gs = pack(this.gs); } catch (e) { if (!this.packWarned) { this.packWarned = true; console.warn('partie non enregistrable', e.message); } }
+      game = { gs, label: `${this.mod.emoji} ${this.mod.name}` };
+    }
+    this.lastSave = Date.now();
+    saveHost({ code: this.code, room: pack(this.room), game, n: this.room.players.length });
   }
 
   get api() {
@@ -109,9 +182,16 @@ class Host {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'ping') { this.safeSend(conn, { t: 'pong' }); return; }
     if (m.t === 'hello') {
-      const pid = String(m.pid || '').slice(0, 40);
+      let pid = String(m.pid || '').slice(0, 40);
       if (!pid || pid === this.room.host) return;
       let p = this.room.players.find((x) => x.pid === pid);
+      if (!p) {
+        // Même prénom qu'un joueur parti (appli rouverte depuis un autre onglet, Safari → appli installée…) :
+        // c'est sûrement lui, il retrouve sa place et ses points.
+        const nm = cleanName(m.name).toLowerCase();
+        p = this.room.players.find((x) => !x.on && x.pid !== this.room.host && x.name.toLowerCase() === nm && !this.conns.has(x.pid)) || null;
+        if (p) pid = p.pid;
+      }
       if (!p) {
         if (this.room.players.length >= CONFIG.maxPlayers) {
           this.safeSend(conn, { t: 'bye', reason: 'La partie est complète.' });
@@ -162,6 +242,20 @@ class Host {
     for (const conn of [...this.conns.values()]) {
       if (now - conn._seen > 16000) { try { conn.close(); } catch { /* */ } this.onClose(conn); }
     }
+    // Après une reprise : ceux qui ne sont pas revenus à temps sont comptés comme partis.
+    if (this.graceUntil && now > this.graceUntil) {
+      this.graceUntil = 0;
+      let changed = false;
+      for (const p of this.room.players) {
+        if (p.on && p.pid !== this.room.host && !this.conns.has(p.pid)) {
+          p.on = false; changed = true;
+          if (this.room.game && this.mod && this.mod.onLeave) { try { this.mod.onLeave(this.room, this.gs, p.pid, this.api); } catch (e) { console.error(e); } }
+        }
+      }
+      if (changed) this.broadcast();
+    }
+    // Pendant un jeu, les minuteurs avancent sans forcément tout renvoyer : on enregistre régulièrement.
+    if (now - (this.lastSave || 0) > (this.room.game ? 4000 : 30000)) this.saveNow();
   }
 
   handle(pid, a) {
@@ -239,6 +333,7 @@ class Host {
     const now = Date.now();
     for (const [pid, c] of this.conns) this.safeSend(c, { t: 'state', now, room: this.viewFor(pid) });
     this.deliver({ t: 'state', now, room: this.viewFor(this.room.host) });
+    this.scheduleSave();
   }
 
   relay(op, except) {
@@ -259,10 +354,16 @@ class Host {
 
   send(a) { this.handle(this.room.host, a); }
 
-  destroy() {
+  // keep = garder la partie enregistrée (fermeture involontaire) ; sinon l'hôte a quitté : plus rien à reprendre.
+  destroy(keep) {
+    if (keep) this.saveNow(); else clearHost();
     this.dead = true;
     clearInterval(this.iv);
     clearInterval(this.hb);
+    clearTimeout(this.saveT);
+    clearTimeout(this.peerT);
+    document.removeEventListener('visibilitychange', this.onHide);
+    window.removeEventListener('pagehide', this.onPageHide);
     for (const c of this.conns.values()) this.safeSend(c, { t: 'bye', reason: 'L\'hôte a fermé la partie.' });
     this.hub.destroy();
     setTimeout(() => { try { this.peer && this.peer.destroy(); } catch { /* */ } }, 400);
@@ -303,7 +404,12 @@ class Client {
       if (this.conn && this.conn.open) { try { this.conn.send({ t: 'ping' }); } catch { /* */ } }
       if (this.welcomed && Date.now() - this.lastMsg > 15000 && !this.rt) this.lost();
     }, 4000);
-    this.onVis = () => { if (document.visibilityState === 'visible' && this.welcomed && !(this.conn && this.conn.open)) this.lost(); };
+    // Retour dans l'appli (téléphone déverrouillé) : on repart pour un délai d'attente complet.
+    this.onVis = () => {
+      if (document.visibilityState !== 'visible' || !this.welcomed) return;
+      if (this.lostAt) this.lostAt = Date.now();
+      if (!(this.conn && this.conn.open)) this.lost();
+    };
     document.addEventListener('visibilitychange', this.onVis);
   }
 
@@ -349,11 +455,17 @@ class Client {
       this.lastMsg = Date.now();
       if (!m || typeof m !== 'object') return;
       if (m.t === 'welcome') {
-        this.welcomed = true; this.attempts = 0;
+        this.welcomed = true; this.attempts = 0; this.lostAt = 0;
         this.onStatus('online');
         if (this.firstResolve) { this.firstResolve(m); this.firstResolve = null; }
       }
       if (m.t === 'bye') { this.byeReason = m.reason; }
+      if (m.t === 'away') {
+        this.onStatus('away');
+        // La page de l'hôte se ferme : la connexion va tomber, on passe tout de suite en reconnexion.
+        if (m.gone) { setTimeout(() => { if (this.conn === conn && !this.dead) { conn._stale = true; try { conn.close(); } catch { /* */ } this.lost(); } }, 300); }
+        return;
+      }
       this.deliver(m);
     });
     conn.on('close', () => {
@@ -372,21 +484,29 @@ class Client {
 
   lost() {
     if (this.dead) return;
+    if (!this.lostAt) this.lostAt = Date.now();
     this.onStatus('reconnecting');
     this.retryLater();
   }
 
+  // On attend l'hôte jusqu'à CONFIG.hostWait (5 min) : son téléphone peut être verrouillé, ou il reprend la partie.
   retryLater() {
     if (this.dead || !this.welcomed || this.rt) return;
     this.attempts++;
-    if (this.attempts > 8) { this.onStatus('closed', 'Connexion à l\'hôte perdue.'); return; }
+    if (!this.lostAt) this.lostAt = Date.now();
+    if (Date.now() - this.lostAt > (CONFIG.hostWait || 300000)) {
+      this.onStatus('closed', `L'hôte ne répond plus. S'il reprend la partie, tu pourras la rejoindre avec le code ${this.code} : tu retrouveras tes points.`, true);
+      return;
+    }
+    // La connexion directe ne revient pas : l'hôte n'est peut-être plus joignable qu'en relais (partie reprise).
+    if (!this.useRelay && this.attempts >= 2) this.useRelay = true;
     this.onStatus('reconnecting');
     this.rt = setTimeout(() => {
       this.rt = null;
       if (this.dead) return;
       try { if (this.peer && !this.useRelay && this.peer.disconnected) this.peer.reconnect(); } catch { /* */ }
       this.open();
-    }, Math.min(800 * this.attempts, 5000));
+    }, Math.min(1000 * this.attempts, 5000));
   }
 
   send(a) {
@@ -419,6 +539,7 @@ export function start(ctx) {
   let viewType = null;
   let lobby = null;      // éléments du salon
   let status = 'online';
+  let hostAway = false; // l'hôte a prévenu qu'il quittait l'appli
   const pendingDraw = [];
   const pendingMsgs = [];
 
@@ -445,6 +566,12 @@ export function start(ctx) {
       joinRoom(code);
     };
     const joinFirst = !!opts.join || opts.joinPrompt;
+    const saved = loadHost();
+    const resumePanel = saved ? h('div', { class: 'panel col resume-card' },
+      h('h3', null, `🔁 Reprendre ta partie ${saved.code}`),
+      h('p', { class: 'muted small' }, resumeText(saved)),
+      h('button', { class: 'btn btn-primary btn-block', onclick: () => resumeRoom(saved) }, 'Reprendre la partie'),
+      h('button', { class: 'btn btn-ghost btn-sm', onclick: () => { clearHost(); resumePanel.remove(); } }, 'Non merci, l\'oublier')) : null;
     const createPanel = h('div', { class: 'panel col' },
       h('h3', null, '🎉 Créer une partie'),
       h('p', { class: 'muted small' }, 'Tu seras l\'hôte : tu choisis les jeux et tu partages le code aux autres.'),
@@ -456,11 +583,13 @@ export function start(ctx) {
     root.replaceChildren(
       header(),
       msg ? h('div', { class: 'conn-banner' }, msg) : null,
+      resumePanel,
       h('label', { class: 'field' }, 'Ton prénom', nameIn),
       ...(joinFirst ? [joinPanel, createPanel] : [createPanel, joinPanel]),
       h('div', { class: 'panel rules' },
         h('p', null, '📱 Chacun joue sur son téléphone. Pas besoin d\'installer l\'appli : le lien ou le QR code suffit.'),
-        h('p', null, '📶 Marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit. L\'hôte doit garder l\'appli ouverte.')),
+        h('p', null, '📶 Marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.'),
+        h('p', null, '🔁 Appli fermée ou téléphone verrouillé ? L\'hôte reprend la partie là où elle en était, et chacun retrouve sa place et ses points.')),
     );
     if (opts.join && me.name) setTimeout(() => codeIn.value.length === 4 ? null : codeIn.focus(), 50);
     else if (!me.name) setTimeout(() => nameIn.focus(), 50);
@@ -497,7 +626,7 @@ export function start(ctx) {
         }
       }
       isHost = true;
-      net = new Host(peer, code, me, (m) => queueMicrotask(() => onMessage(m)));
+      net = new Host(peer, code, me, hostDeliver);
       ctx.setGuard('Quitter la partie ? Elle sera fermée pour tout le monde.');
       net.broadcast();
       if (opts.game) {
@@ -511,8 +640,38 @@ export function start(ctx) {
     }
   }
 
+  // L'hôte revient (appli rouverte, page rechargée…) : même code, mêmes joueurs, mêmes scores, jeu en cours.
+  async function resumeRoom(saved) {
+    busy(`Reprise de la partie ${saved.code}…`);
+    const code = saved.code;
+    const hostP = (saved.room.players || []).find((p) => p.pid === saved.room.host);
+    me.pid = saved.room.host;
+    if (hostP) me.name = hostP.name;
+    let Peer = null, peer = null;
+    try {
+      Peer = await getPeer();
+      // L'adresse directe peut rester réservée quelques instants par l'ancienne session.
+      for (let i = 0; i < 2 && !peer; i++) {
+        try { peer = await openPeer(Peer, CONFIG.idPrefix + code); } catch (e) {
+          if (e.type !== 'unavailable-id') break;
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
+    } catch (e) { console.warn('PeerJS indisponible, relais seul', e && e.type); }
+    isHost = true;
+    net = new Host(peer, code, me, hostDeliver, saved);
+    if (!peer && Peer) net.retryPeer(Peer);
+    ctx.setGuard('Quitter la partie ? Elle sera fermée pour tout le monde.');
+    lobbyPick = net.room.pick;
+    net.broadcast();
+    toast(net.resumedGame ? '🔁 Partie reprise ! Les joueurs reviennent automatiquement.' : '🔁 Partie reprise au salon : les joueurs reviennent automatiquement.', 3500);
+  }
+
   async function joinRoom(code) {
     busy(`Connexion à la partie ${code}…`);
+    // Déjà venu dans cette partie avec ce téléphone : même identifiant, l'hôte nous rend notre place.
+    const seat = loadSeat(code);
+    if (seat) me.pid = seat.pid;
     try {
       let peer = null;
       try { peer = await openPeer(await getPeer(), null); } catch (e) { console.warn('PeerJS indisponible, relais seul', e && e.type); }
@@ -527,14 +686,22 @@ export function start(ctx) {
     }
   }
 
-  function onStatus(s, reason) {
+  // keepSeat : la partie existe peut-être encore (hôte injoignable) → on garde sa place pour revenir.
+  function onStatus(s, reason, keepSeat) {
     if (s === 'relay') { if (!room) busy('Connexion directe impossible : passage par le relais…'); return; }
     status = s;
+    if (s === 'away') hostAway = true; else if (s !== 'reconnecting') hostAway = false;
     const banner = root.querySelector('.conn-banner.live');
-    if (s === 'reconnecting') {
-      if (!banner && room) root.insertBefore(h('div', { class: 'conn-banner live' }, '📶 Connexion perdue… reconnexion en cours'), root.children[1] || null);
+    if (s === 'reconnecting' || s === 'away') {
+      const hostName = room && room.players.find((p) => p.pid === room.host)?.name;
+      const text = hostAway
+        ? `⏸️ ${hostName || 'L\'hôte'} a quitté l'appli un instant… La partie reprendra à son retour.`
+        : '📶 Connexion à l\'hôte perdue… on réessaie. La partie reprendra toute seule.';
+      if (banner) banner.textContent = text;
+      else if (room) root.insertBefore(h('div', { class: 'conn-banner live' }, text), root.children[1] || null);
     } else if (banner) banner.remove();
     if (s === 'closed') {
+      if (!keepSeat) clearSeat();
       if (net) { net.destroy(); net = null; }
       room = null;
       destroyView();
@@ -551,6 +718,8 @@ export function start(ctx) {
     switch (m.t) {
       case 'state':
         offset = m.now - Date.now();
+        if (!isHost && Date.now() - seatAt > 60000) { seatAt = Date.now(); saveSeat(m.room.code, me.pid); }
+        if (status === 'away') onStatus('online');
         render(m.room);
         break;
       case 'draw':
@@ -564,6 +733,9 @@ export function start(ctx) {
         break;
       case 'welcome':
         if (m.name && m.name !== me.name) me.name = m.name;
+        // L'hôte peut nous rendre l'identifiant d'un joueur parti du même prénom (= nous, depuis un autre onglet).
+        if (m.pid && m.pid !== me.pid) { me.pid = m.pid; try { sessionStorage.setItem('ambiance:pid', m.pid); } catch { /* */ } }
+        if (net && net.code) { seatAt = Date.now(); saveSeat(net.code, me.pid); }
         break;
       case 'pong':
         break;
@@ -574,6 +746,8 @@ export function start(ctx) {
     }
   }
 
+  const hostDeliver = (m) => queueMicrotask(() => onMessage(m));
+  let seatAt = 0;
   const send = (a) => { if (net) net.send(a); };
   const gctx = {
     get me() { return me.pid; },
@@ -751,12 +925,17 @@ export function start(ctx) {
   }
 
   // ---------- Démarrage ----------
-  if (opts.create && me.name) createRoom();
+  const toResume = opts.resume && loadHost();
+  if (toResume) resumeRoom(toResume);
+  else if (opts.create && me.name) createRoom();
   else if (opts.join && opts.join.length === 4 && me.name) joinRoom(opts.join);
   else entry();
 
   return () => {
     destroyView();
+    // On quitte l'écran de la partie (bouton retour confirmé) : rien à reprendre.
+    if (net && !isHost) clearSeat();
     if (net) { net.destroy(); net = null; }
   };
 }
+

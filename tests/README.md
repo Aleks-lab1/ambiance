@@ -49,11 +49,15 @@ et sort avec le code 1 en cas d'échec.
 | `online/cartes.test.cjs` | Et si, Confidences, Cap ou pas cap, Action ou vérité, Le Roi, Plus ou moins, Le Bus. |
 | `online/hasard.test.cjs` | La Bouteille, La roue des gages, Qui commence ?, Boîte à outils. |
 | `online/oral.test.cjs` | Sur le front, Ni oui ni non, Histoire folle, Le Pendu, La Séquence, Le Chapeau (4 joueurs). |
-| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant, mode ∞), Dans l'ordre (glisser), 4 en ligne contre le téléphone, Morpion, Chifoumi (« Chi… Fou… Mi ! »), dés qui roulent, carte qui se retourne, bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux », accueil (image de chaque jeu affichée, cases rectangulaires sans description, nom en bas à gauche, favoris illustrés). |
+| `local/jeux-locaux.test.cjs` | Jeux sur un seul téléphone (iPhone simulé) : Quiz (réponse en touchant, mode ∞), Dans l'ordre (glisser), 4 en ligne contre le téléphone, Morpion, Chifoumi (« Chi… Fou… Mi ! »), dés qui roulent, carte qui se retourne, bandeau « en ligne » sur **les 61 jeux**, plus de badge ni de filtre « En ligne », filtre « Nouveaux », accueil (image de chaque jeu affichée, cases rectangulaires sans description, nom en bas à gauche, favoris illustrés, joués récemment, recherche, « On est 2 », 🎲 au hasard qui ouvre le jeu tiré). |
 | `local/sequence.test.cjs` | La Séquence : un seul « Je suis prêt », puis compte à rebours. |
 | `local/sw.test.cjs` | Service worker, avec un **vrai petit serveur web sur localhost** (le service worker exige https ou localhost) : tout est en cache à l'installation, les images des jeux dans un cache à part **non retéléchargé** lors d'une mise à jour, accueil complet **hors ligne**. |
 | `unit/images.test.mjs` | Images des jeux : une composition (`scripts/images/scenes.mjs`) et une image `img/jeux/<id>.webp` (WebP transparent 540 × 360) par jeu, emojis sources présents, poids total raisonnable. |
 | `relay/lobby-relay.test.cjs` | 3 téléphones, PeerJS bloqué, **faux relais MQTT** : vrai salon, lancement de 2 jeux (le 2e par double appui sur le jeu). `DOWN=shiftr` simule la panne du 1er serveur. |
+| `relay/reprise.test.cjs` | 3 téléphones par le faux relais en **https** : messages chiffrés (aucun prénom lisible sur le relais), l'hôte sort de l'appli (« Alice a quitté l'appli un instant… »), puis la ferme en plein Quiz : les joueurs attendent, il rouvre l'appli → « Reprendre » : même code, mêmes scores, même question, minuteur en pause, joueurs revenus seuls. Chloé revient par le bandeau, Bob par un autre navigateur avec le même prénom : pas de doublon. |
+| `online/reprise-jeux.test.cjs` | Chacun des 61 jeux en ligne est enregistré puis rechargé comme chez l'hôte : chaque joueur voit la même chose ; le Quiz repris enchaîne les questions. |
+| `unit/sauvegarde.test.mjs` | `js/online/save.js` : Set/Map conservés, fonctions refusées, minuteurs décalés, texte du bandeau « Reprendre ». |
+| `unit/accueil.test.mjs` | `js/finder.js` : nombre de joueurs de chaque jeu, filtre « On est combien ? », recherche (accents, « dés »), tirage au hasard. |
 | `relay/relay-real.manual.cjs` | **Manuel**, avec Internet : les vrais serveurs relais publics. Pas lancé par `run-all`. |
 
 ## Outils réutilisables (`lib/`)

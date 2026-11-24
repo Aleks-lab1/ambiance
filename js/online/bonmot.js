@@ -48,6 +48,8 @@ const bonmot = {
     return box;
   },
 
+  restore() { ensureDico(); }, // partie reprise par l'hôte : on recharge le dictionnaire
+
   init(room, st) {
     ensureDico();
     const order = room.players.filter((p) => p.on).map((p) => p.pid);
@@ -75,7 +77,7 @@ const bonmot = {
       return true;
     }
     if (a.type === 'word') {
-      if (pid !== cur || s.phase !== 'play') return false;
+      if (pid !== cur || s.phase !== 'play' || !dico) return false; // !dico : partie reprise, dictionnaire en chargement
       return submit(room, s, String(a.v || '').trim().replace(/\s+/g, ' ').slice(0, 40));
     }
     if (a.type === 'accept') {
@@ -95,7 +97,7 @@ const bonmot = {
     }
     if (s.phase === 'count' && now >= s.until) { startPlay(room, s); return true; }
     if (s.phase === 'play' && now >= s.deadline) { fail(room, s); return true; }
-    if (s.phase === 'pick' && now >= s.until) { s.letters = dico.randomStart(); startPlay(room, s); return true; }
+    if (s.phase === 'pick' && now >= s.until && dico) { s.letters = dico.randomStart(); startPlay(room, s); return true; }
     return false;
   },
 

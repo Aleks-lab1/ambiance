@@ -25,6 +25,8 @@ export const CONFIG = {
   ],
   relayPrefix: 'ambiance-soiree-v1',
   directTimeout: 8000,     // ms avant de basculer sur le relais si la connexion directe ne s'établit pas
+  hostWait: 5 * 60 * 1000, // ms pendant lesquelles un joueur attend l'hôte disparu (téléphone verrouillé, partie reprise…)
+  rejoinGrace: 45000,      // ms laissées aux joueurs pour revenir quand l'hôte reprend une partie enregistrée
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },

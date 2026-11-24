@@ -7,6 +7,8 @@ import { ensureAdult } from './common.js';
 import { getFavs, isFav, toggleFav } from './favorites.js';
 import { sfx, buzz } from './sfx.js';
 import { THEMES, THEME_CATS, themeById, applyTheme, setTheme, themeSwatch, gameColors } from './themes.js';
+import { COUNTS, countLabel, fitsCount, matchSearch, getCount, setCount, getRecent, pushRecent, pickGame } from './finder.js';
+import { loadHost, clearHost, loadSeat, clearSeat, resumeText } from './online/save.js';
 
 const ONLINE_META = {
   id: 'online', name: 'Jouer en ligne', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
@@ -14,7 +16,7 @@ const ONLINE_META = {
     'Un joueur <b>crée la partie</b> et obtient un code de 4 lettres (et un QR code). Les autres touchent <b>Rejoindre</b> et entrent ce code : chacun joue sur son propre téléphone.',
     `Tous les jeux d'Ambiance se jouent en ligne : l'hôte choisit parmi les ${GAMES.length} jeux (dessin, quiz, bluff, votes, jeux en équipes, Loup-garou avec rôles secrets, Bataille navale, Yam's, Action ou vérité, La Bouteille…).`,
     'Dans certains jeux, un seul joueur agit à la fois (celui dont c\'est le tour, ou l\'hôte) : les autres suivent la partie en direct sur leur téléphone.',
-    'Astuce : l\'hôte doit garder l\'appli ouverte pendant la partie. Ça marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit.',
+    'Ça marche en Wi-Fi comme en 4G/5G, même si vous n\'êtes pas au même endroit. Si l\'hôte ferme l\'appli (ou si son téléphone se verrouille), il reprend la partie là où elle en était : les autres patientent et reviennent tout seuls, avec leurs points.',
   ],
   load: () => import('./online/room.js'),
 };
@@ -69,6 +71,7 @@ function urlFor(id, opts) {
 async function openScreen(id, opts = {}, push = true) {
   const meta = id === 'online' ? ONLINE_META : gameById(id);
   if (!meta) { renderHome(); return; }
+  if (id !== 'online') pushRecent(id);
   teardown();
   const state = { screen: id, opts };
   const url = urlFor(id, opts);
@@ -147,6 +150,8 @@ function renderHome() {
   document.title = 'Ambiance — jeux de soirée';
   let filter = get('filter', 'all');
   if (!FILTERS.some((f) => f.id === filter)) filter = 'all'; // ancien filtre supprimé (ex. « En ligne »)
+  let count = getCount(); // « On est combien ? » (0 = peu importe)
+  let query = '';
   const grid = h('div', { class: 'grid' });
   const filters = h('div', { class: 'scroll-x', role: 'tablist' });
 
@@ -158,20 +163,81 @@ function renderHome() {
   }
   const favGames = () => getFavs().map((id) => gameById(id)).filter(Boolean);
 
-  function renderGrid() {
-    const list = filter === 'fav'
+  // ---- Recherche ----
+  const searchIn = h('input', {
+    class: 'input', type: 'search', placeholder: 'Chercher un jeu…', 'aria-label': 'Chercher un jeu', enterkeyhint: 'search',
+    autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false',
+    oninput: () => onSearch(),
+    onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
+  });
+  const searchBox = h('div', { class: 'search-box' },
+    h('span', { class: 'search-ico', 'aria-hidden': 'true' }, '🔎'), searchIn,
+    h('button', { class: 'search-clear', 'aria-label': 'Effacer la recherche', onclick: () => { searchIn.value = ''; onSearch(); searchIn.focus(); } }, '×'));
+  function onSearch() {
+    query = searchIn.value;
+    searchBox.classList.toggle('has-text', !!query.trim());
+    // On cherche dans tous les jeux, pas seulement dans la catégorie choisie.
+    if (query.trim() && filter !== 'all') { filter = 'all'; set('filter', filter); renderFilters(); renderFavs(); }
+    renderGrid();
+  }
+
+  // ---- On est combien ? ----
+  const counts = h('div', { class: 'scroll-x count-row', role: 'group', 'aria-label': 'Nombre de joueurs' });
+  function renderCounts() {
+    counts.replaceChildren(h('span', { class: 'count-label' }, '👥 On est'), ...COUNTS.map((n) => h('button', {
+      class: 'chip chip-n' + (count === n ? ' on' : ''), 'aria-pressed': count === n ? 'true' : 'false',
+      'aria-label': n >= 10 ? '10 joueurs ou plus' : `${n} joueurs`,
+      onclick: () => { count = count === n ? 0 : n; setCount(count); renderCounts(); renderGrid(); sfx.pop(); },
+    }, countLabel(n))));
+  }
+
+  const resultBar = h('div', { class: 'result-bar' });
+  const tagWords = (g) => g.tags.map((t) => FILTERS.find((f) => f.id === t)?.label || '').join(' ');
+  function currentList() {
+    const base = filter === 'fav'
       ? favGames()
       : GAMES.filter((g) => filter === 'all' || (filter === 'new' ? g.new : g.tags.includes(filter)));
-    if (filter === 'fav' && !list.length) {
+    return base.filter((g) => fitsCount(g, count) && matchSearch(g, query, tagWords(g)));
+  }
+  function resetFilters() {
+    query = ''; searchIn.value = ''; searchBox.classList.remove('has-text');
+    count = 0; setCount(0);
+    filter = 'all'; set('filter', filter);
+    renderFilters(); renderCounts(); renderFavs(); renderGrid();
+  }
+
+  function renderGrid() {
+    const list = currentList();
+    const n = list.length;
+    resultBar.replaceChildren(
+      h('span', { class: 'section-title' }, `${n} jeu${n > 1 ? 'x' : ''}${count ? ` · ${countLabel(count)} joueurs` : ''}`),
+      n > 1 ? h('button', { class: 'btn btn-soft btn-sm dice-btn', onclick: () => surprise(list) }, '🎲 Au hasard') : null);
+    if (filter === 'fav' && !getFavs().length) {
       grid.replaceChildren(h('div', { class: 'panel center col', style: { gridColumn: '1 / -1' } },
         h('div', { class: 'hero-emo', style: { fontSize: '48px' } }, '⭐'),
         h('b', null, 'Aucun favori pour l\'instant'),
         h('p', { class: 'muted small' }, 'Touche l\'étoile ☆ en bas d\'un jeu pour le retrouver ici et en haut de l\'accueil.')));
       return;
     }
+    if (!n) {
+      const q = query.trim();
+      // Le jeu cherché existe, mais pas pour ce nombre de joueurs (« loup » à 4 : Loup-garou se joue à 6+).
+      const otherCount = count && q && GAMES.filter((g) => matchSearch(g, query, tagWords(g)));
+      const title = q ? `Aucun jeu ne correspond à « ${q} »${count ? ` pour ${countLabel(count)} joueurs` : ''}` : `Aucun jeu ici${count ? ` pour ${countLabel(count)} joueurs` : ''}`;
+      grid.replaceChildren(h('div', { class: 'panel center col empty-find', style: { gridColumn: '1 / -1' } },
+        h('div', { class: 'hero-emo', style: { fontSize: '44px' } }, '🤷'),
+        h('b', null, title),
+        otherCount && otherCount.length
+          ? h('p', { class: 'muted small' }, `${otherCount.map((g) => `${g.name} (${g.players} joueurs)`).slice(0, 3).join(', ')} : pas pour ${countLabel(count)} joueurs.`)
+          : h('p', { class: 'muted small' }, 'Essaie un autre mot ou un autre nombre de joueurs.'),
+        otherCount && otherCount.length
+          ? h('button', { class: 'btn btn-soft btn-sm', onclick: () => { count = 0; setCount(0); renderCounts(); renderGrid(); } }, 'Voir sans le nombre de joueurs')
+          : h('button', { class: 'btn btn-soft btn-sm', onclick: resetFilters }, 'Tout afficher')));
+      return;
+    }
     grid.replaceChildren(...list.map((g) => {
       const star = starButton(g, 'fav-btn');
-      star.addEventListener('click', () => { renderFavs(); if (filter === 'fav') renderGrid(); });
+      star.addEventListener('click', () => { renderFavs(); renderRecent(); if (filter === 'fav') renderGrid(); });
       const [c1, c2] = gameColors(g.id, g.colors);
       return h('div', { class: 'tile-wrap' },
         h('button', {
@@ -185,6 +251,10 @@ function renderHome() {
     }));
   }
 
+  const miniTile = (g) => h('button', {
+    class: 'mini-tile', style: { '--g1': gameColors(g.id, g.colors)[0], '--g2': gameColors(g.id, g.colors)[1] },
+    onclick: () => { sfx.unlock(); openScreen(g.id); },
+  }, gameArt(g), h('span', { class: 'nm' }, g.name));
   const favSlot = h('div', { class: 'col', style: { gap: '8px' } });
   function renderFavs() {
     const favs = favGames();
@@ -192,11 +262,40 @@ function renderHome() {
     favSlot.classList.remove('hidden');
     favSlot.replaceChildren(
       h('div', { class: 'section-title' }, '⭐ Mes favoris'),
-      h('div', { class: 'scroll-x fav-row' }, favs.map((g) => h('button', {
-        class: 'mini-tile', style: { '--g1': gameColors(g.id, g.colors)[0], '--g2': gameColors(g.id, g.colors)[1] },
-        onclick: () => { sfx.unlock(); openScreen(g.id); },
-      }, gameArt(g), h('span', { class: 'nm' }, g.name)))));
+      h('div', { class: 'scroll-x fav-row' }, favs.map(miniTile)));
   }
+  // Joués récemment (une touche pour rejouer), sans répéter les favoris déjà affichés juste au-dessus.
+  const recentSlot = h('div', { class: 'col', style: { gap: '8px' } });
+  function renderRecent() {
+    const favs = getFavs();
+    const list = getRecent().filter((id) => !favs.includes(id)).map((id) => gameById(id)).filter(Boolean).slice(0, 6);
+    if (!list.length) { recentSlot.replaceChildren(); recentSlot.classList.add('hidden'); return; }
+    recentSlot.classList.remove('hidden');
+    recentSlot.replaceChildren(
+      h('div', { class: 'section-title' }, '🕘 Joués récemment'),
+      h('div', { class: 'scroll-x recent-row' }, list.map(miniTile)));
+  }
+
+  // Partie en ligne coupée (appli fermée, téléphone verrouillé…) : on propose de la reprendre.
+  const resumeSlot = h('div');
+  function renderResume() {
+    const saved = loadHost();
+    const seat = !saved && loadSeat();
+    const forget = (fn) => () => { fn(); renderResume(); };
+    const card = (emo, title, sub, label, go, clear) => h('div', { class: 'panel resume-card' },
+      h('span', { class: 'emo' }, emo),
+      h('div', { class: 'txt' }, h('b', null, title), h('p', { class: 'muted small' }, sub)),
+      h('button', { class: 'icon-btn', 'aria-label': 'Oublier cette partie', onclick: forget(clear) }, '×'),
+      h('button', { class: 'btn btn-primary go', onclick: () => { sfx.unlock(); go(); } }, label));
+    if (saved) {
+      resumeSlot.replaceChildren(card('🔁', `Ta partie ${saved.code} n'est pas finie`, resumeText(saved), '▶ Reprendre la partie',
+        () => openScreen('online', { resume: true }), clearHost));
+    } else if (seat) {
+      resumeSlot.replaceChildren(card('🔌', `Tu étais dans la partie ${seat.code}`, 'Reviens : tu retrouveras ta place et tes points.', '▶ Revenir dans la partie',
+        () => openScreen('online', { join: seat.code }), clearSeat));
+    } else resumeSlot.replaceChildren();
+  }
+  renderResume();
 
   const playersBar = h('button', { class: 'players-bar', onclick: async () => { await editPlayers(); renderPlayers(); } });
   function renderPlayers() {
@@ -232,8 +331,10 @@ function renderHome() {
     h('div', { class: 'home-head' },
       h('div', null, h('div', { class: 'logo' }, 'Ambiance'), h('div', { class: 'tagline' }, `${GAMES.length} jeux pour mettre le feu à ta soirée 🎉`)),
       h('button', { class: 'icon-btn', 'aria-label': 'Réglages', onclick: openSettings }, '⚙️')),
+    resumeSlot,
     playersBar,
     favSlot,
+    recentSlot,
     h('div', { class: 'online-banner' },
       h('div', { class: 'deco' }, '📱'),
       h('h2', null, '🌐 Jouer en ligne'),
@@ -242,15 +343,71 @@ function renderHome() {
         h('button', { class: 'btn grow', onclick: () => openScreen('online', { create: true }) }, 'Créer une partie'),
         h('button', { class: 'btn btn-ghost grow', onclick: () => openScreen('online', { joinPrompt: true }) }, 'Rejoindre'))),
     installSlot,
+    searchBox,
     filters,
+    counts,
+    resultBar,
     grid,
     h('p', { class: 'footer' }, settings.drink ? '🍻 Mode soirée : les pénalités se boivent. Avec modération !' : '🧃 Mode sans alcool : les pénalités sont des points de gage.',
       h('br'), h('button', { class: 'btn btn-ghost btn-sm', style: { marginTop: '8px' }, onclick: openSettings }, 'Changer dans les réglages')),
   );
   renderFilters();
+  renderCounts();
   renderGrid();
   renderFavs();
+  renderRecent();
   mount(screen);
+}
+
+// ---------------- Tirage au hasard (« Je ne sais pas quoi jouer ») ----------------
+/** Les jeux défilent comme une machine à sous, ralentissent et s'arrêtent sur l'un d'eux. */
+function surprise(list) {
+  if (!list.length) return;
+  const reel = h('div', { class: 'tile reel', 'aria-live': 'polite' });
+  const desc = h('p', { class: 'muted small center reel-desc' });
+  const again = h('button', { class: 'btn btn-soft grow' }, '🎲 Un autre');
+  const play = h('button', { class: 'btn btn-primary grow' }, '▶ Jouer');
+  let chosen = null;
+  let timer = null;
+  const show = (g, cls) => {
+    const [c1, c2] = gameColors(g.id, g.colors);
+    reel.style.setProperty('--g1', c1); reel.style.setProperty('--g2', c2);
+    reel.replaceChildren(h('div', { class: 'reel-face ' + cls }, gameArt(g), h('div', { class: 'name' }, g.name)));
+  };
+  const spin = () => {
+    clearTimeout(timer);
+    const prev = chosen;
+    chosen = pickGame(list.length > 1 && prev ? list.filter((g) => g.id !== prev.id) : list);
+    again.disabled = true; play.disabled = true; desc.textContent = ' ';
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Délais croissants : ça ralentit comme une vraie roue.
+    const delays = reduce ? [] : [55, 60, 65, 70, 80, 90, 105, 120, 140, 165, 195, 235, 285];
+    let k = 0;
+    const step = () => {
+      if (k < delays.length) {
+        const others = list.filter((g) => g !== chosen);
+        show(others.length ? others[Math.floor(Math.random() * others.length)] : chosen, 'spin');
+        sfx.tick();
+        timer = setTimeout(step, delays[k++]);
+        return;
+      }
+      show(chosen, 'land');
+      desc.textContent = chosen.desc || '';
+      sfx.go(); buzz(25);
+      again.disabled = list.length < 2; play.disabled = false;
+    };
+    step();
+  };
+  modal({
+    title: '🎲 Et si on jouait à…',
+    content: h('div', { class: 'col reel-wrap' }, reel, desc, h('div', { class: 'row' }, again, play)),
+    actions: [],
+    onOpen: (close) => {
+      again.onclick = () => spin();
+      play.onclick = () => { close(null); clearTimeout(timer); if (chosen) openScreen(chosen.id); };
+      spin();
+    },
+  }).then(() => clearTimeout(timer));
 }
 let homeInstallRefresh = null;
 
@@ -293,7 +450,7 @@ async function openSettings() {
     h('div', { class: 'sep' }),
     h('button', { class: 'btn btn-soft', onclick: () => { resetSeen(); toast('Les cartes déjà vues pourront revenir'); } }, '🔄 Revoir toutes les cartes'),
     h('p', { class: 'muted tiny' }, 'Ambiance mémorise les cartes déjà tirées pour ne pas les répéter d\'une soirée à l\'autre.'),
-    h('p', { class: 'muted tiny center' }, 'Ambiance · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC).'),
+    h('p', { class: 'muted tiny center' }, 'Ambiance · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC) ou, à défaut, un relais public avec messages chiffrés.'),
     h('p', { class: 'muted tiny center' }, 'Illustrations des jeux : Fluent Emoji de Microsoft (licence MIT).'),
   );
   await modal({ title: '⚙️ Réglages', content, actions: [{ label: 'Fermer', value: true, primary: true }] });

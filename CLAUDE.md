@@ -10,11 +10,11 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | Dossier | Rôle |
 |---|---|
 | `index.html`, `manifest.webmanifest`, `sw.js` | Page unique, manifeste PWA, service worker (**généré**, ne pas modifier à la main) |
-| `js/` | Cœur : `app.js` (accueil, routes `#/…`, réglages), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
+| `js/` | Cœur : `app.js` (accueil, routes `#/…`, réglages), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
-| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `relay.js` (relais MQTT), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
+| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
 | `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
 | `img/ui/` | Images utilisées pendant les jeux : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow) |
@@ -53,6 +53,15 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 - Mots interdits : 1 mot + 5 interdits. Imposteur : paires de mots **proches** (pas de doublon dans un sens ou dans l'autre).
   Dico bluff : uniquement des mots **rares** (sinon pas de bluff possible). Dans l'ordre : `[événement, année]`, année négative = av. J.-C.
 - Hot / Hot++ : réservé aux adultes (confirmation 18+), toujours consentant ; garder « chacun peut refuser ».
+
+## Accueil : trouver le bon jeu (`js/finder.js`)
+- Sous le bandeau « Jouer en ligne » : recherche, catégories, **« 👥 On est »** (2…8, 10+ : jeux dont `players` contient ce
+  nombre, choix gardé 6 h), puis « N jeux » + **🎲 Au hasard** (modale où les jeux défilent puis s'arrêtent, évite les 3 derniers joués).
+- Recherche : chaque mot tapé = début d'un mot du nom, de la description ou des catégories. Sans accent, les accents sont ignorés ;
+  **avec un accent, il compte** (« dés » ne doit pas trouver tous les jeux contenant « des »). Taper bascule sur « Tous ».
+- **Joués récemment** (`recent`, 8 max, enregistré par `openScreen`) : ligne de mini-cases sous les favoris, sans répéter les favoris.
+- En haut de l'accueil, bandeau de reprise (voir « Partie coupée »). Le champ `players` de chaque jeu doit rester lisible
+  (`2-16`, `3+`, `2`) : `unit/accueil.test.mjs` le vérifie.
 
 ## Accueil : images des jeux
 - Chaque case (`.tile`, `renderGrid` dans `js/app.js`) : l'image `img/jeux/<id>.webp` (fond transparent, 540 × 360) posée sur le
@@ -132,12 +141,35 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   (liste, plateau, cartes) doit **rester le même** d'un `update` à l'autre : ne remplacer que les textes autour, et n'animer que ce qui est
   nouveau (comparer avec l'état affiché, ex. `shown` du 4 en ligne, `lastKey`). Sinon l'animation repart ou le glissement en cours est coupé.
 
+## Partie coupée, partie reprise (`js/online/save.js`)
+- L'hôte enregistre la partie dans son téléphone (`host-save` : salle, joueurs, scores, état du jeu) à chaque envoi (au plus 1 fois/s),
+  toutes les 4 s pendant un jeu, et tout de suite quand l'appli passe en arrière-plan (`visibilitychange`, `pagehide`).
+  Quitter volontairement (← confirmé) efface la sauvegarde (`destroy()`) ; une fermeture involontaire la garde 3 h.
+- Reprise (bandeau de l'accueil ou écran « Jouer en ligne ») : même code (adresse PeerJS réessayée en fond, relais tout de suite),
+  `pack`/`unpack` (Set et Map compris), **`shiftTimes`** décale toutes les dates de la durée de la coupure (minuteurs en pause).
+  Les joueurs ont `CONFIG.rejoinGrace` (45 s) pour revenir avant d'être comptés comme partis.
+- **L'état d'un jeu doit rester des données** (objets, tableaux, Set, Map, nombres, textes) : pas de fonction, de `Date` ni d'objet
+  de classe (sinon la partie reprend au salon). Ce qui vit hors de l'état (dictionnaire, pioche `questionSource` dans une WeakMap)
+  se recrée dans un crochet **`restore(room, s, api)`** du module (exemples : `race.js`, `bonmot.js`, Mot mystère, Pendu).
+  Le dictionnaire peut être encore en chargement juste après la reprise : protéger chaque `dico.…` (`if (!dico)`).
+  `online/reprise-jeux.test.cjs` recharge chacun des 61 jeux et compare la vue de chaque joueur.
+- Côté joueur : attente de l'hôte jusqu'à `CONFIG.hostWait` (5 min) ; après 2 échecs en direct, il passe au relais (un hôte
+  qui reprend n'a parfois que le relais). L'hôte prévient en partant (`{ t: 'away', gone }` → « Alice a quitté l'appli un instant… »).
+- Place du joueur (`seat` : code + pid) : il revient avec le même identifiant (bandeau « Revenir dans la partie »). L'hôte rend
+  aussi sa place à un nouveau venu qui porte **le même prénom qu'un joueur déconnecté** (autre navigateur) : `welcome` contient
+  alors l'ancien pid et le joueur l'adopte.
+
 ## Jeu en ligne : connexions
 - `js/online/room.js` : l'hôte crée une partie avec un code. Les joueurs rejoignent via `#/join/CODE`.
 - On tente d'abord **PeerJS (WebRTC direct)** pendant `CONFIG.directTimeout` (8 s), puis **relais MQTT public** en secours
   (`js/online/relay.js` : petit client MQTT 3.1.1 sur WebSocket, `RelayHub` / `relayConnect` imitent une connexion PeerJS).
   Si PeerJS est injoignable, on passe directement par le relais. Indispensable quand les joueurs ne sont pas sur le même Wi-Fi.
 - Serveurs dans `CONFIG.relayBrokers` (`js/config.js`) : shiftr.io (port 443) d'abord, puis emqx, hivemq, mosquitto.
+- **Relais chiffré** : le joueur envoie `open` avec sa clé publique ECDH (`k`), l'hôte répond `ok` avec la sienne, puis tout passe en
+  `{ t: 'e', i, d }` (AES-GCM, clé dérivée par HKDF, sel = code + identifiant de connexion). Chiffrer/déchiffrer est asynchrone :
+  `cipher()` garde l'ordre des messages, et la fermeture passe après les messages en attente (`later`). Sans `crypto.subtle`
+  (page en http) ou face à une ancienne version : en clair, comme avant. Le joueur répète `open` toutes les 2 s tant qu'il n'a pas
+  de réponse ; même demande (même `c`, même `k`) = même connexion et même réponse, éventuellement sur un autre serveur.
 
 ## Dictionnaire du Bon Mot
 - `js/data/mots.js` est **généré** par `node scripts/gen-mots.mjs …` (mode d'emploi en tête du script). Ne pas le modifier à la main.
@@ -175,13 +207,20 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - Environnement cloud : ne pas réinstaller Playwright (Chromium est préinstallé). Ne pas exécuter de code téléchargé : extraire avec grep/sed.
 - Playwright : `page.waitForFunction(async () => …)` n'attend pas la promesse (toujours « vraie ») : boucler sur `page.evaluate`.
 - Le service worker ne s'installe pas sur `http://app.test/` (il faut https ou localhost) : `local/sw.test.cjs` lance un vrai serveur.
+- `crypto.subtle` n'existe pas en http : le relais y reste en clair. Tester le chiffrement sur `https://app.test/`.
+- Relais simulé : le faux serveur partage les abonnements entre toutes les adresses de `relayBrokers`, donc l'hôte reçoit chaque
+  message 4 fois (une par serveur). Le code doit le supporter (même demande = même connexion).
+- Après une reprise, un module qui garde quelque chose hors de l'état (WeakMap, variable du module) plante au premier coup s'il
+  n'a pas de `restore`.
 
 ## Tests (`tests/`, détails dans `tests/README.md`)
 - Installation : `cd tests && npm install` (mqtt-packet). Playwright/Chromium sont déjà là dans l'environnement cloud.
 - Tout lancer : `cd tests && node run-all.cjs` (ou `node run-all.cjs online|local|unit|relay`).
 - `tests/lib/pw-helper.cjs` : ouvre l'appli dans un iPhone simulé, en servant le dépôt sur `http://app.test/` (pas de serveur web).
 - `tests/lib/mp.cjs` : simulateur multijoueur, n joueurs côte à côte branchés sur la logique de l'hôte. C'est l'outil pour tester un jeu en ligne.
-- `tests/lib/mock-relay.cjs` : faux serveur relais MQTT + PeerJS bloqué. `relay/lobby-relay.test.cjs` fait une vraie partie par le salon.
+- `tests/lib/mock-relay.cjs` : faux serveur relais MQTT + PeerJS bloqué (`broker.stats.payloads` = ce qu'un curieux verrait).
+  `relay/lobby-relay.test.cjs` fait une vraie partie par le salon ; `relay/reprise.test.cjs` coupe l'hôte en plein Quiz et reprend
+  (en **https://app.test/**, nécessaire pour `crypto.subtle` : `serveRepo` sert les deux).
 - `tests/relay/relay-real.manual.cjs` : manuel, avec les vrais serveurs relais (Internet, utilise `HTTPS_PROXY` si présent).
 - `tests/local/sw.test.cjs` : service worker et mode hors ligne, avec un vrai serveur web sur localhost.
 - `tests/unit/images.test.mjs` : une image (et une composition) par jeu.

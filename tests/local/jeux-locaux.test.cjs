@@ -120,7 +120,33 @@ run(async () => {
   check(name.x - box.x < 20 && box.y + box.height - (name.y + name.height) < 20, 'accueil : nom du jeu en bas à gauche de la case');
   await page.evaluate(() => localStorage.setItem('ambiance:favs', JSON.stringify(['quiz', 'roi'])));
   await go(''); await page.reload(); await W(500);
-  check(await page.locator('.mini-tile img.tile-art').count() === 2, 'favoris : les mini-cases ont aussi leur image');
+  check(await page.locator('.fav-row .mini-tile img.tile-art').count() === 2, 'favoris : les mini-cases ont aussi leur image');
+  const recent = await page.locator('.recent-row .mini-tile .nm').allInnerTexts();
+  check(recent.length > 0 && recent.length <= 6 && !recent.includes('Le Quiz') && !recent.includes('Le Roi'), 'joués récemment : les derniers jeux ouverts (sans répéter les favoris)', recent);
+
+  // Recherche, « On est combien ? », tirage au hasard.
+  const names = () => page.locator('.tile .name').allInnerTexts();
+  await page.locator('.search-box input').fill('loup'); await W(200);
+  check(JSON.stringify(await names()) === '["Loup-garou"]', 'recherche « loup » → Loup-garou', await names());
+  await page.locator('.search-box input').fill('dés'); await W(200);
+  check((await names()).includes('Yam\'s') && !(await names()).includes('Je dessine, tu devines'), 'recherche « dés » → jeux de dés', await names());
+  await page.locator('.search-clear').click(); await W(200);
+  check(await page.locator('.tile').count() === ids.length, 'recherche effacée : tous les jeux');
+  await page.locator('.count-row .chip', { hasText: /^2$/ }).click(); await W(200);
+  const two = await page.locator('.tile').count();
+  const badges = await page.locator('.tile .badge', { hasText: '👤' }).allInnerTexts();
+  const fits = badges.every((b) => { const m = b.match(/(\d+)(?:-(\d+)|(\+))?/); const a = +m[1], z = m[2] ? +m[2] : m[3] ? 99 : a; return a <= 2 && z >= 2; });
+  check(two > 5 && two < ids.length && fits && /\b2 joueurs/i.test(await page.locator('.result-bar').innerText()), `« On est 2 » : ${two} jeux, tous jouables à 2`);
+  await page.locator('.search-box input').fill('loup'); await W(200);
+  check(/Loup-garou \(6-20 joueurs\)/.test(await page.locator('.empty-find').innerText()), 'Loup-garou à 2 : expliqué (6-20 joueurs)');
+  await page.locator('.empty-find button', { hasText: 'Voir sans le nombre de joueurs' }).click(); await W(200);
+  check(JSON.stringify(await names()) === '["Loup-garou"]', '« Voir sans le nombre de joueurs » → Loup-garou');
+  await page.locator('.search-clear').click(); await W(200);
+  await page.locator('.dice-btn').click(); await W(3000);
+  const picked = (await page.locator('.reel .name').innerText()).trim();
+  check(!!picked && /\S/.test(await page.locator('.reel-desc').innerText()), `au hasard : la roue s'arrête sur « ${picked} »`);
+  await page.locator('.reel-wrap button', { hasText: 'Jouer' }).click(); await W(800);
+  check((await page.title()).startsWith(picked), 'au hasard : « Jouer » ouvre ce jeu', await page.title());
 
   await go(''); await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
   const n = await page.locator('.tile').count();

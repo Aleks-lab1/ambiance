@@ -5,11 +5,63 @@
 // passent par des serveurs relais publics et gratuits (MQTT sur WebSocket). Ce module fournit des
 // « connexions » qui se comportent comme celles de PeerJS (send, close, on('open'|'data'|'close')),
 // pour que le reste du code n'y voie aucune différence.
+//
+// Chiffrement : ces serveurs sont publics, n'importe qui peut écouter. Chaque connexion par le relais
+// commence donc par un échange de clés (ECDH P-256) : le joueur et l'hôte calculent chacun la même clé
+// secrète sans jamais l'envoyer, puis tous les messages sont chiffrés (AES-GCM). Un curieux qui écoute
+// ne voit que du charabia (mots secrets, rôles, réponses…). Les connexions directes (WebRTC) sont déjà
+// chiffrées par le navigateur. Ancienne version de l'appli en face : on reste en clair, comme avant.
 import { CONFIG } from '../config.js';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 const rid = () => Math.random().toString(36).slice(2, 10);
+
+// ---------------- Chiffrement ----------------
+const subtle = (typeof crypto !== 'undefined' && crypto.subtle) || null; // absent hors https
+const b64 = (u8) => { let t = ''; for (let i = 0; i < u8.length; i += 0x8000) t += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(t); };
+const unb64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+
+/** Paire de clés éphémère : { kp, pub (clé publique en base64) }, ou null si le navigateur ne sait pas chiffrer. */
+export async function newKeys() {
+  if (!subtle) return null;
+  try {
+    const kp = await subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
+    return { kp, pub: b64(new Uint8Array(await subtle.exportKey('raw', kp.publicKey))) };
+  } catch { return null; }
+}
+
+/** Clé AES commune, calculée des deux côtés à partir de sa clé privée et de la clé publique de l'autre. */
+export async function sharedKey(keys, otherPub, salt) {
+  const pk = await subtle.importKey('raw', unb64(otherPub), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+  const bits = await subtle.deriveBits({ name: 'ECDH', public: pk }, keys.kp.privateKey, 256);
+  const hk = await subtle.importKey('raw', bits, 'HKDF', false, ['deriveKey']);
+  return subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: enc.encode(salt), info: enc.encode('ambiance-relais-v1') },
+    hk, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+/** Chiffre / déchiffre dans l'ordre d'arrivée (les opérations sont asynchrones, les messages ne doivent pas se doubler). */
+export function cipher(key) {
+  let wq = Promise.resolve();
+  let rq = Promise.resolve();
+  return {
+    seal(obj, out) {
+      wq = wq.then(async () => {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj))));
+        out(b64(iv), b64(ct));
+      }).catch((e) => console.warn('chiffrement', e));
+    },
+    open(iv, ct, out) {
+      rq = rq.then(async () => {
+        const pt = await subtle.decrypt({ name: 'AES-GCM', iv: unb64(iv) }, key, unb64(ct));
+        out(JSON.parse(dec.decode(pt)));
+      }).catch(() => { /* message illisible ou trafiqué : ignoré */ });
+    },
+    /** Exécute fn après les messages déjà en cours de chiffrement (fermeture). */
+    after(fn) { wq = wq.then(fn, fn); },
+  };
+}
 
 // ---------------- Mini client MQTT 3.1.1 (QoS 0) ----------------
 function str(s) {
@@ -121,17 +173,29 @@ const base = (code) => `${CONFIG.relayPrefix || 'ambiance-soiree-v1'}/${code}`;
 
 // ---------------- Connexion « façon PeerJS » ----------------
 class RelayConn {
-  constructor(mq, topicOut) {
+  constructor(mq, topicOut, head = {}) {
     this.mq = mq;
     this.topicOut = topicOut;
+    this.head = head; // { c: id } côté joueur
     this.open = false;
     this.relay = true;
+    this.cipher = null; // chiffrement négocié à l'ouverture
     this.ls = { open: [], data: [], close: [], error: [] };
   }
   on(ev, fn) { (this.ls[ev] || (this.ls[ev] = [])).push(fn); return this; }
   emit(ev, x) { for (const fn of this.ls[ev] || []) { try { fn(x); } catch (e) { console.error(e); } } }
-  send(obj) { if (!this.open) return; this.mq.publish(this.topicOut, JSON.stringify(this.wrap(obj))); }
-  wrap(obj) { return { t: 'd', d: obj }; }
+  send(obj) {
+    if (!this.open) return;
+    if (this.cipher) this.cipher.seal(obj, (i, d) => this.mq && this.mq.publish(this.topicOut, JSON.stringify({ ...this.head, t: 'e', i, d })));
+    else this.mq.publish(this.topicOut, JSON.stringify({ ...this.head, t: 'd', d: obj }));
+  }
+  /** Message reçu : en clair (t: 'd') seulement si la connexion n'est pas chiffrée, sinon chiffré (t: 'e'). */
+  receive(m) {
+    if (m.t === 'd' && !this.cipher) this.emit('data', m.d);
+    else if (m.t === 'e' && this.cipher && typeof m.i === 'string' && typeof m.d === 'string') this.cipher.open(m.i, m.d, (x) => { if (this.open) this.emit('data', x); });
+  }
+  /** Après les messages en attente de chiffrement (sinon un « au revoir » pourrait arriver après la fermeture). */
+  later(fn) { if (this.cipher) this.cipher.after(fn); else fn(); }
   closeLocal() { if (this.closedOnce) return; this.closedOnce = true; this.open = false; this.emit('close'); }
 }
 
@@ -166,18 +230,39 @@ export class RelayHub {
     if (!m || typeof m.c !== 'string' || m.c.length > 40) return;
     let c = this.conns.get(m.c);
     if (m.t === 'open') {
+      const k = typeof m.k === 'string' && m.k.length < 200 ? m.k : '';
+      // Le joueur répète « open » tant qu'il n'a pas de réponse, éventuellement sur un autre serveur :
+      // même demande = même connexion et même réponse (mêmes clés), sur le serveur qu'il utilise maintenant.
+      if (c && c.k === k && !c.closedOnce) {
+        c.mq = mq;
+        if (c.okMsg) mq.publish(c.topicOut, c.okMsg);
+        return;
+      }
       if (c) { this.conns.delete(m.c); c.closeLocal(); }
       c = new RelayConn(mq, base(this.code) + '/c/' + m.c);
-      c.close = () => { if (this.conns.get(m.c) === c) this.conns.delete(m.c); mq.publish(c.topicOut, JSON.stringify({ t: 'x' })); c.closeLocal(); };
+      c.k = k;
+      c.close = () => {
+        if (this.conns.get(m.c) === c) this.conns.delete(m.c);
+        c.later(() => c.mq.publish(c.topicOut, JSON.stringify({ t: 'x' })));
+        c.closeLocal();
+      };
       this.conns.set(m.c, c);
-      c.open = true;
-      mq.publish(c.topicOut, JSON.stringify({ t: 'ok' }));
-      this.onConnection(c);
+      (async () => {
+        const ok = { t: 'ok' };
+        if (k) {
+          const keys = await newKeys();
+          if (keys) { try { c.cipher = cipher(await sharedKey(keys, k, this.code + '/' + m.c)); ok.k = keys.pub; } catch { c.cipher = null; } }
+        }
+        if (this.dead || this.conns.get(m.c) !== c) return;
+        c.okMsg = JSON.stringify(ok);
+        c.open = true;
+        c.mq.publish(c.topicOut, c.okMsg);
+        this.onConnection(c);
+      })();
       return;
     }
-    if (!c || c.mq !== mq) return;
-    if (m.t === 'd') c.emit('data', m.d);
-    else if (m.t === 'x') { this.conns.delete(m.c); c.closeLocal(); }
+    if (!c || c.mq !== mq || !c.open) return;
+    if (m.t === 'x') { this.conns.delete(m.c); c.closeLocal(); } else c.receive(m);
   }
 
   destroy() {
@@ -188,30 +273,45 @@ export class RelayHub {
 
 // Côté joueur : se connecte à l'hôte par le relais (premier serveur où l'hôte répond).
 export function relayConnect(code) {
-  const conn = new RelayConn(null, null);
   const cid = rid() + rid();
-  conn.wrap = (obj) => ({ c: cid, t: 'd', d: obj });
+  const conn = new RelayConn(null, null, { c: cid });
   conn.close = () => {
-    if (conn.mq) { conn.mq.publish(base(code) + '/h', JSON.stringify({ c: cid, t: 'x' })); setTimeout(() => conn.mq.close(), 300); }
+    const mq = conn.mq;
+    if (mq) conn.later(() => { mq.publish(base(code) + '/h', JSON.stringify({ c: cid, t: 'x' })); setTimeout(() => mq.close(), 300); });
     conn.closeLocal();
   };
   (async () => {
+    const keys = await newKeys();
     for (const url of brokers()) {
       if (conn.closedOnce) return;
       const mq = new Mqtt(url);
       try { await mq.connect(5000); } catch { continue; }
+      let knock = null;
       const ok = await new Promise((resolve) => {
         const t = setTimeout(() => resolve(false), 6000);
-        mq.subscribe(base(code) + '/c/' + cid, (txt) => {
+        let answered = false;
+        mq.subscribe(base(code) + '/c/' + cid, async (txt) => {
           let m; try { m = JSON.parse(txt); } catch { return; }
-          if (m.t === 'ok') { clearTimeout(t); resolve(true); return; }
+          if (m.t === 'ok') {
+            if (answered) return; // réponse répétée (on a frappé plusieurs fois)
+            answered = true;
+            clearTimeout(t);
+            if (keys && typeof m.k === 'string') {
+              try { conn.cipher = cipher(await sharedKey(keys, m.k, code + '/' + cid)); } catch { resolve(false); return; }
+            }
+            resolve(true);
+            return;
+          }
           if (!conn.open) return;
-          if (m.t === 'd') conn.emit('data', m.d);
-          else if (m.t === 'x') conn.closeLocal();
+          if (m.t === 'x') conn.closeLocal(); else conn.receive(m);
         });
-        // Laisse le temps à l'abonnement d'être pris en compte avant de frapper à la porte.
-        setTimeout(() => mq.publish(base(code) + '/h', JSON.stringify({ c: cid, t: 'open' })), 250);
+        // On frappe à la porte (après la prise en compte de l'abonnement), puis toutes les 2 s : un hôte qui
+        // revient (partie reprise) n'entend que les demandes faites après son retour.
+        const hello = JSON.stringify({ c: cid, t: 'open', ...(keys ? { k: keys.pub } : {}) });
+        setTimeout(() => { if (!answered) mq.publish(base(code) + '/h', hello); }, 250);
+        knock = setInterval(() => { if (!answered) mq.publish(base(code) + '/h', hello); }, 2000);
       });
+      clearInterval(knock);
       if (!ok || conn.closedOnce) { mq.close(); continue; }
       conn.mq = mq;
       conn.topicOut = base(code) + '/h';

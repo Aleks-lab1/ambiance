@@ -81,6 +81,9 @@ function makeRace(mode) {
       return s;
     },
 
+    // Partie reprise par l'hôte (save.js) : la pioche de questions est recréée (déjà vues : mémoire du téléphone).
+    restore(room, s) { SOURCES.set(s, questionSource(mode, DATA[mode], s.st)); },
+
     action(room, s, pid, a) {
       if (a.type === 'stop' && pid === room.host && s.phase !== 'end') {
         if (s.phase === 'q') reveal(room, s);

@@ -9,9 +9,9 @@ const OUT = path.join(__dirname, '..', 'out'); // captures d'écran (ignoré par
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' };
 const SETTINGS = { drink: true, sound: false, vibrate: false, adult: false };
 
-/** Branche le dépôt sur http://app.test/ dans un contexte Playwright. */
+/** Branche le dépôt sur http://app.test/ (et https://app.test/, utile pour le chiffrement) dans un contexte Playwright. */
 async function serveRepo(context) {
-  await context.route('http://app.test/**', (route) => {
+  await context.route(/^https?:\/\/app\.test\//, (route) => {
     let p = decodeURIComponent(new URL(route.request().url()).pathname);
     if (p.endsWith('/')) p += 'index.html';
     const f = path.join(ROOT, p);

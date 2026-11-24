@@ -235,6 +235,39 @@ details.panel[open] summary { margin-bottom: 10px; }
 .section-title { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
 .install-card { display: flex; gap: 12px; align-items: center; }
 .install-card .emo { font-size: 30px; }
+/* Partie en ligne à reprendre (hôte) ou à rejoindre (joueur). */
+.resume-card { border: 2px solid rgba(255, 255, 255, .55); background: linear-gradient(135deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .1)); box-shadow: var(--shadow); animation: up .3s ease; }
+.resume-card p { margin-top: 2px; }
+/* Accueil : emoji | texte | × , puis le bouton sous le texte. */
+.panel.resume-card:not(.col) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+.resume-card .emo { font-size: 30px; }
+.resume-card .icon-btn { align-self: start; width: 36px; height: 36px; font-size: 18px; }
+.resume-card .go { grid-column: 2 / 4; margin-top: 8px; }
+
+/* Accueil : recherche, « On est combien ? », nombre de jeux, tirage au hasard. */
+.search-box { position: relative; display: flex; align-items: center; }
+.search-box .search-ico { position: absolute; left: 14px; font-size: 16px; pointer-events: none; }
+.search-box .input { padding-left: 42px; padding-right: 46px; }
+.search-box .input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.search-box .input::placeholder { color: var(--muted); opacity: .85; }
+.search-clear { position: absolute; right: 6px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .16); font-size: 20px; line-height: 1; display: grid; place-items: center; padding: 0; }
+.search-box:not(.has-text) .search-clear { display: none; }
+.count-row { align-items: center; }
+.count-row .count-label { font-weight: 800; font-size: 14px; color: var(--muted); white-space: nowrap; flex: none; }
+.chip.chip-n { min-width: 46px; text-align: center; padding: 9px 12px; flex: none; }
+.result-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; }
+.result-bar .section-title { margin-top: 0; }
+.dice-btn { flex: none; }
+.empty-find b { font-size: 17px; }
+/* Tirage au hasard : les jeux défilent puis s'arrêtent sur l'un d'eux. */
+.reel { width: min(100%, 340px); margin: 0 auto; pointer-events: none; }
+.reel-face { position: absolute; inset: 0; }
+.reel-face.spin { animation: reel-in .09s ease-out; }
+.reel-face.land { animation: reel-land .45s cubic-bezier(.2, .9, .3, 1.3); }
+.reel .name { position: absolute; left: 12px; right: 12px; bottom: 10px; z-index: 1; font-weight: 900; font-size: 20px; line-height: 1.12; text-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+.reel-desc { min-height: 3.2em; }
+@keyframes reel-in { from { transform: translateY(-38%); opacity: .3; } }
+@keyframes reel-land { 0% { transform: translateY(-30%) scale(.92); } 60% { transform: translateY(4%) scale(1.04); } 100% { transform: none; } }
 .footer { text-align: center; color: var(--muted); font-size: 12px; padding-top: 8px; }
 
 /* ---------- Barre du haut ---------- */

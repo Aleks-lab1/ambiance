@@ -10,7 +10,7 @@ const BROKER_RE = /shiftr\.io|\/mqtt$/;
 
 function makeBroker({ down } = {}) {
   const subs = new Map(); // sujet -> Set(ws)
-  const stats = { published: 0, hits: {} };
+  const stats = { published: 0, hits: {}, payloads: [] }; // payloads : ce qu'un curieux verrait passer
   function handle(ws) {
     const url = ws.url();
     stats.hits[url] = (stats.hits[url] || 0) + 1;
@@ -24,6 +24,7 @@ function makeBroker({ down } = {}) {
         send({ cmd: 'suback', messageId: p.messageId, granted: p.subscriptions.map(() => 0) });
       } else if (p.cmd === 'publish') {
         stats.published++;
+        if (stats.payloads.length < 5000) stats.payloads.push(p.payload.toString());
         for (const w of subs.get(p.topic) || []) if (!w._closed) w.send(mqtt.generate({ cmd: 'publish', topic: p.topic, payload: p.payload, qos: 0 }));
       } else if (p.cmd === 'pingreq') send({ cmd: 'pingresp' });
     });

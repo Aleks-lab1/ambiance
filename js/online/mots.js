@@ -146,12 +146,14 @@ export const motmystereOnline = {
       roundsSeg(st, set, [1, 3, 5]));
   },
   init(room, st) { ensureDico(); return { gid: uid(), st, round: 0, phase: 'loading', recent: [] }; },
+  restore() { ensureDico(); }, // partie reprise par l'hôte
   action(room, s, pid, a) {
     if (a.type === 'guess' && s.phase === 'play' && !s.done[pid]) {
       const w = normWord(a.w || '');
       const rows = s.rows[pid] || (s.rows[pid] = []);
       s.msg[pid] = null;
       if (w.length !== s.target.length) { s.msg[pid] = `Il faut ${s.target.length} lettres`; return true; }
+      if (!dico) { s.msg[pid] = 'Dictionnaire en cours de chargement… réessaie'; return true; }
       if (!dico.has(w)) { s.msg[pid] = `« ${w.toUpperCase()} » n'est pas dans le dictionnaire`; return true; }
       rows.push({ w, res: mmScore(w, s.target) });
       if (w === s.target) {
@@ -398,6 +400,7 @@ export const penduOnline = {
       h('label', { class: 'field' }, 'Nombre de mots', seg([3, 5, 8].map((n) => ({ value: n, label: String(n) })), st.rounds, (v) => set({ rounds: v }))),
       h('p', { class: 'muted small' }, 'Bonne lettre : +1 et tu rejoues. Mot trouvé : +2. En mode « Un joueur choisit », celui qui a choisi le mot gagne 3 points si personne ne le trouve.'));
   },
+  restore() { ensureDico(); }, // partie reprise par l'hôte
   init(room, st) {
     ensureDico();
     const s = { gid: uid(), st, order: shuffle(activePids(room)), round: 0, phase: 'loading', recent: [], chooser: null, cur: null };
@@ -423,7 +426,7 @@ export const penduOnline = {
       else if (s.errors >= PENDU_MAX) { s.phase = 'over'; s.won = null; if (s.chooser) addScore(room, s.chooser, 3); }
       return true;
     }
-    if (a.type === 'next' && s.phase === 'over' && (pid === room.host || pid === s.chooser)) { penduRound(room, s); return true; }
+    if (a.type === 'next' && s.phase === 'over' && (pid === room.host || pid === s.chooser) && (dico || s.st.mode === 'secret')) { penduRound(room, s); return true; }
     return false;
   },
   tick(room, s) {
