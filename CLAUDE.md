@@ -183,10 +183,26 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   que la télé ne reçoit aucun texte visible seulement par certains joueurs.
 - Traits de dessin (`api.relay`) et `onSync` : envoyés à la télé **seulement si le module a `tvRelay: true`** (Je dessine). Le
   Téléphone dessiné relaie des dessins privés : il ne doit pas l'avoir.
-- Écrans spéciaux (11 jeux) : jeux de rapidité (`makeRace`, 6 jeux), Je dessine, Qui a écrit ça ?, Punchlines et Dico bluff
-  (`makeWrite`), Loup-garou (script du meneur en grand, nuit sombre / jour lumineux). Outils dans `kit.js` : `tvTimer(g)`
-  (compte à rebours), `tvEnd(room)` (podium), `tvWho()` (pastilles « ✓ a répondu », gardées d'une mise à jour à l'autre).
-  Même règle d'or qu'au téléphone : ne pas recréer ce qui est animé à chaque `update` (comparer une clé d'étape).
+- **Écrans spéciaux : 55 jeux sur 61**, pensés pour un écran paysage (tout tient dans l'écran, rien ne défile) : jeux de rapidité
+  (`makeRace`), Je dessine, Qui a écrit ça ?, Punchlines, Dico bluff, Loup-garou, les 5 votes (question, puis barres qui
+  s'allongent), Et si / Confidences / Cap / Action ou vérité (à qui le tour, la carte en grand), Bouteille et Roue (elles
+  tournent en grand, `spinTicks`), Qui commence ?, Boîte à outils, Le Roi / Plus ou moins / Le Bus (cartes qui se retournent),
+  Memory, Yam's, Bataille navale (les tirs seulement, bateaux cachés), Morpion & 4 en ligne, Pendu, Mot mystère (couleurs
+  seulement, aucune lettre), Petit bac, Paranoïa, Pour ou contre, 3 en 5 s, Deux vérités, Curseur, Dans sa tête, Dans l'ordre,
+  Chifoumi, les 5 jeux par équipes (scores des équipes, jamais le mot), Unisson, Bon Mot (la saisie en direct), Bingo,
+  Sur le front, Ni oui ni non, Histoire folle, Patate chaude, La Séquence. **Sans écran spécial** (écran commun) : Réflexes,
+  Couleurs pièges, L'Imposteur, Menteur, Téléphone dessiné, Qui suis-je (le jeu se passe sur les téléphones ou tout y est secret).
+- Outils dans `kit.js` : `tvTimer(g)` (compte à rebours), `tvEnd(room)` (podium), `tvWho()` (pastilles « ✓ a répondu », gardées
+  d'une mise à jour à l'autre), `tvTurn(emoji, prénom, phrase)` (« à qui le tour »), `tvSplit(gauche, droite)` (deux colonnes :
+  le jeu à gauche, les textes à droite), `tvBars(lignes, total)` (barres de résultats animées), `tvSay()` (grande phrase d'état
+  qui saute quand elle change), **`tvStage(root, ...éléments)`** (pour un jeu qui a une fin : `end(room, fini)` affiche le podium
+  et remet les éléments si la partie recommence avec le même jeu : ne jamais faire `root.replaceChildren` dans `tvMount`).
+  Styles « Écrans télé des jeux » de `css/style.css` (classes `.tv-…`, tailles en `em`).
+- Morpion & 4 en ligne : la télé monte **l'écran du téléphone en spectateur** (`this.mount(…, { ...g, me: TV_PID, isHost: false })`)
+  avec une mise en page télé (`.tv-morpion`) : même animation des coups, sans la recopier.
+- La télé est vue **par tout le monde** : dans `view(room, s, pid)`, `TV_PID` n'est ni dans une équipe ni « celui qui devine »
+  (jeux par équipes : rôle `'tv'`, Sur le front : pas de mot). Une vue qui montre quelque chose « à tous sauf X » doit exclure `TV_PID`.
+- Même règle d'or qu'au téléphone : ne pas recréer ce qui est animé à chaque `update` (comparer une clé d'étape).
 - Mise en page : `body.tv-mode`, tailles en `em` sur `.tv` (`font-size` en `vw`) ; en dessous de 820 px ou en portrait, tout passe en
   colonne. Classement à droite (points gagnés animés), code + QR en haut à droite, bouton ⛶ plein écran, messages en bas.
 
@@ -271,6 +287,11 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - Tout lancer : `cd tests && node run-all.cjs` (ou `node run-all.cjs online|local|unit|relay`).
 - `tests/lib/pw-helper.cjs` : ouvre l'appli dans un iPhone simulé, en servant le dépôt sur `http://app.test/` (pas de serveur web).
 - `tests/lib/mp.cjs` : simulateur multijoueur, n joueurs côte à côte branchés sur la logique de l'hôte. C'est l'outil pour tester un jeu en ligne.
+- `tests/lib/tv-sim.cjs` : **écran télé simulé** (1280 × 720) branché sur la logique de l'hôte (`load(module, export, réglages, n)`,
+  `act(joueur, action)`, `txt()`, `fits()` = rien ne dépasse de l'écran). `online/tele-jeux.test.cjs` joue chaque écran télé
+  (sauf les 11 premiers) et vérifie l'affichage ; `SHOTS=1` enregistre une capture par étape dans `tests/out/`. Pour un nouvel
+  écran télé : l'ajouter à ce test, et ajouter une étape dans `online/tele-secrets.test.cjs` s'il y a un secret (les secrets en
+  nombres, comme la cible du Curseur, ne sont pas vus par la comparaison de textes : les vérifier à la main).
 - `tests/lib/mock-relay.cjs` : faux serveur relais MQTT + PeerJS bloqué (`broker.stats.payloads` = ce qu'un curieux verrait).
   `relay/lobby-relay.test.cjs` fait une vraie partie par le salon ; `relay/reprise.test.cjs` coupe l'hôte en plein Quiz et reprend
   (en **https://app.test/**, nécessaire pour `crypto.subtle` : `serveRepo` sert les deux). `phone(options)` crée aussi un écran

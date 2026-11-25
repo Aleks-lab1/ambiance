@@ -5,7 +5,7 @@ import { LEVELS } from '../data/levels.js';
 import { levelPicker } from '../common.js';
 import { drinks, drinkPl } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { drawNew } from './kit.js';
+import { drawNew, TV_PID, tvWho, tvBars, tvSay } from './kit.js';
 import TP from '../data/tupreferes.js';
 import DIX from '../data/dix.js';
 import QUI from '../data/qui.js';
@@ -87,6 +87,86 @@ function makeVote(mode) {
         mine: s.votes[pid] ?? null,
         voted: Object.keys(s.votes),
         votes: s.phase === 'results' ? s.votes : null,
+      };
+    },
+
+    // Écran télé : la question en grand, qui a voté (sans dire quoi), puis les résultats qui s'allongent.
+    tv(room, s) { return this.view(room, s, TV_PID); },
+    tvMount(root, g) {
+      const [c1, c2] = gameColors('mode-' + mode, M.colors);
+      const bar = h('div', { class: 'tv-bar' });
+      const cardSlot = h('div');
+      const resSlot = h('div', { class: 'tv-fill' });
+      const who = tvWho();
+      const status = h('p', { class: 'tv-status' });
+      root.append(bar, cardSlot, resSlot, who.el, status);
+      let sides = null, lastN = -1, lastPhase = null;
+      const kicker = (v) => (mode === 'dix' && typeof v.q.it === 'object' ? `C'est un ${v.q.it.n} mais…` : M.kicker);
+      function buildCard(v) {
+        const lvl = M.levels.find((l) => l.id === v.q.l) || M.levels[0];
+        sides = binary ? [0, 1].map((i) => h('div', { class: 'tv-side' }, h('div', { class: 't' }, optLabel(v.q.it, i)), h('div', { class: 'res' }))) : null;
+        cardSlot.replaceChildren(h('div', { class: 'tv-card', style: { '--g1': c1, '--g2': c2 } },
+          h('div', { class: 'kicker' }, kicker(v)),
+          mode === 'tp' ? null : h('div', { class: 'q' }, typeof v.q.it === 'object' ? v.q.it.t : (mode === 'op' ? `« ${v.q.it} »` : v.q.it)),
+          sides ? h('div', { class: 'tv-vs' }, sides[0], h('div', { class: 'or' }, 'OU'), sides[1]) : null,
+          h('div', { class: 'foot' }, `${lvl.emoji} ${lvl.name} · Question n°${v.n}`)));
+      }
+      function results(v) {
+        const votes = Object.entries(v.votes || {});
+        const total = votes.length;
+        if (binary) {
+          const names = [0, 1].map((i) => votes.filter(([, x]) => x === i).map(([pid]) => g.nameOf(pid)));
+          names.forEach((list, i) => {
+            const fill = h('i');
+            sides[i].classList.toggle('win', list.length > names[1 - i].length);
+            sides[i].classList.toggle('lose', list.length < names[1 - i].length);
+            sides[i].querySelector('.res').replaceChildren(h('b', null, Math.round((list.length / Math.max(1, total)) * 100) + ' %'),
+              h('span', { class: 'bar' }, fill), h('span', { class: 'names' }, list.join(', ') || '—'));
+            requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = (list.length / Math.max(1, total)) * 100 + '%'; }));
+          });
+          const [a, b] = names;
+          let verdict;
+          if (mode === 'jamais') verdict = a.length ? `${a.join(', ')} ${a.length > 1 ? drinkPl(1) : drinks(1)} ! 🍹 Racontez !` : 'Personne ? Bande de saints 😇';
+          else if (a.length === b.length) verdict = 'Égalité parfaite ! Tout le monde trinque 🥂';
+          else { const min = a.length < b.length ? a : b; verdict = min.length ? `La minorité (${min.join(', ')}) ${drinks(1)} !` : 'Unanimité ! 🤝'; }
+          const say = tvSay(); say.set(verdict);
+          resSlot.replaceChildren(say.el);
+        } else if (mode === 'dix') {
+          const list = votes.map(([pid, x]) => ({ name: g.nameOf(pid), x })).sort((x, y) => y.x - x.x);
+          const avg = list.reduce((t, x) => t + x.x, 0) / (list.length || 1);
+          const hi = list[0], lo = list[list.length - 1];
+          resSlot.replaceChildren(h('div', { class: 'tv-avg' }, h('span', null, 'Note moyenne'), h('b', null, list.length ? avg.toFixed(1).replace('.', ',') : '—'), h('span', null, '/ 10')),
+            h('div', { class: 'tv-results' }, list.map((x) => h('span', { class: 'tv-res' }, `${x.name} · ${x.x}/10`))),
+            list.length > 1 && hi.x !== lo.x ? h('p', { class: 'tv-status' }, `😇 Plus indulgent : ${hi.name} · 😈 Plus sévère : ${lo.name}`) : null);
+        } else {
+          const counts = {};
+          for (const [voter, target] of votes) (counts[target] = counts[target] || []).push(g.nameOf(voter));
+          const ranked = Object.entries(counts).sort((x, y) => y[1].length - x[1].length);
+          const topV = ranked[0];
+          const tie = ranked[1] && ranked[1][1].length === topV[1].length;
+          const say = tvSay(); say.set(!topV ? 'Personne n\'a voté' : tie ? '🤝 Égalité !' : `👉 ${g.nameOf(topV[0])} ${drinks(topV[1].length)} !`);
+          resSlot.replaceChildren(say.el, tvBars(ranked.map(([pid, voters], i) => ({ label: g.nameOf(pid), n: voters.length, names: ['par ' + voters.join(', ')], win: i === 0 && !tie })), total));
+        }
+      }
+      return {
+        update(room, v) {
+          const fresh = v.n !== lastN;
+          if (fresh) { buildCard(v); lastN = v.n; resSlot.replaceChildren(); sfx.swoosh(); }
+          const active = room.players.filter((p) => p.on);
+          bar.replaceChildren(h('span', { class: 'pill' }, `${M.emoji} ${M.name}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, v.phase === 'vote' ? `🗳️ ${v.voted.length}/${active.length} votes` : '📊 Résultats'));
+          if (v.phase === 'vote') {
+            who.el.classList.remove('hidden');
+            who.set(room, v.voted);
+            status.textContent = mode === 'qui' ? '📱 Votez en secret sur vos téléphones : qui de vous ?' : mode === 'dix' ? '📱 Donnez votre nouvelle note sur vos téléphones' : '📱 Votez sur vos téléphones !';
+            if (!fresh && lastPhase !== 'vote') { buildCard(v); resSlot.replaceChildren(); }
+          } else {
+            who.el.classList.add('hidden');
+            status.textContent = '';
+            if (lastPhase !== 'results' || fresh) { results(v); sfx.end(); }
+          }
+          lastPhase = v.phase;
+        },
+        destroy() {},
       };
     },
 

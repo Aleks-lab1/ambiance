@@ -2,7 +2,7 @@
 import { h, uid, shuffle, seg, chip } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, isOn, timerPill, actBtn, drawNew, TV_PID } from './kit.js';
+import { activePids, isOn, timerPill, actBtn, drawNew, TV_PID, tvTimer, tvSay } from './kit.js';
 import { ROLES } from '../games/loup.js';
 import { ROUNDS as CH_ROUNDS } from '../games/chapeau.js';
 import CHAPEAU from '../data/chapeau.js';
@@ -78,12 +78,16 @@ function makeTeamGame(type) {
     onLeave(room, s, pid) { if (s.phase === 'play' && pid === giverOf(room, s)) s.phase = 'recap'; },
     view(room, s, pid) {
       const giver = giverOf(room, s);
-      const role = pid === giver ? 'giver' : s.teams[s.team].includes(pid) ? 'mate' : 'opp';
-      const showWord = s.phase === 'play' && role !== 'mate';
+      // La télé (TV_PID) est vue par les deux équipes : elle n'affiche jamais le mot.
+      const role = pid === giver ? 'giver' : s.teams[s.team].includes(pid) ? 'mate' : pid === TV_PID ? 'tv' : 'opp';
+      const showWord = s.phase === 'play' && (role === 'giver' || role === 'opp');
       return { gid: s.gid, phase: s.phase, teams: s.teams, team: s.team, score: s.score, giver, role, myTeam: s.teams[0].includes(pid) ? 0 : 1,
         deadline: s.deadline, word: showWord ? T.card(s.word) : null, found: s.results.filter((x) => x.r === 'ok').length,
         results: s.phase === 'recap' ? s.results : null, turn: s.turn, turns: s.st.turns * 2 };
     },
+    // Écran télé : les deux équipes et leur score en grand, qui fait deviner, le chrono ; jamais le mot.
+    tv(room, s) { return this.view(room, s, TV_PID); },
+    tvMount(root, g) { return teamTv(root, g, { what: T.verb }); },
     mount(root, g) {
       const main = h('div', { class: 'col' });
       const tp = timerPill(g);
@@ -142,6 +146,51 @@ function teamsBar(g, v) {
   return h('div', { class: 'eq-teams' }, v.teams.map((t, i) => h('div', { class: 'eq-team' + (v.team === i && v.phase !== 'end' ? ' cur' : ''), style: { '--c': TEAMS[i].c } },
     h('div', { class: 'eq-head' }, h('b', null, `${TEAMS[i].emo} ${TEAMS[i].name}`), h('span', { class: 'eq-score' }, String(v.score[i]))),
     h('div', { class: 'eq-mem' }, t.map((p) => (p === g.me ? 'Toi' : g.nameOf(p))).join(', ')))));
+}
+/** Écran télé des jeux par équipes : scores en grand, l'équipe qui joue, le chrono et le compte des mots trouvés. */
+function teamTv(root, g, { what, manche = null }) {
+  const head = h('div', { class: 'tv-eq' });
+  const bar = h('div', { class: 'tv-bar' });
+  const say = tvSay();
+  const big = h('div', { class: 'tv-count' });
+  const list = h('div', { class: 'tv-results' });
+  const tm = tvTimer(g);
+  root.append(head, bar, h('div', { class: 'tv-fill' }, say.el, big, list));
+  let lastKey = null;
+  return {
+    update(r, v) {
+      const ended = v.phase === 'end';
+      head.replaceChildren(...v.teams.map((t, i) => h('div', { class: 'tv-eqt' + (v.team === i && !ended ? ' cur' : ''), style: { '--c': TEAMS[i].c } },
+        h('b', null, `${TEAMS[i].emo} ${TEAMS[i].name}`), h('span', { class: 'sc' }, String(v.score[i])), h('span', { class: 'mem' }, t.map((p) => g.nameOf(p)).join(', ')))));
+      tm.set(v.phase === 'play' ? v.deadline : 0);
+      bar.replaceChildren(h('span', { class: 'pill' }, manche ? manche(v) : `Tour ${Math.min(v.turn + 1, v.turns)}/${v.turns}`), h('div', { class: 'grow' }), tm.el);
+      const key = `${v.gid}:${v.turn}:${v.phase}:${v.found}:${v.results ? v.results.length : 0}:${v.manche}`;
+      if (key === lastKey) return;
+      const T0 = TEAMS[v.team], G = g.nameOf(v.giver);
+      big.textContent = '';
+      list.replaceChildren();
+      if (ended) {
+        const w = v.score[0] === v.score[1] ? -1 : v.score[0] > v.score[1] ? 0 : 1;
+        say.set(w < 0 ? '🤝 Égalité !' : `🏆 ${TEAMS[w].emo} ${TEAMS[w].name} gagne !`);
+        big.textContent = '🏆';
+        if (lastKey !== 'end') sfx.fanfare();
+        lastKey = 'end';
+        return;
+      }
+      if (v.phase === 'ready') say.set(`${T0.emo} Au tour de ${G} ! ${G} ${what} pour l'${T0.name.toLowerCase()}`);
+      else if (v.phase === 'play') {
+        say.set(`🗣️ ${T0.name}, devinez ! ${G} ${what}…`);
+        big.textContent = String(v.found);
+        if (lastKey && !lastKey.includes(':play:')) sfx.go();
+      } else {
+        say.set(`⏰ Fin du tour : ${v.found} trouvé${v.found > 1 ? 's' : ''}`);
+        list.replaceChildren(...v.results.map((x) => h('span', { class: 'tv-res' + (x.r === 'ok' ? ' ok' : '') }, `${x.r === 'ok' ? '✅' : x.r === 'buzz' ? '🚫' : x.r === 'time' ? '⏰' : '⏭'} ${x.label}`)));
+        sfx.end();
+      }
+      lastKey = key;
+    },
+    destroy() { tm.stop(); },
+  };
 }
 function giverOf(room, s) {
   const t = s.teams[s.team].filter((p) => isOn(room, p));
@@ -217,11 +266,15 @@ export const chapeauOnline = {
   },
   view(room, s, pid) {
     const giver = giverOf(room, s);
-    const role = pid === giver ? 'giver' : s.teams[s.team].includes(pid) ? 'mate' : 'opp';
+    const role = pid === giver ? 'giver' : s.teams[s.team].includes(pid) ? 'mate' : pid === TV_PID ? 'tv' : 'opp';
     return { gid: s.gid, phase: s.phase, teams: s.teams, team: s.team, score: s.score, giver, role, myTeam: s.teams[0].includes(pid) ? 0 : 1,
       deadline: s.deadline, manche: s.manche, left: s.left.length + (s.word ? 1 : 0), total: s.cards.length,
-      word: s.phase === 'play' && role !== 'mate' ? s.word : null, found: s.results.filter((x) => x.r === 'ok').length,
+      word: s.phase === 'play' && (role === 'giver' || role === 'opp') ? s.word : null, found: s.results.filter((x) => x.r === 'ok').length,
       results: s.phase === 'recap' ? s.results : null, turn: s.turn };
+  },
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    return teamTv(root, g, { what: 'fait deviner', manche: (v) => { const R = CH_ROUNDS[v.manche]; return R ? `${R.emoji} Manche ${v.manche + 1}/3 · ${R.name.split(': ')[1] || R.name} · 🎩 ${v.left} carte${v.left > 1 ? 's' : ''}` : ''; } });
   },
   mount(root, g) {
     const main = h('div', { class: 'col' });

@@ -1,6 +1,7 @@
 // Le Bon Mot en ligne : chacun sur son téléphone, à tour de rôle. L'hôte vérifie les mots.
 import { h, uid, seg, timerView } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
+import { TV_PID, tvSay } from './kit.js';
 import { loadDico, normWord, fits, minLength } from '../bonmot-core.js';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -119,6 +120,91 @@ const bonmot = {
     };
   },
 
+  // Écran télé : les lettres imposées en grand, ce que tape le joueur en direct, la barre de temps et les vies.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const lives = h('div', { class: 'tv-who tv-bm-lives' });
+    const card = h('div', { class: 'tv-bm-card' });
+    const bar = timerView(15);
+    bar.el.classList.add('tv-bm-timer');
+    const typing = h('div', { class: 'tv-bm-typing' });
+    const say = tvSay();
+    const used = h('div', { class: 'tv-bm-used' });
+    const main = h('div', { class: 'tv-fill' }, lives, card, bar.el, typing, say.el, used);
+    root.append(main);
+    let v = null, lastKey = null, lastTick = null, lastMsgN = -1, ended = false;
+    const iv = setInterval(() => {
+      if (!v) return;
+      if (v.phase === 'play') {
+        const left = Math.max(0, v.deadline - g.now());
+        bar.set(left, v.time * 1000);
+        const sec = Math.ceil(left / 1000);
+        if (sec <= 3 && sec > 0 && sec !== lastTick) { lastTick = sec; sfx.tick(); }
+      } else if (v.phase === 'count') {
+        bar.set(v.time * 1000, v.time * 1000);
+        const n = Math.ceil(Math.max(0, v.until - g.now()) / 1000);
+        const el = card.querySelector('.tv-count');
+        if (el && n > 0 && el.textContent !== String(n)) { el.textContent = String(n); el.classList.remove('pop-in'); void el.offsetWidth; el.classList.add('pop-in'); sfx.beep(); }
+      }
+    }, 150);
+    const lastText = () => {
+      const L = v.last;
+      if (!L) return '';
+      if (L.kind === 'ok') return `✅ « ${L.word} » · ${g.nameOf(L.pid)} +1`;
+      if (L.kind === 'left') return `👋 ${g.nameOf(L.pid)} est parti(e)`;
+      return `⏰ Temps écoulé ! ${L.dead ? `💀 ${g.nameOf(L.pid)} est éliminé(e) !` : `${g.nameOf(L.pid)} perd une vie.`}${L.ex && L.ex.length ? ` Il y avait : ${L.ex.join(', ')}` : ''}`;
+    };
+    return {
+      update(r, view) {
+        v = view;
+        const key = `${v.gid}:${v.phase}:${v.cur}:${v.letters}:${v.n}`;
+        if (v.phase === 'end') {
+          if (ended) return;
+          ended = true;
+          const rank = (pid) => (v.lives[pid] > 0 ? 1000 + v.lives[pid] * 100 + v.words[pid] : v.out.indexOf(pid) * 100 + v.words[pid]);
+          const longest = Object.entries(v.best).sort((a, b) => normWord(b[1]).length - normWord(a[1]).length)[0];
+          main.replaceChildren(h('div', { class: 'tv-big-emo' }, '🏆'), h('h1', { class: 'center' }, v.winner ? `${g.nameOf(v.winner)} gagne !` : 'Fin de la partie !'),
+            h('ol', { class: 'tv-order' }, v.order.slice().sort((a, b) => rank(b) - rank(a)).map((pid) => h('li', null, `${g.nameOf(pid)} · ${v.words[pid] || 0} mot${v.words[pid] > 1 ? 's' : ''}`))),
+            longest ? h('p', { class: 'tv-status' }, `📏 Mot le plus long : ${longest[1]} (${g.nameOf(longest[0])})`) : null);
+          sfx.fanfare();
+          return;
+        }
+        if (ended) { ended = false; main.replaceChildren(lives, card, bar.el, typing, say.el, used); lastKey = null; }
+        lives.replaceChildren(...v.order.map((pid) => {
+          const l = v.lives[pid];
+          return h('span', { class: 'tv-chip' + (pid === v.cur ? ' done' : '') + (l ? '' : ' dead') }, `${g.nameOf(pid)} ${l ? '❤️'.repeat(l) : '💀'}`);
+        }));
+        bar.el.classList.toggle('hidden', v.phase !== 'play' && v.phase !== 'count');
+        typing.replaceChildren(v.phase === 'play' ? h('span', null, `${g.nameOf(v.cur)} écrit :`) : null, v.phase === 'play' ? h('b', null, v.typing || '…') : null);
+        if (v.msg && v.msg.n !== lastMsgN) {
+          lastMsgN = v.msg.n;
+          if (v.phase === 'play') { sfx.bad(); bar.el.classList.remove('bm-malus'); void bar.el.offsetWidth; bar.el.classList.add('bm-malus'); }
+        }
+        const showMsg = v.phase === 'play' && v.msg && v.msg.turn === `${v.cur}:${v.letters}:${v.n}`;
+        if (key === lastKey) { say.set(showMsg ? `❌ ${v.msg.text}` : lastText()); return; }
+        const N = g.nameOf(v.cur);
+        if (v.phase === 'loading') card.replaceChildren(h('div', { class: 'tv-say' }, '⏳ Chargement du dictionnaire…'));
+        else if (v.phase === 'count') {
+          card.replaceChildren(h('div', { class: 'tv-say' }, `Au tour de ${N} !`), h('div', { class: 'tv-count' }, ''),
+            v.chainMode ? h('p', { class: 'tv-status' }, 'Prochain mot : commence par ', h('b', null, up(v.letters))) : null,
+            v.levelup ? h('p', { class: 'tv-status' }, `⬆️ ${v.len} lettres maintenant !`) : null);
+        } else if (v.phase === 'pick') card.replaceChildren(h('div', { class: 'tv-say' }, `${N} choisit la première lettre…`));
+        else if (v.phase === 'play') {
+          const lastWord = v.chain[v.chain.length - 1];
+          card.replaceChildren(h('div', { class: 'kicker' }, v.pos === 'in' ? 'Un mot qui contient' : 'Un mot qui commence par'),
+            h('div', { class: 'tiles' }, up(v.letters).split('').map((c, i) => h('span', { style: { animationDelay: i * 70 + 'ms' } }, c))),
+            h('div', { class: 'kicker' }, lastWord ? `après « ${lastWord} »` : `Au moins ${minLength(v.letters)} lettres`));
+          lastTick = null; sfx.go();
+        }
+        say.set(showMsg ? `❌ ${v.msg.text}` : lastText());
+        used.replaceChildren(...(v.chainMode ? v.chain : v.played.map((x) => x.w)).slice(-12).map((w) => h('span', { class: 'tv-res' }, w)));
+        if (v.last && v.last.kind === 'ok' && v.phase === 'count') sfx.pop();
+        if (v.last && v.last.kind === 'fail' && (v.phase === 'count' || v.phase === 'pick')) sfx.bad();
+        lastKey = key;
+      },
+      destroy() { clearInterval(iv); },
+    };
+  },
   mount(root, g) {
     const head = h('div', { class: 'row' });
     const livesBar = h('div', { class: 'bm-lives' });

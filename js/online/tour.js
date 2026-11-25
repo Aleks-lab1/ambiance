@@ -4,7 +4,7 @@ import { gameColors } from '../themes.js';
 import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew, TV_PID, tvTurn, tvSay, tvStage, tvTimer, tvWho } from './kit.js';
 import { LEVELS as PARA_LEVELS } from '../games/paranoia.js';
 import PARA from '../data/paranoia.js';
 import DEBATS from '../data/debats.js';
@@ -58,6 +58,36 @@ export const paranoiaOnline = {
   view(room, s, pid) {
     const showQ = pid === s.asker || (s.phase === 'result' && s.revealed);
     return { gid: s.gid, n: s.n, phase: s.phase, asker: s.asker, target: s.target, revealed: s.phase === 'result' ? s.revealed : null, q: showQ ? s.q : null };
+  },
+  // Écran télé : qui lit la question secrète, qui est désigné, la pièce qui tourne, la question révélée (ou pas).
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('paranoia', ['#2b2d6e', '#d6336c']);
+    const style = { '--g1': colors[0], '--g2': colors[1] };
+    const main = h('div', { class: 'tv-fill' });
+    root.append(main);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        const key = `${v.gid}:${v.n}:${v.phase}`;
+        if (key === lastKey) return;
+        const A = g.nameOf(v.asker), T = v.target ? g.nameOf(v.target) : '';
+        if (v.phase === 'ask') {
+          main.replaceChildren(h('div', { class: 'tv-big-emo' }, '🤫'), tvTurn('📱', `${A} lit une question en secret…`, '… et va désigner quelqu\'un parmi vous. Qui ? Et pourquoi ? 😈'));
+        } else if (v.phase === 'flip') {
+          main.replaceChildren(h('div', { class: 'tv-say' }, `${A} désigne… 👉 ${T} !`), h('div', { class: 'coin spin tv-coin' }, '🪙'), h('p', { class: 'tv-status' }, 'Pile ou face : la question va-t-elle être révélée ?'));
+          sfx.swoosh();
+        } else {
+          main.replaceChildren(h('div', { class: 'tv-say' }, `${A} a désigné ${T}`),
+            h('div', { class: 'tv-card tv-bigcard', style }, h('div', { class: 'kicker' }, v.revealed ? '🪙 Face : la question est révélée !' : '🪙 Pile !'),
+              h('div', { class: 'q' }, v.revealed ? v.q : '🤐 La question reste secrète…'),
+              v.revealed ? null : h('div', { class: 'foot' }, `${T} peut boire ${sip(1)} pour la découvrir… ou rester dans le doute.`)));
+          v.revealed ? sfx.end() : sfx.bad();
+        }
+        lastKey = key;
+      },
+      destroy() {},
+    };
   },
   mount(root, g) {
     const colors = gameColors('paranoia', ['#2b2d6e', '#d6336c']);
@@ -130,6 +160,51 @@ export const debatsOnline = {
   onLeave(room, s) { if (s.phase === 'vote' && judges(room, s).every((p) => s.votes[p] != null)) result(room, s); },
   view(room, s, pid) {
     return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, topic: s.topic, pour: s.pour, contre: s.contre, deadline: s.deadline, mine: s.votes[pid] ?? null, voted: Object.keys(s.votes), votes: s.phase === 'result' ? s.votes : null, winner: s.winner };
+  },
+  // Écran télé : le sujet en grand, le POUR et le CONTRE face à face, l'orateur qui a la parole et son chrono.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('debats', ['#f857a6', '#ff5858']);
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div');
+    const sides = [h('div', { class: 'tv-side tv-pour' }), h('div', { class: 'tv-side tv-contre' })];
+    const say = tvSay();
+    const who = tvWho();
+    const res = h('div');
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, cardSlot, h('div', { class: 'tv-vs tv-debate' }, sides[0], h('div', { class: 'or' }, 'VS'), sides[1]), say.el, who.el, res);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        tm.set(v.phase === 'pour' || v.phase === 'contre' ? v.deadline : 0);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🎤 Débat ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), tm.el);
+        if (cardSlot.dataset.k !== v.gid + ':' + v.round) {
+          cardSlot.dataset.k = v.gid + ':' + v.round;
+          cardSlot.replaceChildren(h('div', { class: 'tv-card', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, 'Le sujet'), h('div', { class: 'q' }, v.topic)));
+        }
+        const n = v.votes ? [0, 1].map((i) => Object.values(v.votes).filter((x) => x === i).length) : null;
+        [v.pour, v.contre].forEach((p, i) => {
+          sides[i].classList.toggle('on', v.phase === (i ? 'contre' : 'pour'));
+          sides[i].classList.toggle('win', v.phase === 'result' && v.winner === p);
+          sides[i].classList.toggle('lose', v.phase === 'result' && v.winner != null && v.winner !== p);
+          sides[i].replaceChildren(h('div', { class: 'k' }, i ? '🔴 CONTRE' : '🟢 POUR'), h('div', { class: 't' }, g.nameOf(p)),
+            n ? h('div', { class: 'k' }, `${n[i]} vote${n[i] > 1 ? 's' : ''}`) : null);
+        });
+        if (v.phase === 'pour' || v.phase === 'contre') say.set(`🎙️ ${g.nameOf(v.phase === 'pour' ? v.pour : v.contre)} défend le ${v.phase.toUpperCase()} !`);
+        else if (v.phase === 'vote') say.set('🗳️ Votez sur vos téléphones : qui a été le plus convaincant ?');
+        else {
+          const loser = v.winner == null ? null : (v.winner === v.pour ? v.contre : v.pour);
+          say.set(v.winner == null ? '🤝 Égalité !' : `🏆 ${g.nameOf(v.winner)} remporte le débat ! ${g.nameOf(loser)} prend ${sip(1)}.`);
+        }
+        who.el.classList.toggle('hidden', v.phase !== 'vote');
+        if (v.phase === 'vote') who.set(r, v.voted, [v.pour, v.contre]);
+        if (key !== lastKey) { if (v.phase === 'result') sfx.end(); else sfx.go(); }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
+    };
   },
   mount(root, g) {
     const colors = gameColors('debats', ['#f857a6', '#ff5858']);
@@ -226,6 +301,42 @@ export const cinqOnline = {
   tick(room, s) { if (s.phase === 'run' && Date.now() >= s.until) { s.phase = 'judge'; return true; } return false; },
   onLeave(room, s, pid) { if (pid === s.player && s.phase !== 'result') nextCinq(room, s); },
   view(room, s, pid) { return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, player: s.player, prompt: s.prompt, until: s.until, mine: s.votes[pid] ?? null, nv: Object.keys(s.votes).length, ok: s.ok }; },
+  // Écran télé : le thème en grand et un compte à rebours géant de 5 secondes.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('cinq', ['#00c6ff', '#0072ff']);
+    const bar = h('div', { class: 'tv-bar' });
+    const turn = h('div');
+    const cardSlot = h('div');
+    const big = h('div', { class: 'tv-count' });
+    const say = tvSay();
+    const st = tvStage(root, bar, turn, cardSlot, big, say.el);
+    let lastKey = null, iv = null;
+    return {
+      update(r, v) {
+        clearInterval(iv);
+        if (st.end(r, v.phase === 'end')) { lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        const N = g.nameOf(v.player);
+        bar.replaceChildren(h('span', { class: 'pill' }, `⏱️ Tour ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), v.phase === 'judge' ? h('span', { class: 'pill' }, `🗳️ ${v.nv} avis`) : null);
+        if (key !== lastKey) {
+          turn.replaceChildren(tvTurn('🎯', N, 'doit citer 3…'));
+          cardSlot.replaceChildren(h('div', { class: 'tv-card tv-bigcard', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, 'Cite 3…'), h('div', { class: 'q' }, v.prompt)));
+          if (v.phase === 'run') sfx.go(); if (v.phase === 'judge') sfx.end(); if (v.phase === 'result') v.ok ? sfx.ok() : sfx.bad();
+        }
+        big.textContent = '';
+        if (v.phase === 'run') {
+          const upd = () => { const n = Math.ceil(Math.max(0, v.until - 300 - g.now()) / 1000); if (big.textContent !== String(n)) { big.textContent = String(n); big.classList.remove('pop-in'); void big.offsetWidth; big.classList.add('pop-in'); if (n > 0) sfx.tick(); } };
+          upd(); iv = setInterval(upd, 100);
+          say.set('');
+        } else if (v.phase === 'ready') say.set(`📱 ${N} lance le chrono sur son téléphone…`);
+        else if (v.phase === 'judge') say.set('Alors, réussi ? Jugez sur vos téléphones !');
+        else say.set(v.ok ? `✅ Réussi ! ${N} +1` : `❌ Raté ! ${N} prend ${sip(1)}.`);
+        lastKey = key;
+      },
+      destroy() { clearInterval(iv); },
+    };
+  },
   mount(root, g) {
     const colors = gameColors('cinq', ['#00c6ff', '#0072ff']);
     const main = h('div', { class: 'col' });
@@ -315,6 +426,45 @@ export const deuxOnline = {
   view(room, s, pid) {
     return { gid: s.gid, n: s.n, phase: s.phase, teller: s.teller, theme: s.theme, items: s.items, mine: s.votes[pid] ?? null, nv: Object.keys(s.votes).length,
       lie: s.phase === 'result' || pid === s.teller ? s.lie : null, votes: s.phase === 'result' ? s.votes : null };
+  },
+  // Écran télé : les trois anecdotes en grand, puis le mensonge démasqué et qui s'est fait piéger.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('deuxverites', ['#283c86', '#45a247']);
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div');
+    const items = h('div', { class: 'tv-col' });
+    const say = tvSay();
+    const main = h('div', { class: 'tv-fill' }, bar, cardSlot, items, say.el);
+    root.append(main);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        const key = `${v.gid}:${v.n}:${v.phase}`;
+        const T = g.nameOf(v.teller);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🤥 ${T}`), h('div', { class: 'grow' }), v.phase === 'vote' ? h('span', { class: 'pill' }, `🗳️ ${v.nv} vote${v.nv > 1 ? 's' : ''}`) : null);
+        if (key === lastKey) return;
+        cardSlot.replaceChildren(h('div', { class: 'tv-card', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, `Trois anecdotes de ${T}…`), h('div', { class: 'q' }, v.theme)));
+        if (v.phase === 'write') { items.replaceChildren(); say.set(`✍️ ${T} écrit 2 vérités et 1 mensonge… Préparez vos questions !`); }
+        else {
+          const counts = [0, 1, 2].map((i) => (v.votes ? Object.values(v.votes).filter((x) => x === i).length : 0));
+          items.replaceChildren(...v.items.map((t, i) => {
+            const res = v.phase === 'result';
+            return h('div', { class: 'tv-anec' + (res ? (v.lie === i ? ' lie' : ' truth') : '') },
+              h('b', null, String(i + 1)), h('span', { class: 't' }, t),
+              res ? h('span', { class: 'm' }, `${v.lie === i ? '🤥 MENSONGE' : '✅ Vrai'} · ${counts[i]} vote${counts[i] > 1 ? 's' : ''}`) : null);
+          }));
+          if (v.phase === 'vote') say.set(`📱 Votez pour l'anecdote que vous croyez fausse. ${T}, défends tes histoires !`);
+          else {
+            const fooled = Object.entries(v.votes).filter(([, x]) => x !== v.lie).map(([p]) => g.nameOf(p));
+            say.set(fooled.length ? `Piégés : ${fooled.join(', ')} → ${sip(1)} chacun !` : 'Personne n\'a été piégé !');
+            sfx.end();
+          }
+        }
+        lastKey = key;
+      },
+      destroy() {},
+    };
   },
   mount(root, g) {
     const colors = gameColors('deuxverites', ['#283c86', '#45a247']);

@@ -4,7 +4,7 @@ import { gameColors } from '../themes.js';
 import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew, TV_PID, tvTimer, tvEnd } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew, TV_PID, tvTimer, tvEnd, tvSay, tvStage, tvWho } from './kit.js';
 import { sortList } from '../sortable.js';
 import { matches } from '../race-core.js';
 import QAE from '../data/quiaecrit.js';
@@ -240,6 +240,43 @@ export const curseurOnline = {
     return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, giver: s.giver, pair: s.pair, clue: s.clue,
       target: giver || s.phase === 'reveal' ? s.target : null, mine: s.guesses[pid] ?? null, nG: Object.keys(s.guesses).length, guesses: s.phase === 'reveal' ? s.guesses : null, pts: s.pts };
   },
+  // Écran télé : l'échelle en grand et l'indice ; à la fin, la cible et tous les curseurs qui tombent dessus.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('curseur', ['#ff6a00', '#ee0979']);
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div');
+    const say = tvSay();
+    const res = h('div', { class: 'tv-results' });
+    const st = tvStage(root, bar, cardSlot, say.el, res);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        const G = g.nameOf(v.giver);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🎚️ Tour ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `💡 ${G}`));
+        if (v.phase === 'guess') say.set(`📱 Placez votre curseur sur vos téléphones · ${v.nG} curseur${v.nG > 1 ? 's' : ''} posé${v.nG > 1 ? 's' : ''}`);
+        if (key === lastKey) return;
+        const style = { '--g1': colors[0], '--g2': colors[1] };
+        if (v.phase === 'clue') {
+          cardSlot.replaceChildren(h('div', { class: 'tv-card tv-scale', style }, h('div', { class: 'kicker' }, 'L\'échelle'), scaleEl(v.pair)));
+          say.set(`💡 ${G} cherche un indice…`); res.replaceChildren();
+        } else if (v.phase === 'guess') {
+          cardSlot.replaceChildren(h('div', { class: 'tv-card tv-scale', style }, h('div', { class: 'kicker' }, `L'indice de ${G}`), h('div', { class: 'q' }, `« ${v.clue} »`), scaleEl(v.pair)));
+          sfx.go();
+        } else {
+          const marks = Object.entries(v.guesses).map(([p, x]) => ({ v: x, label: g.nameOf(p) }));
+          cardSlot.replaceChildren(h('div', { class: 'tv-card tv-scale', style }, h('div', { class: 'kicker' }, `L'indice de ${G}`), h('div', { class: 'q' }, `« ${v.clue} »`), scaleEl(v.pair, { target: v.target, marks })));
+          say.set('🎯 Voici la cible !');
+          res.replaceChildren(...Object.entries(v.pts).sort((a, b) => b[1] - a[1]).map(([p, n]) => h('span', { class: 'tv-res' + (n >= 3 ? ' ok' : '') }, `${g.nameOf(p)}${p === v.giver ? ' 💡' : ''} +${n}`)));
+          sfx.end();
+        }
+        lastKey = key;
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const colors = gameColors('curseur', ['#ff6a00', '#ee0979']);
     const main = h('div', { class: 'col' });
@@ -325,6 +362,46 @@ export const danssateteOnline = {
   view(room, s, pid) {
     return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, judge: s.judge, theme: s.theme, items: s.items, mine: s.ranks[pid] || null,
       done: Object.keys(s.ranks), judgeRank: s.phase === 'reveal' ? s.ranks[s.judge] : null, ranks: s.phase === 'reveal' ? s.ranks : null, pts: s.pts };
+  },
+  // Écran télé : le thème et les 5 cartes, qui a déjà classé, puis le classement du joueur et qui l'a deviné.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('danssatete', ['#c94b4b', '#4b134f']);
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div');
+    const slot = h('div', { class: 'tv-sort' });
+    const who = tvWho();
+    const res = h('div', { class: 'tv-results' });
+    const st = tvStage(root, bar, cardSlot, slot, who.el, res);
+    let lastKey = null, list = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        const J = g.nameOf(v.judge);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🧠 Tour ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, v.phase === 'rank' ? `✅ ${v.done.length}/${r.players.filter((p) => p.on).length} ont classé` : '📊 Révélation'));
+        who.el.classList.toggle('hidden', v.phase !== 'rank');
+        if (v.phase === 'rank') who.set(r, v.done);
+        if (key === lastKey) return;
+        cardSlot.replaceChildren(h('div', { class: 'tv-card', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, `Comment ${J} a-t-il classé…`), h('div', { class: 'q' }, v.theme)));
+        if (list) list.destroy();
+        if (v.phase === 'rank') {
+          list = null;
+          slot.replaceChildren(h('div', { class: 'tv-items' }, v.items.map((t) => h('span', null, t))));
+          res.replaceChildren(h('p', { class: 'tv-status' }, `📱 ${J} classe selon ses goûts, les autres devinent son classement`));
+          sfx.go();
+        } else {
+          const ref = v.judgeRank;
+          const finders = v.items.map((_, i) => Object.entries(v.ranks).filter(([p, o]) => p !== v.judge && o[ref.indexOf(i)] === i).map(([p]) => '✅ ' + g.nameOf(p)).join(', '));
+          list = sortList(v.items, { order: ref, locked: true, labels: finders, top: '⬆️ N°1', bottom: '⬇️ N°5' });
+          slot.replaceChildren(list.el);
+          res.replaceChildren(...Object.entries(v.pts).sort((a, b) => b[1] - a[1]).map(([p, n]) => h('span', { class: 'tv-res' + (n >= 3 ? ' ok' : '') }, `${g.nameOf(p)}${p === v.judge ? ' 🎯' : ''} +${n}`)));
+          sfx.end();
+        }
+        lastKey = key;
+      },
+      destroy() { if (list) list.destroy(); },
+    };
   },
   mount(root, g) {
     const colors = gameColors('danssatete', ['#c94b4b', '#4b134f']);
@@ -440,6 +517,43 @@ export const ordreOnline = {
   view(room, s, pid) {
     return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, items: s.items.map((e) => e[0]), deadline: s.deadline, mine: s.answers[pid] || null, n: Object.keys(s.answers).length,
       sol: s.phase === 'reveal' ? s.sol : null, years: s.phase === 'reveal' ? s.items.map((e) => fmtYear(e[1])) : null, answers: s.phase === 'reveal' ? s.answers : null };
+  },
+  // Écran télé : les 4 événements à classer, puis la bonne frise avec les années, et qui a tout bon.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const say = tvSay();
+    const slot = h('div', { class: 'tv-sort' });
+    const res = h('div', { class: 'tv-results' });
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, say.el, slot, res);
+    let lastKey = null, list = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        tm.set(v.phase === 'q' ? v.deadline : 0);
+        bar.replaceChildren(h('span', { class: 'pill' }, `📅 Question ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), v.phase === 'q' ? h('span', { class: 'pill' }, `✅ ${v.n} réponse${v.n > 1 ? 's' : ''}`) : null, tm.el);
+        if (key === lastKey) return;
+        if (list) list.destroy();
+        if (v.phase === 'q') {
+          list = null;
+          say.set('📅 Remettez-les dans l\'ordre, du plus ancien au plus récent !');
+          slot.replaceChildren(h('div', { class: 'tv-items' }, v.items.map((t) => h('span', null, t))));
+          res.replaceChildren();
+          sfx.go();
+        } else {
+          say.set('La bonne réponse :');
+          list = sortList(v.items, { order: v.sol, locked: true, labels: v.years, ...ORDRE_EDGES });
+          slot.replaceChildren(list.el);
+          res.replaceChildren(...r.players.map((p) => ({ p, a: v.answers[p.pid] })).filter((x) => x.a).sort((a, b) => b.a.pts - a.a.pts)
+            .map((x) => h('span', { class: 'tv-res' + (x.a.ok === 4 ? ' ok' : '') }, `${x.p.name}${x.a.first ? ' ⚡' : ''} · ${x.a.ok}/4 · +${x.a.pts}`)));
+          sfx.end();
+        }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); if (list) list.destroy(); },
+    };
   },
   mount(root, g) {
     const tp = timerPill(g);
@@ -654,6 +768,61 @@ export const chifoumiOnline = {
     return false;
   },
   view(room, s, pid) { return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, deadline: s.deadline, mine: s.picks[pid] || null, n: Object.keys(s.picks).length, picks: s.phase === 'reveal' ? s.picks : null, gains: s.gains }; },
+  // Écran télé : tous les poings battent ensemble « Chi… Fou… Mi ! », puis chacun montre son choix et ses points.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const say = tvSay();
+    const hands = h('div', { class: 'tv-chi' });
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, say.el, hands);
+    let lastKey = null, timers = [];
+    const clear = () => { timers.forEach(clearTimeout); timers = []; };
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); clear(); lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        tm.set(v.phase === 'pick' ? v.deadline : 0);
+        const on = r.players.filter((p) => p.on);
+        bar.replaceChildren(h('span', { class: 'pill' }, `✂️ Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), v.phase === 'pick' ? h('span', { class: 'pill' }, `🔒 ${v.n}/${on.length} ont choisi`) : null, tm.el);
+        if (key === lastKey) return;
+        lastKey = key;
+        clear();
+        if (v.phase === 'pick') {
+          say.set('📱 Choisissez en secret : pierre, feuille ou ciseaux !');
+          hands.classList.remove('done');
+          hands.replaceChildren(...on.map((p) => h('div', { class: 'tv-chi-p' }, h('span', { class: 'chi-hand' }, '✊'), h('b', null, p.name), h('span', { class: 'g' }))));
+          sfx.go();
+          return;
+        }
+        const list = r.players.filter((p) => v.picks[p.pid]).sort((a, b) => (v.gains[b.pid] || 0) - (v.gains[a.pid] || 0));
+        const els = list.map((p) => {
+          const hand = h('span', { class: 'chi-hand' }, '✊');
+          return { p, hand, el: h('div', { class: 'tv-chi-p' }, hand, h('b', null, p.name), h('span', { class: 'g' })) };
+        });
+        hands.classList.remove('done');
+        hands.replaceChildren(...els.map((x) => x.el));
+        ['Chi…', 'Fou…', 'Mi !'].forEach((w, i) => timers.push(setTimeout(() => {
+          say.set(w); sfx.tick();
+          hands.classList.remove('pump'); void hands.offsetWidth; hands.classList.add('pump');
+        }, i * 330)));
+        timers.push(setTimeout(() => {
+          hands.classList.remove('pump'); hands.classList.add('done');
+          const best = Math.max(0, ...list.map((p) => v.gains[p.pid] || 0));
+          for (const x of els) {
+            const c = CHI.find((y) => y.id === v.picks[x.p.pid]);
+            const gn = v.gains[x.p.pid] || 0;
+            x.hand.textContent = c ? c.e : '❔';
+            x.el.classList.toggle('best', gn === best && best > 0);
+            x.el.querySelector('.g').textContent = `+${gn}`;
+          }
+          say.set(best > 0 ? `🏆 ${list.filter((p) => (v.gains[p.pid] || 0) === best).map((p) => p.name).join(', ')} +${best}` : '🤝 Personne ne gagne cette manche');
+          sfx.ok();
+        }, 1050));
+      },
+      destroy() { tm.stop(); clear(); },
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     const tp = timerPill(g);

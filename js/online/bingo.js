@@ -3,6 +3,7 @@ import { h, uid } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import LIST from '../data/bingo.js';
 import { newCard, completeLines, lineCells, isFull, gridEl, cellText, FREE } from '../bingo-core.js';
+import { TV_PID, tvSay } from './kit.js';
 
 const player = (room, pid) => room.players.find((p) => p.pid === pid);
 
@@ -71,6 +72,34 @@ export default {
     };
   },
 
+  // Écran télé : chaque BINGO annoncé en grand (avec les situations de la ligne), et les lignes de chacun.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const say = tvSay();
+    const last = h('div', { class: 'tv-col' });
+    const board = h('div', { class: 'tv-bingo' });
+    const feed = h('div', { class: 'tv-results' });
+    root.append(h('div', { class: 'tv-fill' }, say.el, last, board, feed));
+    let lastFeed = null, lastGid = null;
+    return {
+      update(r, v) {
+        const newest = v.feed.length ? v.feed[v.feed.length - 1] : null;
+        board.replaceChildren(...v.board.slice().sort((a, b) => b.lines - a.lines).map((x) => h('div', { class: 'tv-bingo-p' + (x.full ? ' full' : '') },
+          h('b', null, g.nameOf(x.pid) + (x.full ? ' 🏆' : '')), h('span', { class: 'n' }, String(x.lines)), h('span', null, `ligne${x.lines > 1 ? 's' : ''}`))));
+        const fresh = newest && lastGid === v.gid && lastFeed !== null && newest.id > lastFeed;
+        if (!newest) { say.set('🎱 Cochez les situations sur vos téléphones quand elles arrivent pour de vrai !'); last.replaceChildren(); }
+        else if (fresh || lastFeed === null || lastGid !== v.gid) {
+          say.set(newest.full ? `🏆 CARTON PLEIN pour ${g.nameOf(newest.pid)} !` : `🎉 BINGO ! ${g.nameOf(newest.pid)} a complété une ligne`);
+          last.replaceChildren(newest.cells.length ? h('div', { class: 'tv-items' }, newest.cells.map((c) => h('span', null, c))) : null);
+          if (fresh) (newest.full ? sfx.fanfare() : sfx.ok());
+        }
+        feed.replaceChildren(...v.feed.slice(0, -1).reverse().slice(0, 6).map((f) => h('span', { class: 'tv-res' }, f.full ? `🏆 ${g.nameOf(f.pid)}` : `🎉 ${g.nameOf(f.pid)}`)));
+        lastGid = v.gid;
+        lastFeed = newest ? newest.id : 0;
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const head = h('div', { class: 'row' });
     const gridSlot = h('div');

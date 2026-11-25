@@ -3,7 +3,7 @@
 import { h, uid, shuffle, seg } from '../ui.js';
 import { settings, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, endScreen } from './kit.js';
+import { activePids, addScore, nextOn, endScreen, TV_PID, tvTurn, tvSplit, tvSay, tvStage } from './kit.js';
 import { rule, RANKS as ROI_RANKS, SUITS as ROI_SUITS } from '../games/roi.js';
 import { cardEl, newDeck, STEPS, stepOk, flip3, revealCard } from '../games/paquet.js';
 
@@ -48,6 +48,38 @@ export const roiOnline = {
   onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
   onLeave(room, s, pid) { if (pid === s.who) s.who = nextOn(room, s.order, s.who); },
   view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, who: s.who, card: s.card, by: s.by, kings: s.kings, left: s.deck.length }; },
+  // Écran télé : la carte piochée se retourne en grand, sa règle à côté, les rois déjà sortis.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div', { class: 'tv-col', style: { alignItems: 'center' } });
+    const info = h('div', { class: 'tv-col' });
+    root.append(bar, tvSplit(cardSlot, info));
+    let lastN = -1;
+    return {
+      update(r, v) {
+        const fresh = v.n !== lastN;
+        lastN = v.n;
+        bar.replaceChildren(h('span', { class: 'pill' }, `🃏 ${v.left} cartes`), h('div', { class: 'grow' }),
+          h('div', { class: 'tv-kings' }, [0, 1, 2, 3].map((i) => h('span', { class: i < v.kings ? 'on' : '' }, '👑'))));
+        if (!fresh) return;
+        const x = v.card ? rule(v.card.r) : null;
+        cardSlot.replaceChildren(v.card ? flip3(roiCard(v.card), h('div', { class: 'playing-card back' })) : h('div', { class: 'playing-card back' }),
+          v.card ? h('p', { class: 'tv-status' }, `Carte de ${g.nameOf(v.by)}`) : h('p', { class: 'tv-status' }, 'Le paquet est mélangé…'));
+        if (v.phase === 'end') {
+          info.replaceChildren(h('div', { class: 'tv-big-emo' }, '👑'), h('div', { class: 'tv-say' }, v.kings >= 4 ? 'LE 4e ROI !' : 'Plus de cartes !'),
+            v.kings >= 4 ? h('p', { class: 'tv-status' }, settings.drink ? `${g.nameOf(v.by)} doit boire le verre du milieu ! 🍹` : `${g.nameOf(v.by)} doit réaliser le gage du Roi au complet !`) : null);
+          sfx.boom();
+          return;
+        }
+        info.replaceChildren(
+          x ? h('div', { class: 'tv-card anim-late' }, h('div', { class: 'kicker' }, `${v.card.r} · ${x.emoji}`), h('div', { class: 'q' }, x.t), h('div', { class: 'foot' }, x.d)) : null,
+          tvTurn('🎯', `Au tour de ${g.nameOf(v.who)}`, 'de piocher une carte'));
+        if (v.card) { sfx.swoosh(); if (v.card.r === 'R') sfx.fanfare(); }
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);
@@ -142,6 +174,37 @@ export const plusmoinsOnline = {
   onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
   onLeave(room, s, pid) { if (pid === s.who && s.phase === 'guess') pmEndTurn(room, s); },
   view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, who: s.who, cur: s.cur, last: s.last, streak: s.streak, trail: s.trail, turn: s.turn, total: s.total, banked: s.banked }; },
+  // Écran télé : les deux cartes en grand, la série en cours, la carte suivante qui se retourne.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const turn = h('div');
+    const table = h('div', { class: 'pc-table tv-table' });
+    const trail = h('div', { class: 'pc-trail tv-trail' });
+    const say = tvSay();
+    const st = tvStage(root, bar, turn, h('div', { class: 'tv-fill' }, table, trail, say.el));
+    let lastKey = null, whoKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { lastKey = whoKey = null; return; }
+        const key = `${v.gid}:${v.n}:${v.phase}:${v.turn}`;
+        if (key === lastKey) return;
+        const N = g.nameOf(v.who);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🃏 Tour ${Math.min(v.turn, v.total)}/${v.total}`), h('div', { class: 'grow' }), v.streak ? h('span', { class: 'pill' }, `🔥 Série : ${v.streak}`) : null);
+        if (whoKey !== v.who + ':' + v.turn) { whoKey = v.who + ':' + v.turn; turn.replaceChildren(tvTurn('🎯', `${N} joue`, 'Plus haute ou plus basse ?')); }
+        const L = v.last;
+        table.replaceChildren(cardEl(v.cur, 'tvc'), L ? revealCard(L.next, 'tvc ' + (L.ok ? 'good' : 'bad')) : cardEl(null, 'tvc'));
+        trail.replaceChildren(...v.trail.map((c) => cardEl(c, 'tvc-mini')));
+        if (L && !L.ok) say.set(`❌ ${L.next.v === v.cur.v ? 'Égalité, c\'est perdu !' : 'Raté !'} ${N} prend ${sip(v.streak + 1)}.`);
+        else if (L) say.set(L.up ? '⬆️ Plus… ✅ Bien vu !' : '⬇️ Moins… ✅ Bien vu !');
+        else if (v.banked) say.set(`💰 ${g.nameOf(v.banked.who)} a encaissé ${v.banked.pts} points !`);
+        else say.set(v.streak ? `🔥 ${v.streak} d'affilée ! En cas d'erreur : ${sip(v.streak + 1)}` : '⬆️ Plus ou moins ? ⬇️');
+        if (L) { sfx.card(); setTimeout(() => (L.ok ? sfx.ok() : sfx.bad()), 420); }
+        lastKey = key;
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);
@@ -246,6 +309,41 @@ export const busOnline = {
     s.tries = 1;
   },
   view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, who: s.who, step: s.step, cards: s.cards, tries: s.tries, last: s.last, pts: s.pts, turn: s.turn, total: s.total }; },
+  // Écran télé : les 4 cartes du bus en grand, l'étape en cours et la question posée.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const turn = h('div');
+    const steps = h('div', { class: 'bus-steps tv-steps' });
+    const table = h('div', { class: 'pc-table four tv-table' });
+    const say = tvSay();
+    const st = tvStage(root, bar, turn, h('div', { class: 'tv-fill' }, steps, table, say.el));
+    let lastKey = null, whoKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { lastKey = whoKey = null; return; }
+        const key = `${v.gid}:${v.n}:${v.phase}`;
+        if (key === lastKey) return;
+        const N = g.nameOf(v.who);
+        const shownStep = v.phase === 'show' ? v.last.step : v.step;
+        const fresh = v.last && lastKey ? v.last.step : -1;
+        bar.replaceChildren(h('span', { class: 'pill' }, `🚌 Passage ${Math.min(v.turn, v.total)}/${v.total}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `Essai n°${v.tries}`));
+        if (whoKey !== v.who + ':' + v.turn) { whoKey = v.who + ':' + v.turn; turn.replaceChildren(tvTurn('🚌', `${N} est dans le bus`, '4 cartes d\'affilée pour descendre')); }
+        steps.replaceChildren(...STEPS.map((x, i) => h('span', { class: 'bus-step' + (i < v.step || v.phase === 'won' ? ' done' : i === v.step ? ' cur' : '') }, String(i + 1))));
+        table.replaceChildren(...[0, 1, 2, 3].map((i) => (v.cards[i] ? (i === fresh ? revealCard(v.cards[i], 'tvc') : cardEl(v.cards[i], 'tvc')) : cardEl(null, 'tvc' + (i === v.step && v.phase === 'play' ? ' next' : '')))));
+        if (v.phase === 'show') say.set(`❌ Raté ! ${N} prend ${sip(v.last.step + 1)} et repart de zéro…`);
+        else if (v.phase === 'won') say.set(`🎉 ${N} descend du bus en ${v.tries} essai${v.tries > 1 ? 's' : ''} ! +${v.pts} point${v.pts > 1 ? 's' : ''}`);
+        else say.set(`Étape ${shownStep + 1} : ${STEPS[shownStep].q}`);
+        if (v.last && lastKey) {
+          sfx.card();
+          const ph = v.phase, ok = v.last.ok;
+          setTimeout(() => { if (ph === 'won') sfx.fanfare(); else if (ph === 'show') sfx.bad(); else if (ok) sfx.ok(); }, 420);
+        }
+        lastKey = key;
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);

@@ -63,12 +63,77 @@ run(async () => {
             G.action(room, s, 'pb', { type: 'answer', v: 'mauvaise réponse secrète' }, api);
             check('mauvaise réponse d\'un joueur');
           }
+          // Jeux par équipes : le mot est vu par celui qui fait deviner et l'équipe adverse, pas par ses coéquipiers.
+          if (G.id.startsWith('eq-') || G.id === 'chapeau') {
+            const tm = s.teams[s.team];
+            G.action(room, s, tm[s.giverIdx[s.team] % tm.length], { type: 'start' }, api);
+            check('mot à faire deviner');
+            if (JSON.stringify(G.tv(room, s)).includes(JSON.stringify(G.view(room, s, tm[s.giverIdx[s.team] % tm.length]).word).slice(1, -1) || '§')) out.bad.push(G.id + ' : mot envoyé à la télé');
+          }
+          if (G.id === 'front') {
+            G.action(room, s, s.guesser, { type: 'start' }, api);
+            check('mot sur le front');
+            if (G.tv(room, s).word) out.bad.push('front : mot envoyé à la télé');
+          }
+          if (G.id === 'paranoia') {
+            const other = pids.find((p) => p !== s.asker);
+            G.action(room, s, s.asker, { type: 'pick', pid: other }, api);
+            check('pièce qui tourne');
+          }
+          if (G.id === 'deuxverites') {
+            G.action(room, s, s.teller, { type: 'submit', items: ['Vérité secrète une', 'Mensonge secret', 'Vérité secrète deux'], lie: 1 }, api);
+            check('anecdotes au vote');
+            if (G.tv(room, s).lie != null) out.bad.push('deuxverites : mensonge envoyé à la télé');
+          }
+          if (G.id === 'curseur') {
+            if (G.tv(room, s).target != null) out.bad.push('curseur : cible envoyée à la télé');
+            G.action(room, s, s.giver, { type: 'clue', v: 'indice public' }, api);
+            G.action(room, s, pids.find((p) => p !== s.giver), { type: 'guess', v: 30 }, api);
+            check('curseurs posés');
+            if (G.tv(room, s).target != null || G.tv(room, s).mine != null) out.bad.push('curseur : cible ou curseur envoyé à la télé');
+          }
+          if (G.id === 'danssatete' || G.id === 'ordre') {
+            G.action(room, s, 'pb', G.id === 'ordre' ? { type: 'order', o: [3, 2, 1, 0] } : { type: 'rank', o: [4, 3, 2, 1, 0] }, api);
+            check('classement envoyé');
+            if (G.tv(room, s).mine) out.bad.push(G.id + ' : classement d\'un joueur envoyé à la télé');
+          }
+          if (G.id === 'unisson') {
+            G.action(room, s, 'pb', { type: 'answer', v: 'Réponse secrète' }, api);
+            check('réponse en cours');
+          }
+          if (G.id.startsWith('vote-') || G.id === 'chifoumi' || G.id === 'debats' || G.id === 'cinq') {
+            if (G.id === 'debats') { G.action(room, s, s.pour, { type: 'done' }, api); G.action(room, s, s.contre, { type: 'done' }, api); }
+            if (G.id === 'cinq') { G.action(room, s, s.player, { type: 'go' }, api); s.phase = 'judge'; }
+            const voter = pids.find((p) => p !== s.pour && p !== s.contre && p !== s.player);
+            const a = G.id === 'chifoumi' ? { type: 'pick', c: 'feuille' } : G.id === 'cinq' ? { type: 'judge', ok: true } : { type: 'vote', v: G.id === 'vote-qui' ? 'pc' : G.id === 'vote-dix' ? 7 : 1 };
+            G.action(room, s, voter, a, api);
+            check('vote secret');
+            if (G.tv(room, s).mine != null) out.bad.push(G.id + ' : vote d\'un joueur envoyé à la télé');
+          }
+          if (G.id === 'pendu') {
+            const P = G.init(room, { ...G.defaults, mode: 'secret' }, api);
+            G.action(room, P, P.chooser, { type: 'word', w: 'Secretissime' }, api);
+            const tv = JSON.stringify(G.tv(room, P));
+            if (/[A-Z]/.test(G.tv(room, P).slots.map((x) => x.c).join(''))) out.bad.push('pendu : lettres du mot secret envoyées à la télé ' + tv.slice(0, 80));
+            out.steps++;
+          }
+          if (G.id === 'motmystere') {
+            await (await import('/js/bonmot-core.js')).loadDico();
+            for (let k = 0; k < 20 && s.phase === 'loading'; k++) { await new Promise((ok) => setTimeout(ok, 50)); G.tick(room, s, api); }
+            G.action(room, s, 'pb', { type: 'guess', w: 'pomme' }, api);
+            check('essai d\'un joueur');
+            if (JSON.stringify(G.tv(room, s)).includes('pomme')) out.bad.push('motmystere : lettres d\'un essai envoyées à la télé');
+          }
+          if (G.id === 'bataille') {
+            if (G.tv(room, s).myFleet || G.tv(room, s).fleets) out.bad.push('bataille : flotte envoyée à la télé');
+            out.steps++;
+          }
         } catch (e) { out.bad.push(G.id + ' étapes : ' + e.message); }
       }
     }
     return out;
   });
-  check(res.special.length >= 11, `${res.special.length} jeux avec un écran télé spécial`, res.special);
+  check(res.special.length >= 55, `${res.special.length} jeux avec un écran télé spécial`, res.special);
   check(!res.generic.length, `les ${res.n - res.special.length} autres n'envoient à la télé que « partie finie ou non »`, res.generic);
   check(!res.bad.length, `aucun secret envoyé à la télé (${res.steps} situations vérifiées sur ${res.n} jeux)`, res.bad);
   check(!errors.length, 'aucune erreur JS', errors);

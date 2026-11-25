@@ -1,7 +1,7 @@
 // À l'unisson (en ligne) : un thème s'affiche, chacun écrit UNE réponse en secret.
 // On marque autant de points que de joueurs qui ont écrit la même chose. Les « moutons noirs » sont seuls.
 import { h, uid, seg, levenshtein } from '../ui.js';
-import { drawNew } from './kit.js';
+import { drawNew, TV_PID, tvWho, tvTimer, tvStage, tvSay } from './kit.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -92,6 +92,48 @@ const unisson = {
     };
   },
 
+  // Écran télé : le thème en grand, qui a déjà répondu, puis les réponses regroupées (les plus nombreuses en haut).
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('unisson', ['#00b09b', '#96c93d']);
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div');
+    const who = tvWho();
+    const say = tvSay();
+    const groups = h('div', { class: 'tv-groups' });
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, cardSlot, who.el, say.el, groups);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        const k = `${v.gid}:${v.round}:${v.phase}`;
+        tm.set(v.phase === 'write' ? v.deadline : 0);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🤝 Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), tm.el);
+        if (cardSlot.dataset.k !== `${v.gid}:${v.round}`) {
+          cardSlot.dataset.k = `${v.gid}:${v.round}`;
+          cardSlot.replaceChildren(h('div', { class: 'tv-card tv-bigcard', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, 'Pensez tous pareil…'), h('div', { class: 'q' }, v.prompt)));
+        }
+        who.el.classList.toggle('hidden', v.phase !== 'write');
+        if (v.phase === 'write') who.set(r, v.answered);
+        if (k === lastKey) return;
+        if (v.phase === 'write') {
+          say.set('📱 Écrivez UNE réponse en secret : comme la majorité !');
+          groups.replaceChildren();
+          sfx.go();
+        } else {
+          const lone = v.groups.length > 1 && v.groups[0].pids.length > 1;
+          say.set(v.groups.length && v.groups[0].pids.length > 1 ? `🤝 ${v.groups[0].pids.length} esprits à l'unisson !` : '🐑 Que des moutons noirs !');
+          groups.replaceChildren(...v.groups.map((gr) => h('div', { class: 'tv-group' + (gr.pids.length > 1 ? ' many' : '') },
+            h('b', null, gr.text), h('span', { class: 'n' }, gr.pids.length > 1 ? `× ${gr.pids.length} · +${gr.pids.length - 1} chacun` : (lone ? '🐑 Mouton noir' : '0')),
+            h('span', { class: 'who' }, gr.pids.map((p) => g.nameOf(p)).join(', ')))));
+          sfx.end();
+        }
+        lastKey = k;
+      },
+      destroy() { tm.stop(); },
+    };
+  },
   mount(root, g) {
     const head = h('div', { class: 'row' });
     const cardSlot = h('div');

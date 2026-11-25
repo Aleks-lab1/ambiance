@@ -3,7 +3,7 @@ import { h, uid, shuffle, seg, pick } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, timerPill, actBtn, drawNew, TV_PID, tvTurn, tvSay, tvStage, tvTimer } from './kit.js';
 import FRONT from '../data/front.js';
 import NIOUI from '../data/nioui.js';
 import HISTOIRE from '../data/histoire.js';
@@ -71,8 +71,43 @@ export const frontOnline = {
   },
   view(room, s, pid) {
     return { gid: s.gid, phase: s.phase, guesser: s.guesser, turn: s.turn, total: s.total, deadline: s.deadline, wk: s.wk,
-      word: s.phase === 'play' && pid !== s.guesser ? s.word : null, found: s.results.filter((x) => x.r === 'ok').length,
+      // La télé est vue aussi par celui qui devine : jamais le mot.
+      word: s.phase === 'play' && pid !== s.guesser && pid !== TV_PID ? s.word : null, found: s.results.filter((x) => x.r === 'ok').length,
       results: s.phase === 'recap' ? s.results : null };
+  },
+  // Écran télé : qui devine, le chrono et les mots trouvés (le mot lui-même reste sur les téléphones).
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const turn = h('div');
+    const big = h('div', { class: 'tv-count' });
+    const say = tvSay();
+    const list = h('div', { class: 'tv-results' });
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, turn, big, say.el, list);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        tm.set(v.phase === 'play' ? v.deadline : 0);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🤳 Tour ${Math.min(v.turn, v.total)}/${v.total}`), h('div', { class: 'grow' }), tm.el);
+        const key = `${v.gid}:${v.turn}:${v.phase}:${v.found}:${v.wk}`;
+        if (key === lastKey) return;
+        const N = g.nameOf(v.guesser);
+        turn.replaceChildren(tvTurn('🤳', `${N} devine`, v.phase === 'play' ? 'Les autres font deviner le mot affiché sur leurs téléphones' : ''));
+        big.textContent = v.phase === 'play' ? String(v.found) : '';
+        list.replaceChildren();
+        if (v.phase === 'ready') say.set(`📱 ${N} met son téléphone sur le front… et lance le tour !`);
+        else if (v.phase === 'play') { say.set(`✅ ${v.found} mot${v.found > 1 ? 's' : ''} trouvé${v.found > 1 ? 's' : ''}`); if (!lastKey || !lastKey.includes(':play:')) sfx.go(); else sfx.ok(); }
+        else {
+          say.set(`⏰ Fin du tour : ${v.found} mot${v.found > 1 ? 's' : ''} trouvé${v.found > 1 ? 's' : ''} !`);
+          list.replaceChildren(...v.results.map((x) => h('span', { class: 'tv-res' + (x.r === 'ok' ? ' ok' : '') }, `${x.r === 'ok' ? '✅' : x.r === 'time' ? '⏰' : '⏭'} ${x.w}`)));
+          sfx.end();
+        }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
+    };
   },
   mount(root, g) {
     const main = h('div', { class: 'col' });
@@ -172,6 +207,43 @@ export const niouiOnline = {
     else if (pid === s.asker) s.asker = nextOn(room, s.order, s.victim);
   },
   view(room, s) { return { gid: s.gid, phase: s.phase, victim: s.victim, asker: s.asker, q: s.q, qn: s.qn, deadline: s.deadline, won: s.won, by: s.by, turn: s.turn, total: s.total, time: s.st.time }; },
+  // Écran télé : la victime, la question piège en grand et le chrono à tenir.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('nioui', ['#ff416c', '#ff4b2b']);
+    const bar = h('div', { class: 'tv-bar' });
+    const turn = h('div');
+    const cardSlot = h('div');
+    const say = tvSay();
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, turn, cardSlot, say.el);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        tm.set(v.phase === 'play' ? v.deadline : 0);
+        bar.replaceChildren(h('span', { class: 'pill' }, `🙅 Tour ${Math.min(v.turn, v.total)}/${v.total}`), h('div', { class: 'grow' }), v.phase === 'play' ? h('span', { class: 'pill' }, `❓ ${v.qn}`) : null, tm.el);
+        const key = `${v.gid}:${v.turn}:${v.phase}:${v.qn}`;
+        if (key === lastKey) return;
+        const V = g.nameOf(v.victim), A = g.nameOf(v.asker);
+        turn.replaceChildren(tvTurn('🙅', `${V} doit tenir ${v.time} s`, `${A} pose les questions pièges`));
+        if (v.phase === 'ready') {
+          cardSlot.replaceChildren();
+          say.set(`Ni oui, ni non, ni hochement de tête ! Si vous entendez un oui ou un non : buzzez sur vos téléphones !`);
+        } else if (v.phase === 'play') {
+          cardSlot.replaceChildren(h('div', { class: 'tv-card tv-bigcard', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, `${A} demande à ${V}`), h('div', { class: 'q' }, v.q)));
+          say.set('');
+          if (v.qn === 1) sfx.go();
+        } else {
+          cardSlot.replaceChildren(h('div', { class: 'tv-big-emo' }, v.won ? '🏆' : '😱'));
+          say.set(v.won ? `${V} a tenu ${v.time} secondes ! +1 point` : `${V} a craqué après ${plural(v.qn, 'question')} et prend ${sip(2)} !${v.by ? ` Buzzé par ${g.nameOf(v.by)}.` : ''}`);
+          v.won ? sfx.fanfare() : sfx.bad();
+        }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
+    };
+  },
   mount(root, g) {
     const colors = gameColors('nioui', ['#ff416c', '#ff4b2b']);
     const main = h('div', { class: 'col' });
@@ -265,6 +337,47 @@ export const histoireOnline = {
   onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
   onLeave(room, s, pid) { if (pid === s.who && s.phase !== 'end') { s.who = nextOn(room, s.order, pid); if (s.phase === 'play') s.phase = 'ready'; } },
   view(room, s) { return { gid: s.gid, phase: s.phase, who: s.who, starter: s.starter, word: s.phase === 'play' ? s.word : null, deadline: s.deadline, chain: s.chain, turn: s.turn, total: s.total }; },
+  // Écran télé : le début de l'histoire, le mot imposé en grand et la chaîne des mots déjà placés.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('histoire', ['#8360c3', '#2ebf91']);
+    const bar = h('div', { class: 'tv-bar' });
+    const starter = h('div');
+    const turn = h('div');
+    const word = h('div');
+    const say = tvSay();
+    const chain = h('div', { class: 'tv-results' });
+    const tm = tvTimer(g);
+    const main = h('div', { class: 'tv-fill' }, bar, starter, turn, word, say.el, chain);
+    root.append(main);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        tm.set(v.phase === 'play' ? v.deadline : 0);
+        bar.replaceChildren(h('span', { class: 'pill' }, v.phase === 'end' ? '📚 Fin de l\'histoire' : `📚 Tour ${Math.min(v.turn + 1, v.total)}/${v.total}`), h('div', { class: 'grow' }), tm.el);
+        const key = `${v.gid}:${v.turn}:${v.phase}`;
+        if (key === lastKey) return;
+        const N = g.nameOf(v.who);
+        if (starter.dataset.k !== v.gid) { starter.dataset.k = v.gid; starter.replaceChildren(h('div', { class: 'tv-card', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, 'L\'histoire commence ainsi…'), h('div', { class: 'q tv-starter' }, v.starter))); }
+        chain.replaceChildren(...v.chain.map((c) => h('span', { class: 'tv-res' + (c.ok ? ' ok' : '') }, `${c.ok ? '✅' : '❌'} ${c.w} · ${g.nameOf(c.p)}`)));
+        word.replaceChildren();
+        if (v.phase === 'end') { turn.replaceChildren(); say.set('📜 Fin de l\'histoire ! Bravo les conteurs'); sfx.fanfare(); }
+        else if (v.phase === 'play') {
+          turn.replaceChildren(tvTurn('🗣️', `${N} continue l'histoire`, 'en plaçant ce mot :'));
+          word.replaceChildren(h('div', { class: 'tv-quote' }, v.word));
+          say.set('👂 Écoutez bien : le mot va-t-il être placé ?');
+          sfx.go();
+        } else {
+          const last = v.chain[v.chain.length - 1];
+          turn.replaceChildren(tvTurn('🗣️', `Au tour de ${N}`, v.phase === 'intro' ? 'de lire le début à voix haute, puis de continuer' : 'de continuer l\'histoire'));
+          say.set(last ? (last.ok ? `✅ « ${last.w} » bien placé par ${g.nameOf(last.p)} !` : `❌ Raté ! ${g.nameOf(last.p)} prend ${sip(1)}.`) : '');
+          if (last) (last.ok ? sfx.ok() : sfx.bad());
+        }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
+    };
+  },
   mount(root, g) {
     const colors = gameColors('histoire', ['#8360c3', '#2ebf91']);
     const main = h('div', { class: 'col' });

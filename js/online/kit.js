@@ -124,3 +124,52 @@ export function tvWho() {
     },
   };
 }
+
+/** Bandeau « à qui le tour » de la télé : grand emoji, prénom en gros et petite phrase dessous. */
+export function tvTurn(emoji, who, sub = '') {
+  return h('div', { class: 'tv-turn' }, h('span', { class: 'e' }, emoji), h('div', null, h('b', null, who), sub ? h('span', { class: 'sub' }, sub) : null));
+}
+
+/** Deux colonnes à la télé : le jeu à gauche, les explications à droite (l'une sous l'autre sur petit écran). */
+export const tvSplit = (left, right, cls = '') => h('div', { class: 'tv-split ' + cls }, left, right);
+
+/**
+ * Barres de résultats qui grandissent : rows = [{ label, n, names, win }], total = nombre de votants.
+ * Les barres partent de zéro et s'allongent à l'affichage.
+ */
+export function tvBars(rows, total) {
+  const t = Math.max(1, total);
+  const bars = rows.map((r) => {
+    const fill = h('i');
+    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = (r.n / t) * 100 + '%'; }));
+    return h('div', { class: 'tv-barrow' + (r.win ? ' win' : '') },
+      h('span', { class: 'lb' }, r.label), h('span', { class: 'nb' }, r.pct ? Math.round((r.n / t) * 100) + ' %' : String(r.n)),
+      h('span', { class: 'bar' }, fill),
+      r.names && r.names.length ? h('span', { class: 'names' }, r.names.join(', ')) : null);
+  });
+  return h('div', { class: 'tv-bars' }, bars);
+}
+
+/** Grande phrase d'état de la télé (« Bob réfléchit… »), qui saute quand elle change. */
+export function tvSay() {
+  const el = h('div', { class: 'tv-say' });
+  return { el, set(t) { if (el.textContent === t) return; el.textContent = t; el.classList.remove('pop-in'); void el.offsetWidth; el.classList.add('pop-in'); } };
+}
+
+/**
+ * Écran télé d'un jeu qui a une fin : les éléments `parts` dans une colonne, remplacés par le podium à la fin.
+ * end(room, fini) → true si la partie est finie ; si une nouvelle partie recommence, les éléments reviennent.
+ */
+export function tvStage(root, ...parts) {
+  const main = h('div', { class: 'tv-fill' }, ...parts);
+  root.append(main);
+  let ended = false;
+  return {
+    main,
+    end(room, isEnd) {
+      if (isEnd) { if (!ended) { ended = true; main.replaceChildren(...tvEnd(room)); sfx.fanfare(); } return true; }
+      if (ended) { ended = false; main.replaceChildren(...parts); }
+      return false;
+    },
+  };
+}

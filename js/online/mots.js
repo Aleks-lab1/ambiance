@@ -2,7 +2,7 @@
 import { h, uid, shuffle, seg, pick, norm, toast } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import { sip } from '../store.js';
-import { activePids, addScore, playerOf, nextOn, timerPill, endScreen, actBtn } from './kit.js';
+import { activePids, addScore, playerOf, nextOn, timerPill, endScreen, actBtn, TV_PID, tvTurn, tvSplit, tvSay, tvStage, tvTimer } from './kit.js';
 import { softNorm } from '../race-core.js';
 import { loadDico, normWord } from '../bonmot-core.js';
 import { score as mmScore } from '../games/motmystere.js';
@@ -50,6 +50,43 @@ export const petitbacOnline = {
   },
   tick(room, s) { if (s.phase === 'write' && Date.now() >= s.deadline + 800) { pbReview(room, s); return true; } return false; },
   view(room, s, pid) { return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, letter: s.letter, cats: s.cats, deadline: s.deadline, stopBy: s.stopBy, review: s.phase === 'review' ? s.review : null, nAns: Object.keys(s.answers).length }; },
+  // Écran télé : la lettre géante et les catégories pendant l'écriture, puis le tableau de toutes les réponses.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const body = h('div', { class: 'tv-fill' });
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, body);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        bar.replaceChildren(h('span', { class: 'pill' }, `🔤 Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), tm.el);
+        tm.set(v.phase === 'write' ? v.deadline : 0);
+        if (v.phase === 'write') {
+          if (key === lastKey) return;
+          body.replaceChildren(tvSplit(h('div', { class: 'letter-big tv-letter' }, v.letter),
+            h('div', { class: 'tv-col' }, h('div', { class: 'tv-cats' }, v.cats.map((c) => h('span', null, c))),
+              h('p', { class: 'tv-status' }, '✍️ Écrivez un mot par catégorie sur vos téléphones. Le premier qui a tout rempli peut crier STOP !'))));
+          sfx.go();
+        } else {
+          const pl = r.players.filter((p) => v.review.cats.some((c) => c.some((x) => x.pid === p.pid)));
+          body.replaceChildren(h('div', { class: 'tv-say' }, `Lettre ${v.letter} : ${v.stopBy ? `STOP de ${g.nameOf(v.stopBy)} !` : 'temps écoulé !'}`),
+            h('div', { class: 'tv-pb', style: { gridTemplateColumns: `minmax(6em, auto) repeat(${pl.length}, minmax(0, 1fr))` } },
+              h('span', { class: 'hd' }), ...pl.map((p) => h('span', { class: 'hd' }, `${p.name} +${v.review.pts[p.pid] || 0}`)),
+              ...v.cats.flatMap((c, ci) => [h('span', { class: 'cat' }, c), ...pl.map((p) => {
+                const x = v.review.cats[ci].find((y) => y.pid === p.pid);
+                return h('span', { class: 'ans ' + (!x || !x.text ? 'none' : x.valid ? (x.pts === 2 ? 'uniq' : 'shared') : 'bad') }, x && x.text ? x.text : '—');
+              })])),
+            h('p', { class: 'tv-status' }, '🟢 2 pts réponse unique · 🟡 1 pt si partagée · ❌ refusée (l\'hôte peut corriger)'));
+          if (key !== lastKey) sfx.bad();
+        }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     const tp = timerPill(g);
@@ -179,6 +216,41 @@ export const motmystereOnline = {
       rows: s.rows[pid] || [], done: s.done[pid] || null, msg: s.msg[pid] || null,
       others: room.players.filter((p) => p.pid !== pid).map((p) => ({ pid: p.pid, res: (s.rows[p.pid] || []).map((r) => r.res), done: s.done[p.pid] || null })),
       target: s.phase === 'result' ? s.targetShown : null, finish: s.finish,
+    };
+  },
+  // Écran télé : la course de tous les joueurs, en couleurs seulement (aucune lettre), puis le mot.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const boards = h('div', { class: 'tv-mm' });
+    const say = tvSay();
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, boards, say.el);
+    let lastKey = null;
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { tm.set(0); lastKey = null; return; }
+        if (v.phase === 'loading') { say.set('⏳ Chargement du dictionnaire…'); return; }
+        bar.replaceChildren(h('span', { class: 'pill' }, `🟩 Mot ${v.round}/${v.rounds} · ${v.len} lettres`), h('div', { class: 'grow' }), tm.el);
+        tm.set(v.phase === 'play' ? v.deadline : 0);
+        boards.replaceChildren(...v.others.map((o) => h('div', { class: 'tv-mm-p' + (o.done ? (o.done.ok ? ' won' : ' lost') : '') },
+          h('b', null, `${g.nameOf(o.pid)}${o.done ? (o.done.ok ? ` ✅ ${o.done.rank === 1 ? '1er' : o.done.rank + 'e'}` : ' ❌') : ''}`),
+          h('div', { class: 'tv-mm-g', style: { '--n': v.len } }, Array.from({ length: TRIES }, (_, k) => {
+            const res = o.res[k];
+            return Array.from({ length: v.len }, (_, c) => h('i', { class: res ? res[c] : '' }));
+          }).flat()))));
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        if (v.phase === 'result') {
+          const w = v.finish[0];
+          say.set(`Le mot était « ${v.target.toUpperCase()} » · ${w ? `🏆 ${g.nameOf(w)} a trouvé en premier !` : `Personne n'a trouvé : tout le monde prend ${sip(1)} !`}`);
+          if (key !== lastKey) sfx.end();
+        } else {
+          say.set('📱 Trouvez le mot sur vos téléphones !');
+          if (key !== lastKey) sfx.go();
+        }
+        lastKey = key;
+      },
+      destroy() { tm.stop(); },
     };
   },
   mount(root, g) {
@@ -311,6 +383,13 @@ export const morpionOnline = {
     if (k >= 0 && s.queue.length) { s.duo[k] = s.queue.shift(); newBoard(s); }
   },
   view(room, s) { return { gid: s.gid, n: s.n, quatre: s.quatre, board: s.board, duo: s.duo, queue: s.queue, turn: s.turn, phase: s.phase, win: s.win, last: s.last }; },
+  // Écran télé : le même plateau animé que sur les téléphones (vu par un spectateur), en grand, les textes à côté.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const wrap = h('div', { class: 'tv-morpion' });
+    root.append(wrap);
+    return this.mount(wrap, { ...g, me: TV_PID, isHost: false, send() {}, hostBar: () => null });
+  },
   mount(root, g) {
     // Plateau animé gardé d'une mise à jour à l'autre (js/morpion-vue.js) : chaque nouveau coup est joué en
     // animation (jeton qui tombe, trait au feutre), dans l'ordre d'arrivée, puis les textes sont mis à jour.
@@ -451,6 +530,57 @@ export const penduOnline = {
     });
     return { ...base, cur: s.cur, tried: s.tried, errors: s.errors, slots, won: s.won, last: s.last,
       good: s.tried.filter((k) => s.target.includes(k.toLowerCase())) };
+  },
+  // Écran télé : le dessin du pendu en grand, le mot à trous et toutes les lettres déjà proposées.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const art = h('div', { class: 'pendu-svg tv-pendu' });
+    const word = h('div', { class: 'pendu-word tv-pword' });
+    const turn = h('div');
+    const say = tvSay();
+    const kb = h('div', { class: 'kb tv-kb' });
+    const st = tvStage(root, bar, tvSplit(art, h('div', { class: 'tv-col' }, word, turn, say.el, kb)));
+    let lastKey = null, wordKey = null, lastErr = 0, seenNow = [];
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { lastKey = wordKey = null; return; }
+        if (v.phase === 'loading') { say.set('⏳ Chargement des mots…'); return; }
+        const key = `${v.gid}:${v.round}:${v.phase}:${(v.tried || []).length}`;
+        if (key === lastKey) return;
+        bar.replaceChildren(h('span', { class: 'pill' }, `🪢 Mot ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), v.phase !== 'choose' ? h('span', { class: 'pill' }, `❤️ ${PENDU_MAX - v.errors}`) : null);
+        if (v.phase === 'choose') {
+          art.innerHTML = drawing(0, false); word.replaceChildren(); kb.replaceChildren(); turn.replaceChildren();
+          say.set(`🤫 ${g.nameOf(v.chooser)} choisit un mot en secret…`);
+          lastKey = key;
+          return;
+        }
+        const over = v.phase === 'over';
+        const wk = `${v.gid}:${v.round}`;
+        if (wk !== wordKey) { wordKey = wk; lastErr = 0; seenNow = []; }
+        const newErr = v.errors > lastErr;
+        lastErr = v.errors;
+        const seen = seenNow;
+        seenNow = v.slots.map((x) => !!x.c);
+        art.innerHTML = drawing(v.errors, newErr);
+        art.classList.toggle('oops', newErr);
+        word.style.setProperty('--len', v.slots.length);
+        word.replaceChildren(...v.slots.map((x, i) => (x.sp != null ? h('span', { class: 'sp' }, x.sp === ' ' ? '\u00a0' : x.sp) : h('span', { class: 'ltr' + (x.miss ? ' miss' : '') + (x.c && !seen[i] ? ' pop-in' : '') }, x.c))));
+        kb.replaceChildren(...PENDU_KEYS.map((k) => h('span', { class: 'kb-key' + (v.tried.includes(k) ? (v.good.includes(k) ? ' good' : ' bad') : '') }, k)));
+        const L = v.last;
+        if (over) {
+          turn.replaceChildren();
+          say.set(v.won ? `🎉 ${g.nameOf(v.won)} a trouvé le mot ! +2` : `💀 Pendu ! ${v.chooser ? `${g.nameOf(v.chooser)} gagne 3 points.` : `Tout le monde prend ${sip(1)}.`}`);
+          v.won ? sfx.fanfare() : sfx.boom();
+        } else {
+          turn.replaceChildren(tvTurn('👉', `À ${g.nameOf(v.cur)}`, 'de proposer une lettre'));
+          say.set(L ? (L.good ? `✅ ${g.nameOf(L.by)} a trouvé le ${L.k} (+1)` : `❌ Pas de ${L.k} dans le mot`) : (v.chooser ? `🤫 Le mot de ${g.nameOf(v.chooser)}` : '🎲 Un mot au hasard'));
+          if (L) (L.good ? sfx.ok() : sfx.bad());
+        }
+        lastKey = key;
+      },
+      destroy() {},
+    };
   },
   mount(root, g) {
     const main = h('div', { class: 'col' });

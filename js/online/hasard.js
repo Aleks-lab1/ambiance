@@ -4,7 +4,7 @@ import { h, uid, shuffle, pick, randInt, seg, stepper } from '../ui.js';
 import { levelPicker, dieFace, tumble, spinTicks, TEAM_COLORS, podium } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, isOn, playerOf, drawNew } from './kit.js';
+import { activePids, addScore, nextOn, isOn, playerOf, drawNew, TV_PID, tvSplit, tvSay } from './kit.js';
 import { DEFIS, BOTTLE_SVG } from '../games/bouteille.js';
 import { LEVELS as ROUE_LEVELS, SEGMENTS, drawWheel } from '../games/roue.js';
 import GAGES from '../data/gages.js';
@@ -64,6 +64,62 @@ export const bouteilleOnline = {
   onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
   onLeave(room, s, pid) { if (pid === s.spinner && s.phase !== 'spin') s.spinner = nextOn(room, s.order, pid); },
   view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, order: s.order, spinner: s.spinner, from: s.from, target: s.target, angle: s.angle, defi: s.phase === 'result' ? s.defi : null }; },
+  // Écran télé : la bouteille tourne en grand au milieu des prénoms, le défi s'affiche à côté.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const ring = h('div', { class: 'bt-ring tv-ring' });
+    const say = tvSay();
+    const result = h('div', { class: 'tv-col' });
+    root.append(tvSplit(ring, h('div', { class: 'tv-col' }, say.el, result)));
+    let names = {}, bottle = null, ringKey = '', lastKey = null, stopTicks = () => {};
+    function buildRing(v) {
+      ring.replaceChildren();
+      names = {};
+      const n = v.order.length;
+      v.order.forEach((p, i) => {
+        const a = (i / n) * 2 * Math.PI;
+        names[p] = h('div', { class: 'bt-name', style: { left: `${50 + 42 * Math.sin(a)}%`, top: `${50 - 42 * Math.cos(a)}%` } }, g.nameOf(p));
+        ring.append(names[p]);
+      });
+      bottle = h('div', { class: 'bt-bottle', html: BOTTLE_SVG, style: { transform: `translate(-50%, -50%) rotate(${v.angle}deg)` } });
+      ring.append(bottle);
+    }
+    return {
+      update(r, v) {
+        const rk = v.order.join(',') + '|' + v.order.map((p) => g.nameOf(p)).join(',');
+        if (rk !== ringKey) { ringKey = rk; buildRing(v); }
+        bottle.style.transform = `translate(-50%, -50%) rotate(${v.angle}deg)`;
+        for (const [p, el] of Object.entries(names)) {
+          el.classList.toggle('cur', p === (v.phase === 'spin' ? v.from : v.spinner));
+          el.classList.toggle('hit', v.phase === 'result' && p === v.target);
+          el.style.opacity = r.players.some((x) => x.pid === p && x.on) ? '' : '.4';
+        }
+        const key = `${v.n}:${v.phase}`;
+        if (key === lastKey) return;
+        stopTicks();
+        if (v.phase === 'spin') {
+          say.set(`🍾 ${g.nameOf(v.from)} fait tourner…`);
+          result.replaceChildren();
+          sfx.swoosh();
+          const els = v.order.map((p) => names[p]);
+          stopTicks = spinTicks(bottle, v.order.length, { ms: 3800, onTick: (k) => { const el = els[k]; if (el) { el.classList.remove('pass'); void el.offsetWidth; el.classList.add('pass'); } } });
+        } else if (v.phase === 'result') {
+          say.set(`🍾 ${g.nameOf(v.target)} !`);
+          result.replaceChildren(h('div', { class: 'tv-card' },
+            h('div', { class: 'kicker' }, `${g.nameOf(v.from)} → ${g.nameOf(v.target)}`),
+            h('div', { class: 'q' }, v.defi.replace(/\{sip2\}/g, sip(2)).replace(/\{sip\}/g, sip(1))),
+            h('div', { class: 'foot' }, `Refus ? ${sip(2)} !`)),
+          h('p', { class: 'tv-status' }, `Ensuite, c'est ${g.nameOf(v.spinner)} qui fait tourner la bouteille.`));
+          sfx.ok();
+        } else {
+          say.set(`🍾 ${g.nameOf(v.spinner)} va faire tourner la bouteille…`);
+          result.replaceChildren(h('p', { class: 'tv-status' }, '📱 On la lance depuis son téléphone'));
+        }
+        lastKey = key;
+      },
+      destroy() { stopTicks(); },
+    };
+  },
   mount(root, g) {
     const status = h('h2', { class: 'center' });
     const ring = h('div', { class: 'bt-ring' });
@@ -171,6 +227,54 @@ export const roueOnline = {
   onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
   onLeave(room, s, pid) { if (pid === s.who && s.phase !== 'spin') s.who = nextOn(room, s.order, pid); },
   view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, who: s.who, victim: s.victim, angle: s.angle, idx: s.idx, res: s.res }; },
+  // Écran télé : la roue en grand (un tic par case), le gage à côté.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const cv = h('canvas', { width: 760, height: 760 });
+    drawWheel(cv);
+    const pointer = h('div', { class: 'wheel-pointer' }, '🔻');
+    const say = tvSay();
+    const result = h('div', { class: 'tv-col' });
+    // La roue tourne dans un disque qui la découpe : ses coins (transparents) ne débordent pas de l'écran.
+    root.append(tvSplit(h('div', { class: 'wheel-wrap tv-wheel' }, pointer, h('div', { class: 'tv-wheel-disc' }, cv)), h('div', { class: 'tv-col' }, say.el, result)));
+    let lastKey = null, stop = () => {}, first = true;
+    function resultCard(v) {
+      const seg0 = SEGMENTS[v.idx];
+      const N = g.nameOf(v.victim);
+      const x = v.res;
+      let title, text;
+      switch (x.kind) {
+        case 'joker': title = '🍀 Joker !'; text = `${N} est épargné(e) cette fois-ci.`; break;
+        case 'double': title = `🔥 Double gage pour ${N} !`; text = `${x.g1} — ET — ${x.g2}`; break;
+        case 'tous': title = '🎉 Tout le monde !'; text = x.g1; break;
+        case 'choisis': title = `👉 ${N} choisit la victime`; text = `${N} désigne qui doit faire : ${x.g1}`; break;
+        case 'sip': title = '🍹 Pénalité'; text = `${N} prend ${sip(2)}.`; break;
+        default: title = `🎯 Gage pour ${N}`; text = x.g1;
+      }
+      return h('div', { class: 'tv-card', style: { '--g1': seg0.color, '--g2': '#3a2a86' } }, h('div', { class: 'kicker' }, title), h('div', { class: 'q' }, text));
+    }
+    return {
+      update(r, v) {
+        if (first) { cv.style.transition = 'none'; cv.style.transform = `rotate(${v.angle}deg)`; void cv.offsetWidth; cv.style.transition = ''; first = false; } else cv.style.transform = `rotate(${v.angle}deg)`;
+        const key = `${v.n}:${v.phase}`;
+        if (key === lastKey) return;
+        stop();
+        if (v.phase === 'spin') {
+          say.set(`🎡 La roue de ${g.nameOf(v.victim)} tourne…`);
+          result.replaceChildren();
+          sfx.swoosh();
+          stop = spinTicks(cv, SEGMENTS.length, { pointer, ms: 4500 });
+        } else {
+          say.set(v.phase === 'result' ? '🎡 Et c\'est…' : `🎡 Au tour de ${g.nameOf(v.who)}`);
+          result.replaceChildren(v.phase === 'result' && v.res ? resultCard(v) : null,
+            h('p', { class: 'tv-status' }, v.phase === 'result' ? `Ensuite : ${g.nameOf(v.who)} tourne la roue.` : '📱 On la lance depuis son téléphone'));
+          if (v.phase === 'result') sfx.fanfare();
+        }
+        lastKey = key;
+      },
+      destroy() { stop(); },
+    };
+  },
   mount(root, g) {
     const cv = h('canvas', { width: 760, height: 760 });
     drawWheel(cv);
@@ -260,6 +364,53 @@ export const doigtOnline = {
   onLeave(room, s, pid) { delete s.hold[pid]; doigtCheck(room, s); },
   onJoin(room, s) { doigtCheck(room, s); },
   view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, mode: s.st.mode, hold: Object.keys(s.hold), until: s.until, res: s.res }; },
+  // Écran télé : les doigts posés s'allument, le compte à rebours en grand, puis le résultat.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const say = tvSay();
+    const sub = h('p', { class: 'tv-status' });
+    const big = h('div', { class: 'tv-count' });
+    const chips = h('div', { class: 'tv-who tv-fingers' });
+    const out = h('div', { class: 'tv-col' });
+    root.append(h('div', { class: 'tv-fill' }, say.el, sub, big, chips, out));
+    let v = null, lastKey = null, iv = null;
+    const count = () => {
+      if (!v || v.phase !== 'count') return;
+      const n = Math.max(1, Math.ceil(Math.max(0, v.until - g.now()) / (COUNT_MS / 3)));
+      if (big.textContent !== String(n)) { big.textContent = String(n); big.classList.remove('pop-in'); void big.offsetWidth; big.classList.add('pop-in'); sfx.beep(); }
+    };
+    return {
+      update(r, view) {
+        v = view;
+        const key = `${v.n}:${v.phase}`;
+        clearInterval(iv);
+        if (v.phase === 'done') {
+          big.textContent = ''; chips.replaceChildren(); sub.textContent = '';
+          if (key === lastKey) return;
+          const res = v.res;
+          if (res.winner) { say.set(`👑 ${g.nameOf(res.winner)} commence !`); out.replaceChildren(h('div', { class: 'tv-big-emo' }, '👑')); }
+          else if (res.teams) {
+            say.set('👥 Les équipes sont faites !');
+            out.replaceChildren(h('div', { class: 'tv-teams' }, res.teams.map((t, i) => h('div', { class: 'tv-team', style: { '--c': TEAM_COLORS[i] } }, h('b', null, `Équipe ${i + 1}`), h('span', null, t.map((p) => g.nameOf(p)).join(', '))))));
+          } else {
+            say.set('🔢 L\'ordre de jeu');
+            out.replaceChildren(h('ol', { class: 'tv-order' }, res.order.map((p) => h('li', null, g.nameOf(p)))));
+          }
+          sfx.fanfare();
+        } else {
+          out.replaceChildren();
+          const on = r.players.filter((p) => p.on);
+          const held = new Set(v.hold);
+          say.set(v.phase === 'count' ? '✋ Ne lâchez plus !' : '☝️ Tout le monde pose son doigt sur son téléphone');
+          sub.textContent = `${v.mode === 'teams' ? '👥 2 équipes' : v.mode === 'order' ? '🔢 Ordre de jeu' : '👑 1 gagnant'} · ${held.size}/${on.length} doigt${held.size > 1 ? 's' : ''} posé${held.size > 1 ? 's' : ''}`;
+          chips.replaceChildren(...on.map((p) => h('span', { class: 'tv-chip' + (held.has(p.pid) ? ' done' : '') }, `${held.has(p.pid) ? '☝️' : '⏳'} ${p.name}`)));
+          if (v.phase === 'count') { count(); iv = setInterval(count, 100); } else big.textContent = '';
+        }
+        lastKey = key;
+      },
+      destroy() { clearInterval(iv); },
+    };
+  },
   mount(root, g) {
     const status = h('h2', { class: 'center' });
     const sub = h('p', { class: 'center muted' });
@@ -412,6 +563,64 @@ export const outilsOnline = {
     return false;
   },
   view(room, s) { return { gid: s.gid, tab: s.tab, dice: s.dice, coin: s.coin, teams: s.teams, chrono: s.chrono }; },
+  // Écran télé : l'outil choisi par l'hôte en très grand (dés qui roulent, pièce, équipes, chrono géant, points).
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const title = h('div', { class: 'tv-bar' });
+    const body = h('div', { class: 'tv-fill tv-tool' });
+    root.append(title, body);
+    let v = null, last = {}, tab = null, bigEl = null, coinT = null;
+    const iv = setInterval(() => { if (v && bigEl && bigEl.isConnected) { const c = v.chrono; bigEl.textContent = fmt(c.run ? c.end - g.now() : c.left); bigEl.classList.toggle('low', c.run && c.end - g.now() < 10000); } }, 200);
+    const by = (pid) => (pid ? `par ${g.nameOf(pid)}` : '');
+    function render(r) {
+      const t = v.tab;
+      bigEl = null;
+      if (t === 'des') {
+        const fresh = last.dice !== undefined && last.dice !== v.dice.k;
+        const dice = v.dice.vals.map((x) => { const d = dieFace(x); if (fresh) tumble(d); return d; });
+        body.replaceChildren(h('div', { class: 'dice-row tv-dice' }, dice),
+          v.dice.vals.length > 1 ? h('div', { class: 'tv-say' }, `Total : ${v.dice.vals.reduce((a, b) => a + b, 0)}`) : null,
+          h('p', { class: 'tv-status' }, v.dice.by ? `Lancés ${by(v.dice.by)}` : '📱 Chacun peut lancer les dés depuis son téléphone'));
+        if (fresh) sfx.rattle();
+      } else if (t === 'piece') {
+        const c = v.coin;
+        const flipping = !!c.res && g.now() < c.until;
+        const coin = h('div', { class: 'coin tv-coin' + (flipping && last.coin !== c.k ? ' spin' : '') }, flipping ? '' : c.res || '?');
+        clearTimeout(coinT);
+        if (flipping) coinT = setTimeout(() => { coin.textContent = c.res; sfx.ok(); }, c.until - g.now());
+        body.replaceChildren(coin, h('p', { class: 'tv-status' }, c.by ? `Lancée ${by(c.by)}` : '📱 Chacun peut lancer la pièce depuis son téléphone'));
+        if (last.coin !== undefined && last.coin !== c.k) sfx.swoosh();
+      } else if (t === 'equipes') {
+        const tm = v.teams;
+        body.replaceChildren(tm.list ? h('div', { class: 'tv-teams' }, tm.list.map((x, i) => h('div', { class: 'tv-team', style: { '--c': TEAM_COLORS[i] } }, h('b', null, `Équipe ${i + 1}`), h('span', null, x.map((p) => g.nameOf(p)).join(', ')))))
+          : h('div', { class: 'tv-say' }, `👥 ${tm.n} équipes seront tirées au sort`));
+        if (last.teams !== undefined && last.teams !== tm.k) sfx.pop();
+      } else if (t === 'chrono') {
+        const c = v.chrono;
+        bigEl = h('div', { class: 'tv-chrono' }, fmt(c.run ? c.end - g.now() : c.left));
+        body.replaceChildren(bigEl, h('p', { class: 'tv-status' }, c.run ? '⏱ C\'est parti !' : c.left <= 0 ? '⏰ Temps écoulé !' : 'L\'hôte lance le chrono'));
+        if (last.chrono !== undefined && last.chrono !== c.k) sfx.fanfare();
+      } else {
+        const list = r.players.slice().sort((a, b) => b.score - a.score);
+        const max = list.length ? list[0].score : 0;
+        body.replaceChildren(h('div', { class: 'tv-points' }, list.map((p) => h('div', { class: 'tv-pt' + (p.score === max && max > 0 ? ' lead' : '') }, h('span', null, p.name), h('b', null, String(p.score))))));
+      }
+      last = { dice: v.dice.k, coin: v.coin.k, teams: v.teams.k, chrono: v.chrono.k };
+    }
+    return {
+      update(r, view) {
+        const prev = v;
+        v = view;
+        title.replaceChildren(h('span', { class: 'pill' }, (TOOLS.find((x) => x.value === v.tab) || TOOLS[0]).label), h('div', { class: 'grow' }), h('span', { class: 'muted' }, 'L\'hôte choisit l\'outil'));
+        // On ne redessine que si quelque chose a changé (sinon la pièce ou les dés rejoueraient leur animation).
+        const k = JSON.stringify([v.tab, v.dice, v.coin, v.teams, v.chrono.k, v.chrono.run, v.chrono.left, v.chrono.secs, v.tab === 'scores' ? r.players.map((p) => p.score) : 0]);
+        if (prev && k === tab) return;
+        tab = k;
+        render(r);
+      },
+      destroy() { clearInterval(iv); clearTimeout(coinT); },
+    };
+  },
   mount(root, g) {
     const tabs = h('div');
     const body = h('div', { class: 'col' });

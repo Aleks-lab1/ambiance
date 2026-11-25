@@ -3,7 +3,7 @@ import { h, uid, shuffle, seg, pick, rand } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
-import { activePids, addScore, nextOn, card, endScreen, actBtn, timerPill, drawNew } from './kit.js';
+import { activePids, addScore, nextOn, card, endScreen, actBtn, timerPill, drawNew, TV_PID, tvSay, tvStage, tvTimer, tvSplit } from './kit.js';
 import PATATE from '../data/patate.js';
 import { COLORS } from '../games/couleurs.js';
 import { PADS } from '../games/sequence.js';
@@ -58,6 +58,43 @@ export const patateOnline = {
   onLeave(room, s, pid) { if (pid === s.holder && s.phase === 'play') s.holder = nextOn(room, s.order, pid); },
   onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
   view(room, s) { return { gid: s.gid, round: s.round, rounds: s.st.rounds, phase: s.phase, theme: s.theme, holder: s.holder, start: s.start, end: s.end, loser: s.loser, passes: s.passes, next: s.phase === 'play' ? nextOn(room, s.order, s.holder) : null }; },
+  // Écran télé : la bombe en grand qui tremble de plus en plus vite, qui l'a, et le thème.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const colors = gameColors('patate', ['#ee0979', '#ff6a00']);
+    const bar = h('div', { class: 'tv-bar' });
+    const cardSlot = h('div', { class: 'tv-col' });
+    const bomb = h('div', { class: 'bomb tv-bomb' });
+    const say = tvSay();
+    const chips = h('div', { class: 'tv-who' });
+    const st = tvStage(root, bar, tvSplit(cardSlot, h('div', { class: 'tv-col' }, bomb, say.el)), chips);
+    let v = null, lastKey = null, timer = null;
+    const loop = () => {
+      if (!v || v.phase !== 'play') return;
+      const f = Math.min(1, Math.max(0, (g.now() - v.start) / (v.end - v.start)));
+      if (f > 0.4) sfx.tick();
+      bomb.classList.toggle('fast', f > 0.65);
+      timer = setTimeout(loop, Math.max(110, 620 - 520 * f));
+    };
+    return {
+      update(r, view) {
+        v = view;
+        if (st.end(r, v.phase === 'end')) { clearTimeout(timer); lastKey = null; return; }
+        const who = v.phase === 'play' ? v.holder : v.loser;
+        bar.replaceChildren(h('span', { class: 'pill' }, `💣 Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `🔁 ${v.passes} passe${v.passes > 1 ? 's' : ''}`));
+        chips.replaceChildren(...r.players.filter((p) => p.on).map((p) => h('span', { class: 'tv-chip' + (p.pid === who ? ' done' : '') }, (p.pid === who ? '💣 ' : '') + p.name)));
+        if (v.phase === 'play') say.set(`${g.nameOf(v.holder)} a la bombe ! Réponds et passe-la…`);
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        if (key === lastKey) return;
+        clearTimeout(timer);
+        cardSlot.replaceChildren(h('div', { class: 'tv-card tv-bigcard', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, v.theme.kicker), h('div', { class: 'q' }, v.theme.text)));
+        if (v.phase === 'play') { bomb.textContent = '💣'; bomb.classList.add('shake'); bomb.classList.remove('fast'); sfx.go(); loop(); }
+        else { bomb.textContent = '💥'; bomb.classList.remove('shake', 'fast'); say.set(`BOUM ! ${g.nameOf(v.loser)} avait la bombe et prend ${sip(2)} !`); sfx.boom(); }
+        lastKey = key;
+      },
+      destroy() { clearTimeout(timer); },
+    };
+  },
   mount(root, g) {
     const colors = gameColors('patate', ['#ee0979', '#ff6a00']);
     const main = h('div', { class: 'col' });
@@ -344,6 +381,60 @@ export const sequenceOnline = {
   view(room, s, pid) {
     return { gid: s.gid, round: s.round, phase: s.phase, seq: s.seq, startAt: s.startAt, showEnd: s.showEnd, deadline: s.deadline, alive: s.alive,
       answered: Object.keys(s.ans), mine: s.ans[pid] || null, res: s.phase === 'result' ? s.res : null, over: s.over, solo: s.solo };
+  },
+  // Écran télé : les 4 couleurs en grand, la suite s'allume pour tout le monde en même temps, puis qui a réussi.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const bar = h('div', { class: 'tv-bar' });
+    const count = h('div', { class: 'seq-count' });
+    const pads = PADS.map((p) => h('div', { class: 'seq-pad', style: { '--c': p.c } }));
+    const grid = h('div', { class: 'seq-grid' }, pads);
+    const say = tvSay();
+    const chips = h('div', { class: 'tv-results' });
+    const tm = tvTimer(g);
+    const st = tvStage(root, bar, tvSplit(h('div', { class: 'seq-wrap tv-seq' }, grid, count), h('div', { class: 'tv-col' }, say.el, chips)));
+    let timers = [], lastKey = null;
+    const later = (fn, ms) => timers.push(setTimeout(fn, Math.max(0, ms)));
+    const clear = () => { timers.forEach(clearTimeout); timers = []; };
+    const light = (i, ms) => { pads[i].classList.add('lit'); sfx.note(PADS[i].f, ms / 1000); later(() => pads[i].classList.remove('lit'), ms); };
+    return {
+      update(r, v) {
+        if (st.end(r, v.phase === 'end')) { clear(); tm.set(0); lastKey = null; return; }
+        const key = `${v.gid}:${v.round}:${v.phase}`;
+        tm.set(v.phase === 'input' ? v.deadline : 0);
+        const alive = v.alive.filter((p) => r.players.some((x) => x.pid === p && x.on));
+        bar.replaceChildren(h('span', { class: 'pill' }, `🔴 Manche ${v.round} · suite de ${v.seq.length}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `${alive.length} en lice`), tm.el);
+        if (v.phase === 'input') chips.replaceChildren(...alive.map((p) => h('span', { class: 'tv-res' + (v.answered.includes(p) ? ' ok' : '') }, `${v.answered.includes(p) ? '✓ ' : ''}${g.nameOf(p)}`)));
+        if (key === lastKey) return;
+        clear();
+        pads.forEach((b) => b.classList.remove('lit'));
+        if (v.phase === 'show') {
+          grid.classList.add('dim');
+          say.set('👀 Regardez bien…');
+          chips.replaceChildren();
+          for (let n = 3; n >= 1; n--) {
+            const at = v.startAt - n * 1000 - g.now();
+            if (at < -900) continue;
+            later(() => { count.textContent = String(n); count.classList.remove('pop'); void count.offsetWidth; count.classList.add('pop'); sfx.beep(); }, at);
+          }
+          later(() => { count.textContent = ''; grid.classList.remove('dim'); }, v.startAt - g.now());
+          const step = seqStep(v.seq.length);
+          v.seq.forEach((c, k) => later(() => light(c, step * 0.7), v.startAt + 450 + k * step - g.now()));
+        } else if (v.phase === 'input') {
+          count.textContent = ''; grid.classList.add('dim');
+          say.set('📱 À vous ! Reproduisez la suite sur vos téléphones');
+          sfx.go();
+        } else if (v.phase === 'result') {
+          grid.classList.remove('dim');
+          const ok = Object.values(v.res).filter(Boolean).length;
+          say.set(ok ? `✅ ${ok} joueur${ok > 1 ? 's' : ''} ${ok > 1 ? 'ont' : 'a'} réussi !` : '❌ Tout le monde a raté : on rejoue !');
+          chips.replaceChildren(...Object.entries(v.res).map(([p, x]) => h('span', { class: 'tv-res' + (x ? ' ok' : '') }, `${x ? '✅' : '❌'} ${g.nameOf(p)}`)));
+          v.seq.forEach((c, k) => later(() => light(c, 200), 400 + k * 260));
+        }
+        lastKey = key;
+      },
+      destroy() { clear(); tm.stop(); },
+    };
   },
   mount(root, g) {
     const status = h('h2', { class: 'center' });

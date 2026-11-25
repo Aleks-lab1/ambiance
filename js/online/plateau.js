@@ -3,7 +3,7 @@ import { h, uid, seg } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { dieFace, tumble } from '../common.js';
-import { activePids, addScore, playerOf, endScreen, actBtn } from './kit.js';
+import { activePids, addScore, playerOf, endScreen, actBtn, TV_PID, tvTurn, tvSplit, tvSay, tvStage } from './kit.js';
 import { BN, randomFleet, fire, memDeck, YAMS_CATS, yamsScore, yamsTotals, rollDie } from '../plateau-core.js';
 
 // En mode « chacun son tour » sur un seul téléphone (g.hotseat), on affiche toujours les prénoms.
@@ -138,6 +138,45 @@ export const batailleOnline = {
       myFleet: k >= 0 ? s.fleets[k] : null, shotsOn: s.shots, // shots[i] = tirs reçus par le joueur i
       fleets: s.phase === 'over' ? s.fleets : null };
   },
+  // Écran télé : les deux mers côte à côte (seulement les tirs : les bateaux restent cachés jusqu'à la fin).
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const say = tvSay();
+    const sub = h('p', { class: 'tv-status' });
+    const seas = h('div', { class: 'tv-seas' });
+    const queue = h('p', { class: 'tv-status' });
+    root.append(h('div', { class: 'tv-fill' }, say.el, sub, seas, queue));
+    let lastKey = null;
+    return {
+      update(r, v) {
+        const key = `${v.gid}:${v.n}:${v.phase}:${v.turn}:${JSON.stringify(v.last)}:${v.ready.join()}`;
+        if (key === lastKey) return;
+        const N = (k) => g.nameOf(v.duo[k]);
+        const sc = (k) => (playerOf(r, v.duo[k]) || {}).score || 0;
+        const fresh = v.last && lastKey ? { i: v.last.i, res: v.last.res } : null;
+        const hitOn = v.last ? 1 - v.last.by : -1;
+        if (v.phase === 'place') {
+          say.set(`🚢 ${N(0)} contre ${N(1)}`);
+          sub.textContent = `Les capitaines placent leur flotte… ${v.ready.map((x, k) => (x ? '✅ ' : '⏳ ') + N(k)).join(' · ')}`;
+          seas.replaceChildren();
+        } else {
+          if (v.phase === 'over') say.set(`🏆 ${N(v.winner)} a coulé toute la flotte !`);
+          else say.set(`🎯 ${N(v.turn)} tire…`);
+          sub.textContent = v.phase === 'over' ? `${N(1 - v.winner)} prend ${sip(2)} !`
+            : v.last ? `${N(v.last.by)} : ${v.last.res === 'miss' ? 'à l\'eau 🌊' : v.last.res === 'hit' ? 'touché 🔥 (rejoue)' : `coulé 💥 (bateau de ${v.last.len})`}` : 'Touché = on rejoue';
+          // Mer de chaque capitaine : les tirs qu'il a reçus.
+          seas.replaceChildren(...[0, 1].map((k) => h('div', { class: 'tv-sea' + (v.phase === 'play' && v.turn === 1 - k ? ' aimed' : '') },
+            h('b', null, `🚢 ${N(k)} · ${sc(k)} 🏆`),
+            bnGrid(v.shotsOn[k], { ships: v.fleets ? v.fleets[k] : null, fx: hitOn === k ? fresh : null }))));
+        }
+        queue.textContent = v.queue.length ? `⏳ Prochains capitaines : ${v.queue.map((p) => g.nameOf(p)).join(', ')}` : '';
+        if (fresh) { v.last.res === 'miss' ? sfx.splash() : sfx.boom(); }
+        if (v.phase === 'over' && !/:over:/.test(lastKey || '')) sfx.fanfare();
+        lastKey = key;
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);
@@ -220,6 +259,47 @@ export const memoryOnline = {
   view(room, s) {
     return { gid: s.gid, phase: s.phase, cur: s.cur, cards: s.deck.map((e, i) => (s.owner[i] || s.flipped.includes(i) ? e : null)), owners: s.owner, flipped: s.flipped.length, lastPair: s.lastPair, total: s.deck.length / 2 };
   },
+  // Écran télé : le plateau en grand, les cartes se retournent en même temps que sur les téléphones.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const slot = h('div', { class: 'tv-mem' });
+    const turn = h('div');
+    const say = tvSay();
+    const pairs = h('div', { class: 'tv-pills' });
+    const st = tvStage(root, tvSplit(slot, h('div', { class: 'tv-col' }, turn, say.el, pairs), 'wide-l'));
+    let board = null, gid = null, lastKey = null, endT = null, ending = false;
+    return {
+      update(r, v) {
+        if (v.phase === 'end') {
+          if (ending) return;
+          ending = true;
+          if (board && gid === v.gid) board.update(v, false);
+          endT = setTimeout(() => st.end(r, true), board ? 1300 : 0);
+          return;
+        }
+        clearTimeout(endT); ending = false;
+        st.end(r, false);
+        if (!board || gid !== v.gid) {
+          board = memBoard(v.cards.length, () => {}); gid = v.gid;
+          const cols = v.cards.length > 16 ? 6 : 4;
+          board.el.style.setProperty('--cols', cols); board.el.style.setProperty('--rows', Math.ceil(v.cards.length / cols));
+          slot.replaceChildren(board.el);
+        }
+        board.update(v, false);
+        const key = `${v.gid}:${v.cur}:${v.phase}:${Object.keys(v.owners).length}:${v.flipped}`;
+        if (key === lastKey) return;
+        turn.replaceChildren(tvTurn('👆', `À ${g.nameOf(v.cur)}`, 'de retourner deux cartes'));
+        say.set(v.phase === 'show' ? '❌ Pas une paire…' : v.lastPair ? `✅ Paire pour ${g.nameOf(v.lastPair)} : rejoue !` : 'Une paire = un point');
+        const found = {};
+        for (const p of Object.values(v.owners)) found[p] = (found[p] || 0) + 0.5;
+        pairs.replaceChildren(h('span', { class: 'pill' }, `🧩 ${Object.keys(v.owners).length / 2}/${v.total} paires`),
+          ...r.players.filter((p) => found[p.pid]).map((p) => h('span', { class: 'pill' }, `${p.name} · ${found[p.pid]}`)));
+        if (v.phase === 'show') setTimeout(() => sfx.bad(), 300); else if (v.lastPair && lastKey) setTimeout(() => sfx.ok(), 250);
+        lastKey = key;
+      },
+      destroy() { clearTimeout(endT); },
+    };
+  },
   mount(root, g) {
     const head = h('div', { class: 'row' }), slot = h('div'), chips = h('div', { class: 'chips', style: { justifyContent: 'center' } }), msg = h('p', { class: 'center muted small' });
     const main = h('div', { class: 'col' }, head, slot, chips, msg);
@@ -289,6 +369,30 @@ export const yamsOnline = {
   },
   onLeave(room, s, pid) { if (pid === s.cur) { const on = s.order.filter((q) => q !== pid && room.players.some((x) => x.pid === q && x.on)); if (on.length) { s.cur = on[0]; ysTurn(s); } } },
   view(room, s) { return { gid: s.gid, phase: s.phase, cur: s.cur, dice: s.dice, held: s.held, rolls: s.rolls, sheets: s.sheets, anim: s.anim, last: s.last, order: s.order }; },
+  // Écran télé : les 5 dés en grand (ils roulent), les dés gardés levés, et la feuille de marque de tous.
+  tv(room, s) { return this.view(room, s, TV_PID); },
+  tvMount(root, g) {
+    const turn = h('div');
+    const dice = h('div', { class: 'tv-yams-dice' });
+    const say = tvSay();
+    const sheet = h('div', { class: 'tv-sheet' });
+    const st = tvStage(root, tvSplit(h('div', { class: 'tv-col' }, turn, dice, say.el), sheet));
+    let lastAnim = null, lastCur = null;
+    return {
+      update(r, v) {
+        const players = v.order.map((p) => playerOf(r, p) || { pid: p, name: g.nameOf(p) });
+        if (st.end(r, v.phase === 'end')) { lastCur = 'end'; return; }
+        if (v.cur !== lastCur) turn.replaceChildren(tvTurn('🎲', `À ${g.nameOf(v.cur)}`, 'jusqu\'à 3 lancers'));
+        dice.replaceChildren(v.rolls ? diceRow(v.dice, v.held, null) : h('div', { class: 'tv-say' }, `${g.nameOf(v.cur)} va lancer les dés…`),
+          h('div', { class: 'tv-pills' }, h('span', { class: 'pill' }, `Lancer ${v.rolls}/3`)));
+        say.set(v.last ? `${g.nameOf(v.last.pid)} : ${YAMS_CATS.find((c) => c.id === v.last.c).name} → ${v.last.v}` : '');
+        sheet.replaceChildren(yamsSheet(players, v.sheets, { cur: v.cur }));
+        if (v.anim !== lastAnim && v.rolls) { dice.querySelectorAll('.ys-die:not(.held) .die').forEach((d) => tumble(d)); sfx.rattle(); }
+        lastAnim = v.anim; lastCur = v.cur;
+      },
+      destroy() {},
+    };
+  },
   mount(root, g) {
     const main = h('div', { class: 'col' });
     root.append(main);

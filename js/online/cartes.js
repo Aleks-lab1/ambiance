@@ -7,7 +7,7 @@ import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { LEVELS } from '../data/levels.js';
 import { LEVELS as ACTION_LEVELS } from '../games/action.js';
-import { activePids, addScore, nextOn, playerOf, actBtn, drawNew } from './kit.js';
+import { activePids, addScore, nextOn, playerOf, actBtn, drawNew, TV_PID, tvTurn, tvSay } from './kit.js';
 import ETSI from '../data/etsi.js';
 import CONF from '../data/confidences.js';
 import CAP from '../data/cap.js';
@@ -104,6 +104,53 @@ function makeCardGame(id) {
     onJoin(room, s, pid) { if (!s.order.includes(pid)) s.order.push(pid); },
     onLeave(room, s, pid) { if (pid === s.who && s.phase !== 'result') turn(room, s); },
     view(room, s) { return { gid: s.gid, n: s.n, phase: s.phase, who: s.who, card: s.card, kind: s.kind, done: s.done }; },
+    // Écran télé : à qui le tour, la carte en grand (tout le monde la lit), puis « fait » ou « refusé ».
+    tv(room, s) { return this.view(room, s, TV_PID); },
+    tvMount(root, g) {
+      const colors = gameColors(id, M.colors);
+      const bar = h('div', { class: 'tv-bar' });
+      const turn = h('div');
+      const cardSlot = h('div', { class: 'tv-fill' });
+      const say = tvSay();
+      root.append(bar, turn, cardSlot, say.el);
+      let cardKey = null, turnKey = null, lastPhase = null;
+      return {
+        update(r, v) {
+          const N = g.nameOf(v.who);
+          bar.replaceChildren(h('span', { class: 'pill' }, `${M.emoji} ${M.name}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `🃏 Carte n°${v.n}`));
+          const tk = v.gid + ':' + v.who + ':' + v.phase;
+          if (tk !== turnKey) {
+            turnKey = tk;
+            turn.replaceChildren(tvTurn('🎯', `Au tour de ${N}`, v.phase === 'choose' ? 'Action ou vérité ? Choix sur son téléphone…'
+              : M.challenge ? (v.phase === 'result' ? '' : M.choose ? `Refus = ${sip(2)}` : `Cap ou pas cap ? Refus = ${sip(2)}`) : (M.foot ? M.foot(false, N) : '')));
+          }
+          const ck = `${v.gid}:${v.n}:${v.phase === 'choose' ? 'c' : v.card ? v.card.t : ''}`;
+          if (ck !== cardKey) {
+            cardKey = ck;
+            if (v.phase === 'choose') {
+              cardSlot.replaceChildren(h('div', { class: 'tv-vs tv-aov' },
+                h('div', { class: 'tv-side', style: { '--g1': KIND.action.colors[0], '--g2': KIND.action.colors[1] } }, h('div', { class: 't' }, KIND.action.label)),
+                h('div', { class: 'or' }, 'OU'),
+                h('div', { class: 'tv-side', style: { '--g1': KIND.verite.colors[0], '--g2': KIND.verite.colors[1] } }, h('div', { class: 't' }, KIND.verite.label))));
+              sfx.go();
+            } else if (v.card) {
+              const lvl = M.levels.find((l) => l.id === v.card.l) || {};
+              const c = lvl.extreme ? HOTPP : v.kind ? KIND[v.kind].colors : colors;
+              cardSlot.replaceChildren(h('div', { class: 'tv-card tv-bigcard', style: { '--g1': c[0], '--g2': c[1] } },
+                lvl.name ? h('div', { class: 'lvl-b' }, `${lvl.emoji} ${lvl.name}`) : null,
+                h('div', { class: 'kicker' }, v.kind ? KIND[v.kind].label : M.kicker),
+                h('div', { class: 'q' }, v.card.t)));
+              sfx.swoosh();
+            }
+          }
+          if (v.phase === 'result') say.set(v.done ? `💪 ${N} l'a fait : +1 point !` : `🙅 ${N} refuse et prend ${sip(2)} !`);
+          else say.set(v.phase === 'card' && M.challenge ? `👀 ${N} ${M.choose ? 'relève le défi' : 'est cap'} ?` : '');
+          if (v.phase === 'result' && lastPhase !== 'result') (v.done ? sfx.ok() : sfx.bad());
+          lastPhase = v.phase;
+        },
+        destroy() {},
+      };
+    },
     mount(root, g) {
       const colors = gameColors(id, M.colors);
       const main = h('div', { class: 'col' });

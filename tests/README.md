@@ -57,7 +57,8 @@ et sort avec le code 1 en cas d'échec.
 | `relay/reprise.test.cjs` | 3 téléphones par le faux relais en **https** : messages chiffrés (aucun prénom lisible sur le relais), l'hôte sort de l'appli (« Alice a quitté l'appli un instant… »), puis la ferme en plein Quiz : les joueurs attendent, il rouvre l'appli → « Reprendre » : même code, mêmes scores, même question, minuteur en pause, joueurs revenus seuls. Chloé revient par le bandeau, Bob par un autre navigateur avec le même prénom : pas de doublon. |
 | `relay/tele.test.cjs` | Écran télé de bout en bout (3 téléphones + télé 1280 × 720, relais en https) : la télé n'est pas un joueur, Quiz (même question, qui a répondu, bonne réponse), Punchlines (rien de lisible pendant l'écriture, réponses au vote, auteurs à la fin), Je dessine (dessin reçu, mot caché), L'Imposteur (écran commun, aucun mot secret). |
 | `relay/tvmode.test.cjs` | TV Mode (télé 1280 × 720 + 3 téléphones, relais en https) : la télé crée le salon depuis l'accueil, les téléphones rejoignent par le lien du QR code, le premier est le chef 👑, les autres votent (badges chez le chef, barres à la télé, vote retiré), le chef lance par double appui, seul le chef a les boutons de l'hôte, la télé est rechargée en plein Quiz et reprend, le chef part et le suivant prend la relève, la télé ferme le salon. |
-| `online/tele-secrets.test.cjs` | Pour les 61 jeux (et plusieurs étapes des 11 écrans spéciaux) : la télé ne reçoit aucun texte visible seulement par certains joueurs ; les jeux sans écran spécial n'envoient que « partie finie ou non ». |
+| `online/tele-jeux.test.cjs` | Les 44 écrans télé ajoutés en novembre 2026 (votes, cartes, bouteille, roue, plateaux, Pendu, Petit bac, équipes…), sur une **télé simulée 1280 × 720** (`lib/tv-sim.cjs`) : quelques coups par jeu, ce qu'affiche la télé, rien ne dépasse de l'écran, le mot reste caché (Mots interdits, Sur le front), aucune erreur. `SHOTS=1` : captures dans `tests/out/tv-*.png`. |
+| `online/tele-secrets.test.cjs` | Pour les 61 jeux (et plusieurs étapes des 55 écrans spéciaux) : la télé ne reçoit aucun texte visible seulement par certains joueurs ; les jeux sans écran spécial n'envoient que « partie finie ou non ». |
 | `online/reprise-jeux.test.cjs` | Chacun des 61 jeux en ligne est enregistré puis rechargé comme chez l'hôte : chaque joueur voit la même chose ; le Quiz repris enchaîne les questions. |
 | `unit/sauvegarde.test.mjs` | `js/online/save.js` : Set/Map conservés, fonctions refusées, minuteurs décalés, texte du bandeau « Reprendre ». |
 | `unit/accueil.test.mjs` | `js/finder.js` : nombre de joueurs de chaque jeu, filtre « On est combien ? », recherche (accents, « dés »), tirage au hasard. |
@@ -71,6 +72,9 @@ et sort avec le code 1 en cas d'échec.
   n joueurs (A = hôte, B, C…) côte à côte, branchés directement sur `init / action / tick / view / mount`
   du module, sans réseau. `t.at('B')` = zone du joueur B, `t.txt('A')` = son texte,
   `t.get(() => window.__h.s)` = état de l'hôte, `t.state().log` = erreurs levées par le module.
+- `tv-sim.cjs` : **écran télé simulé** (1280 × 720) branché sur la logique de l'hôte, sans réseau :
+  `const t = await tvSim(); await t.load('/js/online/vote.js', 'voteTP', réglages, n)`, puis `t.act('B', action)`,
+  `t.txt()` (texte de la télé), `t.fits()` (rien ne dépasse), `t.shot(nom)` (capture si `SHOTS=1`).
 - `mock-relay.cjs` : faux serveur MQTT 3.1.1 (via `routeWebSocket`) qui intercepte toutes les adresses de
   `CONFIG.relayBrokers` + blocage de PeerJS. `relayWorld()` → `{ browser, phone(), broker, errors }`.
 - `check.cjs` : `check(condition, message, détail)`, `wait(ms)`, `run(async () => …)`.
