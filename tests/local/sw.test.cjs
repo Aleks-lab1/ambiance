@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
 const { check, wait: W, run } = require('../lib/check.cjs');
 const { ROOT, SETTINGS } = require('../lib/pw-helper.cjs');
 
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2' };
 
 run(async () => {
   const hits = [];
@@ -74,8 +74,8 @@ run(async () => {
   await page.reload();
   await page.waitForSelector('.mode-card');
   await W(500);
-  const modes = await page.evaluate(() => { const l = [...document.querySelectorAll('.mode-card img.fx')]; return { n: l.length, ok: l.filter((i) => i.complete && i.naturalWidth > 0).length, cards: document.querySelectorAll('.mode-card .ms').length }; });
-  check(modes.cards === 3 && modes.n > 10 && modes.ok === modes.n, `hors ligne : les 3 scènes de l'accueil avec leurs images (${modes.ok}/${modes.n})`, modes);
+  const modes = await page.evaluate(async () => { await document.fonts.ready; const l = [...document.querySelectorAll('.mode-card img.mode-art')]; return { n: l.length, ok: l.filter((i) => i.complete && i.naturalWidth > 0).length, font: document.fonts.check('700 40px Fredoka') }; });
+  check(modes.n === 3 && modes.ok === 3 && modes.font, `hors ligne : les 3 cases de l'accueil illustrées, police Fredoka chargée (${modes.ok}/3)`, modes);
   await page.locator('.mode-card', { hasText: 'Local' }).click();
   await page.waitForSelector('.tile');
   const nLocal = await page.evaluate(async () => (await import('/js/games/index.js')).LOCAL_GAMES.length);

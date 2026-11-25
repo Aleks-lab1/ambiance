@@ -2,7 +2,8 @@
 // La composition de chaque image est dans scripts/images/scenes.mjs.
 //   node scripts/gen-images.mjs              → toutes les images
 //   node scripts/gen-images.mjs quiz roi     → seulement ces jeux
-//   node scripts/gen-images.mjs fx           → emojis 3D des scènes animées de l'accueil (FX_EMOJI) → img/ui/fx/<code>.webp
+//   node scripts/gen-images.mjs modes        → illustrations des 3 cases de l'accueil, découpées dans la maquette
+//                                              (scripts/images/maquette-accueil.webp, MODE_CROPS) → img/ui/mode-<id>.webp
 // Les illustrations 3D viennent de Fluent Emoji (Microsoft, licence MIT, voir scripts/images/emoji/LICENSE),
 // copiées dans scripts/images/emoji/ (une image par emoji, nommée d'après ses codes Unicode, ex. 1f3b2.webp).
 // Pour un emoji qui n'y est pas encore, récupérer le paquet complet (3 400 emojis, images seulement) puis relancer
@@ -17,7 +18,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SCENES, FX_EMOJI } from './images/scenes.mjs';
+import { SCENES, MODE_CROPS } from './images/scenes.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -47,12 +48,32 @@ function emojiFile(ch) {
   throw new Error(`Emoji introuvable : ${ch} (${code}). Voir en tête de scripts/gen-images.mjs (EMOJI_DIR).`);
 }
 
-// Emojis 3D des scènes animées de l'accueil (js/modes-art.js) : simple copie dans img/ui/fx/<code>.webp.
-if (process.argv[2] === 'fx') {
-  const dir = join(root, 'img/ui/fx');
-  mkdirSync(dir, { recursive: true });
-  for (const ch of FX_EMOJI) copyFileSync(join(SRC, emojiFile(ch)), join(dir, [...ch].map((c) => c.codePointAt(0).toString(16)).filter((c) => c !== 'fe0f').join('-') + '.webp'));
-  console.log(`${FX_EMOJI.length} emojis copiés dans img/ui/fx/`);
+// Illustrations des 3 cases de l'accueil : découpées dans la maquette (Pillow + numpy). Les bouts de lettres de la
+// maquette qui dépassent dans la découpe sont effacés (couleurs du dessus et du dessous fondues, puis lissées) :
+// le vrai texte est refait en HTML (js/modes-art.js).
+if (process.argv[2] === 'modes') {
+  const CROP = `
+import sys, json
+import numpy as np
+from PIL import Image, ImageFilter
+src, out, spec = sys.argv[1], sys.argv[2], json.loads(sys.argv[3])
+im = Image.open(src).convert('RGB')
+for id, m in spec.items():
+    a = np.asarray(im).astype(float).copy()
+    for (x0, y0, x1, y1) in m['erase']:
+        top, bot = a[y0 - 2, x0:x1], a[y1 + 2, x0:x1]
+        for y in range(y0, y1):
+            t = (y - y0) / (y1 - y0)
+            a[y, x0:x1] = top * (1 - t) + bot * t
+    fixed = Image.fromarray(a.clip(0, 255).astype('uint8'))
+    for (x0, y0, x1, y1) in m['erase']:
+        box = (x0 - 4, y0 - 4, x1 + 4, y1 + 4)
+        fixed.paste(fixed.crop(box).filter(ImageFilter.GaussianBlur(3)), box[:2])
+    fixed.crop(tuple(m['box'])).save(f'{out}/mode-{id}.webp', 'WEBP', quality=84, method=6)
+    print(id, 'ok')
+`;
+  const py = spawnSync('python3', ['-I', '-c', CROP, join(root, 'scripts/images/maquette-accueil.webp'), join(root, 'img/ui'), JSON.stringify(MODE_CROPS)], { encoding: 'utf8' });
+  process.stdout.write(py.stdout || ''); if (py.status !== 0) { console.error(py.stderr); process.exit(1); }
   process.exit(0);
 }
 

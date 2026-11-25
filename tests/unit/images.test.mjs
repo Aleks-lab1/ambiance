@@ -7,7 +7,7 @@ const { check, done } = createRequire(import.meta.url)('../lib/check.cjs');
 
 const ROOT = new URL('../../', import.meta.url);
 const { GAMES } = await import('../../js/games/index.js');
-const { SCENES, FX_EMOJI } = await import('../../scripts/images/scenes.mjs');
+const { SCENES, MODE_CROPS } = await import('../../scripts/images/scenes.mjs');
 const ids = GAMES.map((g) => g.id);
 
 const noScene = ids.filter((id) => !SCENES[id]);
@@ -48,10 +48,8 @@ for (const [id, items] of Object.entries(SCENES)) {
 }
 check(!missing.length, 'tous les emojis des compositions sont dans scripts/images/emoji/', missing);
 check(have.has('LICENSE'), 'licence des emojis Fluent (MIT) présente');
-// Scènes animées des 3 cases de l'accueil (js/modes-art.js) : chaque emoji utilisé est copié dans img/ui/fx/ (gen-images.mjs fx).
-const fxCode = (ch) => [...ch].map((c) => c.codePointAt(0).toString(16)).filter((c) => c !== 'fe0f').join('-');
-const art = readFileSync(new URL('js/modes-art.js', ROOT), 'utf8');
-const used = [...art.matchAll(/'(\p{Extended_Pictographic}\uFE0F?)'/gu)].map((m) => m[1]); // tous les emojis entre guillemets du fichier
-const fxBad = [...new Set(used)].filter((ch) => !FX_EMOJI.includes(ch) || !existsSync(new URL(`img/ui/fx/${fxCode(ch)}.webp`, ROOT)));
-check(used.length > 10 && !fxBad.length, `accueil : les ${new Set(used).size} emojis 3D des scènes sont dans img/ui/fx/`, fxBad);
+// Les 3 cases de l'accueil : illustration découpée dans la maquette (gen-images.mjs modes), police Fredoka et sa licence.
+const modeBad = ['local', 'online', 'tv'].filter((m) => { const f = new URL(`img/ui/mode-${m}.webp`, ROOT); return !MODE_CROPS[m] || !existsSync(f) || readFileSync(f).toString('ascii', 8, 12) !== 'WEBP'; });
+check(!modeBad.length && existsSync(new URL('scripts/images/maquette-accueil.webp', ROOT)), 'accueil : maquette et illustration de chacun des 3 modes', modeBad);
+check(['fonts/fredoka-700.woff2', 'fonts/fredoka-600.woff2', 'fonts/OFL.txt'].every((f) => existsSync(new URL(f, ROOT))), 'police Fredoka (titres des modes) et sa licence OFL présentes');
 done();

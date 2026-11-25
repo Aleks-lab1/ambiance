@@ -1,11 +1,14 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = 'f9f375257d';
+const VERSION = '4373975418';
 const CACHE = 'ambiance-' + VERSION;
 // Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
-const IMG_CACHE = 'ambiance-img-c67f5469ac';
+const IMG_CACHE = 'ambiance-img-61049ecc5b';
 const ASSETS = [
   "./",
   "./css/style.css",
+  "./fonts/OFL.txt",
+  "./fonts/fredoka-600.woff2",
+  "./fonts/fredoka-700.woff2",
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -199,25 +202,10 @@ const IMAGES = [
   "./img/jeux/unisson.webp",
   "./img/jeux/vraifaux.webp",
   "./img/jeux/yams.webp",
-  "./img/ui/fx/1f0cf.webp",
-  "./img/ui/fx/1f310.webp",
-  "./img/ui/fx/1f389.webp",
-  "./img/ui/fx/1f3a8.webp",
-  "./img/ui/fx/1f3b2.webp",
-  "./img/ui/fx/1f3c6.webp",
-  "./img/ui/fx/1f44d.webp",
-  "./img/ui/fx/1f451.webp",
-  "./img/ui/fx/1f525.webp",
-  "./img/ui/fx/1f5f3.webp",
-  "./img/ui/fx/1f602.webp",
-  "./img/ui/fx/1f60e.webp",
-  "./img/ui/fx/1f929.webp",
-  "./img/ui/fx/1f973.webp",
-  "./img/ui/fx/1f9e0.webp",
-  "./img/ui/fx/1faf1.webp",
-  "./img/ui/fx/1faf2.webp",
-  "./img/ui/fx/2728.webp",
-  "./img/ui/main.webp"
+  "./img/ui/main.webp",
+  "./img/ui/mode-local.webp",
+  "./img/ui/mode-online.webp",
+  "./img/ui/mode-tv.webp"
 ];
 
 self.addEventListener('install', (event) => {

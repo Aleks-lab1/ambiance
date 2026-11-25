@@ -93,6 +93,11 @@ export const SCENES = {
   outils: [far('⏱️'), e('🎲', 104, 66, 54, -15), e('🧰', 206, 94, 118), e('🪙', 268, 140, 48, 15)],
 };
 
-// Emojis 3D utilisés par les scènes animées des 3 cases de l'accueil (js/modes-art.js) :
-// node scripts/gen-images.mjs fx → copiés dans img/ui/fx/<code>.webp.
-export const FX_EMOJI = ['🫱', '🫲', '🧠', '🎨', '🎲', '🎉', '🤩', '🃏', '✨', '😎', '😂', '🥳', '🌐', '👍', '🗳️', '🔥', '🏆', '👑'];
+// Les 3 cases de l'accueil : illustrations découpées dans la maquette de l'utilisateur
+// (scripts/images/maquette-accueil.webp, 1024 × 1536) → node scripts/gen-images.mjs modes → img/ui/mode-<id>.webp.
+// box : zone découpée (x0, y0, x1, y1) ; erase : bouts de lettres de la maquette à effacer dans cette zone.
+export const MODE_CROPS = {
+  local: { box: [400, 27, 1001, 493], erase: [] },
+  online: { box: [400, 524, 1001, 996], erase: [[398, 686, 438, 764]] },
+  tv: { box: [400, 1028, 1001, 1491], erase: [[398, 1170, 480, 1268], [398, 1300, 432, 1338], [398, 1370, 448, 1452]] },
+};

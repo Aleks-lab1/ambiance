@@ -9,7 +9,7 @@ import { sfx, buzz } from './sfx.js';
 import { THEMES, THEME_CATS, themeById, applyTheme, setTheme, themeSwatch, gameColors } from './themes.js';
 import { COUNTS, countLabel, fitsCount, matchSearch, getCount, setCount, getRecent, pushRecent, pickGame } from './finder.js';
 import { loadHost, clearHost, loadSeat, clearSeat, resumeText } from './online/save.js';
-import { modeScene, parallax } from './modes-art.js';
+import { modeArt, modeIcon, parallax } from './modes-art.js';
 
 const ONLINE_META = {
   id: 'online', name: 'Online', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
@@ -328,9 +328,10 @@ function renderLocal(ctx) {
 
 // ---------------- Accueil : 3 grandes cases Local / Online / TV Mode ----------------
 const MODES = [
-  { id: 'local', name: 'Local', sub: 'Un seul téléphone qu\'on se passe', more: `${LOCAL_GAMES.length} jeux`, colors: ['#ff9a44', '#ff2d87'], go: () => openScreen('local') },
-  { id: 'online', name: 'Online', sub: 'Chacun joue sur son téléphone', more: 'Créer ou rejoindre un salon', colors: ['#2563eb', '#a21caf'], go: () => openScreen('online') },
-  { id: 'tv', name: 'TV Mode', sub: 'La télé affiche, les téléphones jouent', more: 'On scanne le QR code', colors: ['#4c1d95', '#0f766e'], go: () => openScreen('online', { tv: true }) },
+  // sub : les deux lignes du sous-titre, comme sur la maquette.
+  { id: 'local', name: 'Local', sub: ['Un seul téléphone', 'qu\'on se passe'], more: `${LOCAL_GAMES.length} jeux`, go: () => openScreen('local') },
+  { id: 'online', name: 'Online', sub: ['Chacun joue sur', 'son téléphone'], more: 'Créer ou rejoindre un salon', go: () => openScreen('online') },
+  { id: 'tv', name: 'TV Mode', sub: ['La télé affiche,', 'les téléphones jouent'], more: 'On scanne le QR code', go: () => openScreen('online', { tv: true }) },
 ];
 
 function renderHome() {
@@ -374,11 +375,17 @@ function renderHome() {
   }
   renderInstall();
   homeInstallRefresh = renderInstall;
+  // Cases dessinées d'après la maquette (couleurs fixes, assorties à l'illustration) : js/modes-art.js.
   const cards = MODES.map((m) => {
-    const [c1, c2] = gameColors('mode-' + m.id, m.colors);
-    const card = h('button', { class: 'mode-card mode-' + m.id, style: { '--g1': c1, '--g2': c2 }, onclick: () => { sfx.unlock(); sfx.pop(); m.go(); } },
-      modeScene(m.id),
-      h('span', { class: 'mode-txt' }, h('b', { class: 'mode-name' }, m.name), h('span', { class: 'mode-sub' }, m.sub), h('span', { class: 'mode-more' }, m.more)));
+    const card = h('button', { class: 'mode-card mode-' + m.id, onclick: () => { sfx.unlock(); sfx.pop(); m.go(); } },
+      // Couche intérieure : repère des tailles en cqh (un bouton ne peut pas l'être lui-même).
+      h('span', { class: 'mode-in' },
+        modeArt(m.id),
+        h('span', { class: 'mode-txt' },
+          modeIcon(m.id),
+          h('b', { class: 'mode-name' }, m.name),
+          h('span', { class: 'mode-sub' }, m.sub[0], h('br'), m.sub[1]),
+          h('span', { class: 'mode-more' }, h('span', null, m.more), h('span', { class: 'chev', 'aria-hidden': 'true' }, '›')))));
     parallax(card);
     return card;
   });
@@ -485,7 +492,7 @@ async function openSettings() {
     h('button', { class: 'btn btn-soft', onclick: () => { resetSeen(); toast('Les cartes déjà vues pourront revenir'); } }, '🔄 Revoir toutes les cartes'),
     h('p', { class: 'muted tiny' }, 'Ambiance mémorise les cartes déjà tirées pour ne pas les répéter d\'une soirée à l\'autre.'),
     h('p', { class: 'muted tiny center' }, 'Ambiance · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC) ou, à défaut, un relais public avec messages chiffrés.'),
-    h('p', { class: 'muted tiny center' }, 'Illustrations des jeux : Fluent Emoji de Microsoft (licence MIT).'),
+    h('p', { class: 'muted tiny center' }, 'Illustrations des jeux : Fluent Emoji de Microsoft (licence MIT). Police des titres : Fredoka (licence OFL).'),
   );
   await modal({ title: '⚙️ Réglages', content, actions: [{ label: 'Fermer', value: true, primary: true }] });
   if (!current) renderHome();
