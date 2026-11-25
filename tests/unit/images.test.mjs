@@ -7,7 +7,7 @@ const { check, done } = createRequire(import.meta.url)('../lib/check.cjs');
 
 const ROOT = new URL('../../', import.meta.url);
 const { GAMES } = await import('../../js/games/index.js');
-const { SCENES, MODE_SCENES } = await import('../../scripts/images/scenes.mjs');
+const { SCENES, FX_EMOJI } = await import('../../scripts/images/scenes.mjs');
 const ids = GAMES.map((g) => g.id);
 
 const noScene = ids.filter((id) => !SCENES[id]);
@@ -39,7 +39,7 @@ check(!orphans.length, 'aucune image en trop dans img/jeux/', orphans);
 const have = new Set(readdirSync(new URL('scripts/images/emoji/', ROOT)));
 const code = (ch) => [...ch].map((c) => c.codePointAt(0).toString(16)).join('-');
 const missing = [];
-for (const [id, items] of Object.entries({ ...SCENES, ...MODE_SCENES })) {
+for (const [id, items] of Object.entries(SCENES)) {
   for (const it of items) {
     if (it.k !== 'e') continue;
     const c = code(it.ch);
@@ -48,7 +48,10 @@ for (const [id, items] of Object.entries({ ...SCENES, ...MODE_SCENES })) {
 }
 check(!missing.length, 'tous les emojis des compositions sont dans scripts/images/emoji/', missing);
 check(have.has('LICENSE'), 'licence des emojis Fluent (MIT) présente');
-// Les 3 grandes cases de l'accueil (Local, Online, TV Mode) : img/ui/mode-<id>.webp (node scripts/gen-images.mjs modes).
-const modeBad = ['local', 'online', 'tv'].filter((m) => { const f = new URL(`img/ui/mode-${m}.webp`, ROOT); const sz = existsSync(f) && webpSize(readFileSync(f)); return !(MODE_SCENES['mode-' + m] && sz && sz[0] === 540 && sz[1] === 360); });
-check(!modeBad.length, 'accueil : une composition et une image pour chacun des 3 modes', modeBad);
+// Scènes animées des 3 cases de l'accueil (js/modes-art.js) : chaque emoji utilisé est copié dans img/ui/fx/ (gen-images.mjs fx).
+const fxCode = (ch) => [...ch].map((c) => c.codePointAt(0).toString(16)).filter((c) => c !== 'fe0f').join('-');
+const art = readFileSync(new URL('js/modes-art.js', ROOT), 'utf8');
+const used = [...art.matchAll(/'(\p{Extended_Pictographic}\uFE0F?)'/gu)].map((m) => m[1]); // tous les emojis entre guillemets du fichier
+const fxBad = [...new Set(used)].filter((ch) => !FX_EMOJI.includes(ch) || !existsSync(new URL(`img/ui/fx/${fxCode(ch)}.webp`, ROOT)));
+check(used.length > 10 && !fxBad.length, `accueil : les ${new Set(used).size} emojis 3D des scènes sont dans img/ui/fx/`, fxBad);
 done();

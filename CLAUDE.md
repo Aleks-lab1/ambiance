@@ -10,14 +10,14 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | Dossier | Rôle |
 |---|---|
 | `index.html`, `manifest.webmanifest`, `sw.js` | Page unique, manifeste PWA, service worker (**généré**, ne pas modifier à la main) |
-| `js/` | Cœur : `app.js` (accueil 3 modes, écran Local `#/local`, routes `#/…`, réglages), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
+| `js/` | Cœur : `app.js` (accueil 3 modes, écran Local `#/local`, routes `#/…`, réglages), `modes-art.js` (scènes animées des 3 cases de l'accueil), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
 | `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `tv.js` (écran télé), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
 | `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
-| `img/ui/` | Images utilisées pendant les jeux : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow) |
+| `img/ui/` | Images de l'interface : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow), `fx/<code>.webp` (emojis 3D des scènes de l'accueil, copiés par `node scripts/gen-images.mjs fx`) |
 | `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main), `gen-images.mjs` (images des jeux, compositions dans `images/scenes.mjs`, emojis 3D dans `images/emoji/`) |
 | `css/style.css` | Toute la feuille de style |
 | `tests/` | Outils de test, hors appli (voir plus bas et `tests/README.md`) |
@@ -56,8 +56,14 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 
 ## Accueil : 3 modes (Local, Online, TV Mode)
 - L'accueil (`renderHome`, `js/app.js`) : logo + ⚙️, bandeau de reprise, puis **3 grandes cases empilées de haut en bas**
-  (`.mode-card`, illustrations `img/ui/mode-<id>.webp` générées par `node scripts/gen-images.mjs modes`, compositions
-  `MODE_SCENES` dans `scenes.mjs`, illustration à droite car le texte est à gauche) :
+  (`.mode-card`). Chaque case a une **scène animée qui la remplit** (`modeScene(id)` de `js/modes-art.js`, styles « Scènes des
+  modes » dans `style.css`) : Local = un téléphone dessiné en CSS passe d'une main à l'autre (jeux qui défilent sur l'écran,
+  confettis, dé, carte, cotillon) ; Online = 3 téléphones reliés au salon (lignes SVG animées, points qui circulent, ondes, bulles
+  🗳️👍🔥, couronne du chef) ; TV Mode = télé allumée (QR code puis quiz, bonne réponse qui s'allume), rayons, étoiles, téléphones
+  qui envoient des ondes. Reflet qui balaie la case, profondeur à la souris (`parallax`, classes `d1`…`d3`, propriété `translate`).
+  Tailles en **`cqh`** (`.ms` a `container-type: size`) et éléments ancrés à droite : même dessin quelle que soit la largeur ; texte en
+  bas à gauche sur un voile discret. Emojis 3D : liste `FX_EMOJI` de `scenes.mjs` → `node scripts/gen-images.mjs fx` → `img/ui/fx/`.
+  Mouvement réduit (`prefers-reduced-motion`) : scènes figées mais complètes. Accès aux modes :
   - **Local** → `#/local` (`renderLocal`, `LOCAL_META`) : les jeux à un seul téléphone = `LOCAL_GAMES` (`GAMES` sans les 7 jeux
     `onlineOnly: true` : Qui a écrit ça, Dans sa tête, Qui suis-je, Punchlines, Téléphone dessiné, Dico bluff, Menteur).
   - **Online** → `#/online` : prénom, puis « Créer le salon » / « Rejoindre le salon » (code).
@@ -254,6 +260,9 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   message 4 fois (une par serveur). Le code doit le supporter (même demande = même connexion).
 - Après une reprise, un module qui garde quelque chose hors de l'état (WeakMap, variable du module) plante au premier coup s'il
   n'a pas de `restore`.
+- Scènes de l'accueil : `.ms .fx { height: auto }` l'emporte sur une classe seule → donner la taille d'un emoji avec `width`
+  (sinon il s'affiche à 256 px). Les décalages de profondeur utilisent `translate` : ne pas centrer un élément `d1…d3` avec
+  `translate` (utiliser `margin`), et animer avec `transform`.
 - Écran télé : `tv()` est appelé comme méthode (`this.mod.tv(...)`), `this.view` y désigne bien le module. Le mot masqué de
   Je dessine (« _ _ _ ») est public (tous les devineurs le voient) : le test des secrets l'ignore.
 

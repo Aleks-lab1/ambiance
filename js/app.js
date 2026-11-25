@@ -9,6 +9,7 @@ import { sfx, buzz } from './sfx.js';
 import { THEMES, THEME_CATS, themeById, applyTheme, setTheme, themeSwatch, gameColors } from './themes.js';
 import { COUNTS, countLabel, fitsCount, matchSearch, getCount, setCount, getRecent, pushRecent, pickGame } from './finder.js';
 import { loadHost, clearHost, loadSeat, clearSeat, resumeText } from './online/save.js';
+import { modeScene, parallax } from './modes-art.js';
 
 const ONLINE_META = {
   id: 'online', name: 'Online', emoji: '🌐', colors: ['#2a7bff', '#ff4d8d'],
@@ -327,9 +328,9 @@ function renderLocal(ctx) {
 
 // ---------------- Accueil : 3 grandes cases Local / Online / TV Mode ----------------
 const MODES = [
-  { id: 'local', name: 'Local', sub: 'Un seul téléphone qu\'on se passe', more: `${LOCAL_GAMES.length} jeux`, colors: ['#ff8a4c', '#ff4d8d'], go: () => openScreen('local') },
-  { id: 'online', name: 'Online', sub: 'Chacun joue sur son téléphone', more: 'Créer ou rejoindre un salon', colors: ['#2a7bff', '#7c5cff'], go: () => openScreen('online') },
-  { id: 'tv', name: 'TV Mode', sub: 'La télé affiche, les téléphones jouent', more: 'On scanne le QR code', colors: ['#7c3aed', '#14b8a6'], go: () => openScreen('online', { tv: true }) },
+  { id: 'local', name: 'Local', sub: 'Un seul téléphone qu\'on se passe', more: `${LOCAL_GAMES.length} jeux`, colors: ['#ff9a44', '#ff2d87'], go: () => openScreen('local') },
+  { id: 'online', name: 'Online', sub: 'Chacun joue sur son téléphone', more: 'Créer ou rejoindre un salon', colors: ['#2563eb', '#a21caf'], go: () => openScreen('online') },
+  { id: 'tv', name: 'TV Mode', sub: 'La télé affiche, les téléphones jouent', more: 'On scanne le QR code', colors: ['#4c1d95', '#0f766e'], go: () => openScreen('online', { tv: true }) },
 ];
 
 function renderHome() {
@@ -375,11 +376,11 @@ function renderHome() {
   homeInstallRefresh = renderInstall;
   const cards = MODES.map((m) => {
     const [c1, c2] = gameColors('mode-' + m.id, m.colors);
-    const img = h('img', { class: 'mode-art', src: `img/ui/mode-${m.id}.webp`, alt: '', decoding: 'async', draggable: 'false' });
-    img.addEventListener('error', () => img.remove(), { once: true });
-    return h('button', { class: 'mode-card mode-' + m.id, style: { '--g1': c1, '--g2': c2 }, onclick: () => { sfx.unlock(); sfx.pop(); m.go(); } },
-      img,
+    const card = h('button', { class: 'mode-card mode-' + m.id, style: { '--g1': c1, '--g2': c2 }, onclick: () => { sfx.unlock(); sfx.pop(); m.go(); } },
+      modeScene(m.id),
       h('span', { class: 'mode-txt' }, h('b', { class: 'mode-name' }, m.name), h('span', { class: 'mode-sub' }, m.sub), h('span', { class: 'mode-more' }, m.more)));
+    parallax(card);
+    return card;
   });
   const screen = h('div', { class: 'screen home' },
     h('div', { class: 'home-head' },

@@ -1,8 +1,8 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = '32c9dca647';
+const VERSION = 'f9f375257d';
 const CACHE = 'ambiance-' + VERSION;
 // Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
-const IMG_CACHE = 'ambiance-img-4ed0f6ac42';
+const IMG_CACHE = 'ambiance-img-c67f5469ac';
 const ASSETS = [
   "./",
   "./css/style.css",
@@ -96,6 +96,7 @@ const ASSETS = [
   "./js/games/sequence.js",
   "./js/games/soiree.js",
   "./js/games/teamwords.js",
+  "./js/modes-art.js",
   "./js/morpion-vue.js",
   "./js/online/bingo.js",
   "./js/online/bonmot.js",
@@ -198,10 +199,25 @@ const IMAGES = [
   "./img/jeux/unisson.webp",
   "./img/jeux/vraifaux.webp",
   "./img/jeux/yams.webp",
-  "./img/ui/main.webp",
-  "./img/ui/mode-local.webp",
-  "./img/ui/mode-online.webp",
-  "./img/ui/mode-tv.webp"
+  "./img/ui/fx/1f0cf.webp",
+  "./img/ui/fx/1f310.webp",
+  "./img/ui/fx/1f389.webp",
+  "./img/ui/fx/1f3a8.webp",
+  "./img/ui/fx/1f3b2.webp",
+  "./img/ui/fx/1f3c6.webp",
+  "./img/ui/fx/1f44d.webp",
+  "./img/ui/fx/1f451.webp",
+  "./img/ui/fx/1f525.webp",
+  "./img/ui/fx/1f5f3.webp",
+  "./img/ui/fx/1f602.webp",
+  "./img/ui/fx/1f60e.webp",
+  "./img/ui/fx/1f929.webp",
+  "./img/ui/fx/1f973.webp",
+  "./img/ui/fx/1f9e0.webp",
+  "./img/ui/fx/1faf1.webp",
+  "./img/ui/fx/1faf2.webp",
+  "./img/ui/fx/2728.webp",
+  "./img/ui/main.webp"
 ];
 
 self.addEventListener('install', (event) => {

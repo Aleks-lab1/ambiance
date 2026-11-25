@@ -74,8 +74,8 @@ run(async () => {
   await page.reload();
   await page.waitForSelector('.mode-card');
   await W(500);
-  const modes = await page.evaluate(() => [...document.querySelectorAll('img.mode-art')].filter((i) => i.complete && i.naturalWidth > 0).length);
-  check(modes === 3, `hors ligne : les 3 cases de l'accueil illustrées (${modes}/3)`);
+  const modes = await page.evaluate(() => { const l = [...document.querySelectorAll('.mode-card img.fx')]; return { n: l.length, ok: l.filter((i) => i.complete && i.naturalWidth > 0).length, cards: document.querySelectorAll('.mode-card .ms').length }; });
+  check(modes.cards === 3 && modes.n > 10 && modes.ok === modes.n, `hors ligne : les 3 scènes de l'accueil avec leurs images (${modes.ok}/${modes.n})`, modes);
   await page.locator('.mode-card', { hasText: 'Local' }).click();
   await page.waitForSelector('.tile');
   const nLocal = await page.evaluate(async () => (await import('/js/games/index.js')).LOCAL_GAMES.length);

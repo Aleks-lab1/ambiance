@@ -2,7 +2,7 @@
 // La composition de chaque image est dans scripts/images/scenes.mjs.
 //   node scripts/gen-images.mjs              → toutes les images
 //   node scripts/gen-images.mjs quiz roi     → seulement ces jeux
-//   node scripts/gen-images.mjs modes        → les 3 grandes cases de l'accueil (Local, Online, TV Mode) → img/ui/mode-<id>.webp
+//   node scripts/gen-images.mjs fx           → emojis 3D des scènes animées de l'accueil (FX_EMOJI) → img/ui/fx/<code>.webp
 // Les illustrations 3D viennent de Fluent Emoji (Microsoft, licence MIT, voir scripts/images/emoji/LICENSE),
 // copiées dans scripts/images/emoji/ (une image par emoji, nommée d'après ses codes Unicode, ex. 1f3b2.webp).
 // Pour un emoji qui n'y est pas encore, récupérer le paquet complet (3 400 emojis, images seulement) puis relancer
@@ -17,7 +17,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SCENES, MODE_SCENES } from './images/scenes.mjs';
+import { SCENES, FX_EMOJI } from './images/scenes.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -47,12 +47,20 @@ function emojiFile(ch) {
   throw new Error(`Emoji introuvable : ${ch} (${code}). Voir en tête de scripts/gen-images.mjs (EMOJI_DIR).`);
 }
 
-const ALL = { ...SCENES, ...MODE_SCENES };
-const ids = process.argv.slice(2).flatMap((x) => (x === 'modes' ? Object.keys(MODE_SCENES) : [x]));
+// Emojis 3D des scènes animées de l'accueil (js/modes-art.js) : simple copie dans img/ui/fx/<code>.webp.
+if (process.argv[2] === 'fx') {
+  const dir = join(root, 'img/ui/fx');
+  mkdirSync(dir, { recursive: true });
+  for (const ch of FX_EMOJI) copyFileSync(join(SRC, emojiFile(ch)), join(dir, [...ch].map((c) => c.codePointAt(0).toString(16)).filter((c) => c !== 'fe0f').join('-') + '.webp'));
+  console.log(`${FX_EMOJI.length} emojis copiés dans img/ui/fx/`);
+  process.exit(0);
+}
+
+const ALL = SCENES;
+const ids = process.argv.slice(2);
 const todo = ids.length ? ids : Object.keys(SCENES);
 for (const id of todo) if (!ALL[id]) throw new Error('Jeu inconnu dans scenes.mjs : ' + id);
-// Images des 3 modes de l'accueil : dans img/ui/ (les images des jeux restent seules dans img/jeux/).
-const outFor = (id) => (MODE_SCENES[id] ? join(root, 'img/ui') : OUT);
+const outFor = () => OUT;
 
 // Images sources (en data: URL pour les passer au navigateur).
 const files = new Map();

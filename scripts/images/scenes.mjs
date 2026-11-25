@@ -93,10 +93,6 @@ export const SCENES = {
   outils: [far('⏱️'), e('🎲', 104, 66, 54, -15), e('🧰', 206, 94, 118), e('🪙', 268, 140, 48, 15)],
 };
 
-// Les 3 grandes cases de l'accueil (node scripts/gen-images.mjs modes → img/ui/mode-<id>.webp).
-// Le texte de la case est à gauche : garder l'illustration à droite (x > 90).
-export const MODE_SCENES = {
-  'mode-local': [e('🎉', 184, 46, 44, -16), e('📱', 234, 100, 118, -12), e('👆', 286, 160, 44, 10), e('🍿', 186, 160, 40, 6)],
-  'mode-online': [e('📱', 186, 122, 52, -18), e('🌐', 238, 88, 110), e('📱', 288, 146, 48, 16), e('🤝', 284, 34, 36, 8)],
-  'mode-tv': [e('📺', 236, 88, 116), e('📱', 184, 152, 46, -16), e('🎮', 288, 154, 44, 14), e('🍿', 290, 34, 34, 10)],
-};
+// Emojis 3D utilisés par les scènes animées des 3 cases de l'accueil (js/modes-art.js) :
+// node scripts/gen-images.mjs fx → copiés dans img/ui/fx/<code>.webp.
+export const FX_EMOJI = ['🫱', '🫲', '🧠', '🎨', '🎲', '🎉', '🤩', '🃏', '✨', '😎', '😂', '🥳', '🌐', '👍', '🗳️', '🔥', '🏆', '👑'];
