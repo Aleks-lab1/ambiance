@@ -1,5 +1,5 @@
 // Le Bon Mot : tape vite un mot avec les lettres imposées, ou enchaîne les mots sur la dernière lettre.
-import { h, topbar, seg, toggleRow, countdown, timerView, confirmBox } from '../ui.js';
+import { h, topbar, seg, toggleRow, countdown, timerView, confirmBox, setText } from '../ui.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
@@ -57,13 +57,13 @@ export function start(ctx) {
           ],
         h('label', { class: 'field' }, 'Temps par joueur', seg([10, 15, 20, 30].map((v) => ({ value: v, label: v + ' s' })), opts.time, (v) => { opts.time = v; save(); })),
         toggleRow('Vérifier avec le dictionnaire', 'Refuse les mots inconnus (le groupe peut quand même les accepter)', opts.dico, (v) => { opts.dico = v; save(); }));
-      if (dico) { startBtn.disabled = false; startBtn.textContent = opts.mode === 'chaine' ? '🔗 Lancer la chaîne' : '🔠 C\'est parti !'; }
+      if (dico) { startBtn.disabled = false; setText(startBtn, opts.mode === 'chaine' ? '🔗 Lancer la chaîne' : '🔠 C\'est parti !'); }
     }
 
     startBtn.disabled = true;
-    startBtn.textContent = '⏳ Chargement du dictionnaire…';
+    setText(startBtn, '⏳ Chargement du dictionnaire…');
     loadDico().then((d) => { dico = d; if (startBtn.isConnected) render(); }).catch(() => {
-      if (startBtn.isConnected) startBtn.textContent = '😵 Dictionnaire introuvable. Réessaie plus tard.';
+      if (startBtn.isConnected) setText(startBtn, '😵 Dictionnaire introuvable. Réessaie plus tard.');
     });
 
     root.replaceChildren(
@@ -133,7 +133,7 @@ export function start(ctx) {
 
     function updatePills() {
       const p = who();
-      whoPill.textContent = `${solo ? '✍️ À toi !' : '✍️ ' + p} ${hearts(stats.get(p).lives)}`;
+      setText(whoPill, `${solo ? '✍️ À toi !' : '✍️ ' + p} ${hearts(stats.get(p).lives)}`);
       livesBar.replaceChildren(solo ? null : players.map((x) => {
         const l = stats.get(x).lives;
         return h('span', { class: 'bm-life' + (x === p && state !== 'over' ? ' cur' : '') + (l ? '' : ' dead') }, h('b', null, x), ' ', l ? '❤️'.repeat(l) : '💀');

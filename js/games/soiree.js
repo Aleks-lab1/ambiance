@@ -1,5 +1,5 @@
 // Versions « un seul téléphone » : Le Curseur, Dans l'ordre !, Chifoumi (contre le téléphone).
-import { h, topbar, pick, rand } from '../ui.js';
+import { h, topbar, pick, rand, setText } from '../ui.js';
 import { get, set, sip } from '../store.js';
 import { onlineBanner } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -71,7 +71,7 @@ export const ordre = {
         hint.textContent = '';
         buzz(30);
         ok === 4 ? sfx.fanfare() : ok ? sfx.ok() : sfx.bad();
-        title.textContent = ok === 4 ? '🎉 Parfait !' : `${ok}/4 bien placé${ok > 1 ? 's' : ''}`;
+        setText(title, ok === 4 ? '🎉 Parfait !' : `${ok}/4 bien placé${ok > 1 ? 's' : ''}`);
         // Les cartes mal placées glissent ensuite à leur vraie place, et les dates apparaissent.
         setTimeout(() => {
           if (!root.isConnected) return;

@@ -1,5 +1,5 @@
 // La Séquence : retenir une suite de couleurs qui s'allonge à chaque tour.
-import { h, topbar, randInt } from '../ui.js';
+import { h, topbar, randInt, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
@@ -64,7 +64,7 @@ export function start(ctx) {
       input = false;
       status.textContent = players.length ? `Au tour de ${who()}` : 'Prêt(e) ?';
       sub.textContent = `Suite de ${len()}. Regarde bien…`;
-      startBtn.textContent = '👀 Je suis prêt(e)';
+      setText(startBtn, '👀 Je suis prêt(e)');
       startBtn.classList.remove('hidden');
       startBtn.onclick = showSeq;
     }
@@ -115,8 +115,8 @@ export function start(ctx) {
         const rec = get('seq-record', 0);
         if (seq.length > rec) set('seq-record', seq.length);
         sfx.ok();
-        status.textContent = '✅ Parfait !';
-        sub.textContent = `Suite de ${seq.length} réussie${seq.length > rec ? ' — nouveau record ! 🏅' : ''}`;
+        setText(status, '✅ Parfait !');
+        setText(sub, `Suite de ${seq.length} réussie${seq.length > rec ? ' — nouveau record ! 🏅' : ''}`);
         seq.push(randInt(0, 3));
         turn++;
         later(() => countdownThen(showSeq), 1100);
@@ -128,11 +128,11 @@ export function start(ctx) {
       sfx.bad(); buzz([200, 80, 200]);
       grid.classList.add('shake');
       later(() => grid.classList.remove('shake'), 500);
-      status.textContent = '❌ Raté !';
+      setText(status, '❌ Raté !');
       sub.textContent = `La suite faisait ${len()}. ${players.length ? who() + ' prend ' + sip(1) + '.' : ''}`;
       // Montre la bonne réponse
       seq.forEach((c, k) => later(() => light(c, 200), 700 + k * 260));
-      startBtn.textContent = '🔁 On repart de zéro';
+      setText(startBtn, '🔁 On repart de zéro');
       startBtn.classList.remove('hidden');
       startBtn.onclick = () => { clear(); seq = [randInt(0, 3)]; turn++; countdownThen(showSeq); };
     }

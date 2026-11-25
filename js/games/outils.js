@@ -1,5 +1,5 @@
 // Boîte à outils : dés, pile ou face, équipes, chrono, compteur de points.
-import { h, topbar, seg, shuffle, randInt, countdown, timerView, stepper, toast } from '../ui.js';
+import { h, topbar, seg, shuffle, randInt, countdown, timerView, stepper, toast, setText } from '../ui.js';
 import { get, set, getPlayers } from '../store.js';
 import { editPlayers } from '../players.js';
 import { TEAM_COLORS, dieFace, tumble, onlineBanner } from '../common.js';
@@ -89,16 +89,16 @@ export function start(ctx) {
     const big = h('div', { class: 'letter-big', style: { fontSize: '96px', fontVariantNumeric: 'tabular-nums' } }, fmt(secs * 1000));
     const startBtn = h('button', { class: 'btn btn-primary btn-big grow' }, '▶ Démarrer');
     function fmt(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
-    function reset() { t && t.stop(); t = null; big.textContent = fmt(secs * 1000); tv.set(secs * 1000, secs * 1000); startBtn.textContent = '▶ Démarrer'; }
+    function reset() { t && t.stop(); t = null; setText(big, fmt(secs * 1000)); tv.set(secs * 1000, secs * 1000); setText(startBtn, '▶ Démarrer'); }
     startBtn.onclick = () => {
       if (!t) {
         t = countdown({
           seconds: secs,
           onTick: (l, s, ch) => { big.textContent = fmt(l); tv.set(l, secs * 1000); if (ch && s <= 5 && s > 0) sfx.tick(); },
-          onEnd: () => { sfx.fanfare(); buzz([300, 100, 300, 100, 300]); startBtn.textContent = '▶ Démarrer'; t = null; },
+          onEnd: () => { sfx.fanfare(); buzz([300, 100, 300, 100, 300]); setText(startBtn, '▶ Démarrer'); t = null; },
         });
-        startBtn.textContent = '⏸ Pause';
-      } else if (t.paused) { t.resume(); startBtn.textContent = '⏸ Pause'; } else { t.pause(); startBtn.textContent = '▶ Reprendre'; }
+        setText(startBtn, '⏸ Pause');
+      } else if (t.paused) { t.resume(); setText(startBtn, '⏸ Pause'); } else { t.pause(); setText(startBtn, '▶ Reprendre'); }
     };
     body.append(
       seg([30, 60, 120, 180, 300, 600].map((v) => ({ value: v, label: v < 60 ? v + 's' : v / 60 + 'min' })), secs, (v) => { secs = v; set('chrono-s', v); reset(); }),

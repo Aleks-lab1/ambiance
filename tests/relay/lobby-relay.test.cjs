@@ -25,7 +25,7 @@ run(async () => {
   await c1.waitForSelector('.game-pick', { timeout: 15000 });
   check(/Vote pour ton jeu/i.test(await c1.locator('body').innerText()), 'Bob (joueur) : « Vote pour ton jeu »');
   await c1.locator('.pick-tile', { hasText: 'Bataille navale' }).click();
-  await host.waitForFunction(() => /🗳️ 1/.test([...document.querySelectorAll('.pick-tile')].find((t) => /Bataille navale/.test(t.innerText))?.innerText || ''), null, { timeout: 10000 })
+  await host.waitForFunction(() => ([...document.querySelectorAll('.pick-tile')].find((t) => /Bataille navale/.test(t.innerText))?.querySelector('.vote-badge')?.innerText || '').trim() === '1', null, { timeout: 10000 })
     .then(() => check(true, 'l\'hôte voit le vote de Bob (« 🗳️ 1 » sur Bataille navale)'), () => check(false, 'l\'hôte voit le vote de Bob'));
   check(/Bataille navale · 1/.test(await host.locator('.vote-strip').innerText().catch(() => '')), 'hôte : « Demandés : Bataille navale · 1 »');
   const picks = await host.locator('.game-pick button').count();

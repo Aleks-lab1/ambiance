@@ -1,5 +1,5 @@
 // Point d'entrée : accueil, navigation, réglages, installation PWA.
-import { h, mount, modal, toast, toggleRow, confirmBox, keepAwake } from './ui.js';
+import { h, mount, modal, toast, toggleRow, confirmBox, keepAwake, setText } from './ui.js';
 import { settings, saveSettings, get, set, resetSeen, getPlayers } from './store.js';
 import { GAMES, LOCAL_GAMES, FILTERS, gameById } from './games/index.js';
 import { editPlayers } from './players.js';
@@ -28,7 +28,7 @@ function favLabel(g, on) { return on ? `Retirer ${g.name} des favoris` : `Ajoute
 /** Bascule le favori d'un jeu et met à jour le bouton étoile. */
 function flipFav(g, btn) {
   const on = toggleFav(g.id);
-  btn.textContent = on ? '★' : '☆';
+  setText(btn, on ? '★' : '☆');
   btn.classList.toggle('on', on);
   btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   btn.setAttribute('aria-label', favLabel(g, on));
@@ -459,7 +459,7 @@ async function openThemes() {
   function render() {
     const cur = settings.theme || 'ambiance';
     wrap.replaceChildren(
-      toggleRow('✨ Animations et particules', 'Fonds qui bougent, flocons, emojis qui tombent… (désactive si le téléphone rame)', settings.themeFx !== false, (v) => { settings.themeFx = v; saveSettings(); applyTheme(); }),
+      toggleRow('✨ Animations et particules', 'Fonds qui bougent, flocons, petites icônes qui tombent… (désactive si le téléphone rame)', settings.themeFx !== false, (v) => { settings.themeFx = v; saveSettings(); applyTheme(); }),
       h('button', { class: 'btn btn-soft', onclick: () => { const pool = THEMES.filter((t) => t.id !== cur); setTheme(pool[Math.floor(Math.random() * pool.length)].id); sfx.pop(); render(); } }, '🎲 Thème au hasard'),
       THEME_CATS.map((c) => [
         h('div', { class: 'theme-cat' }, c.label),
@@ -492,7 +492,7 @@ async function openSettings() {
     h('button', { class: 'btn btn-soft', onclick: () => { resetSeen(); toast('Les cartes déjà vues pourront revenir'); } }, '🔄 Revoir toutes les cartes'),
     h('p', { class: 'muted tiny' }, 'Ambiance mémorise les cartes déjà tirées pour ne pas les répéter d\'une soirée à l\'autre.'),
     h('p', { class: 'muted tiny center' }, 'Ambiance · fonctionne hors ligne une fois installé · le jeu en ligne utilise une connexion directe entre téléphones (WebRTC) ou, à défaut, un relais public avec messages chiffrés.'),
-    h('p', { class: 'muted tiny center' }, 'Illustrations des jeux : Fluent Emoji de Microsoft (licence MIT). Police des titres : Fredoka (licence OFL).'),
+    h('p', { class: 'muted tiny center' }, 'Illustrations des jeux : game-icons.net (Lorc, Delapouite et leurs contributeurs, licence CC BY 3.0). Icônes : Phosphor Icons (licence MIT). Main du 4 en ligne : Fluent Emoji de Microsoft (licence MIT). Police des titres : Fredoka (licence OFL).'),
   );
   await modal({ title: '⚙️ Réglages', content, actions: [{ label: 'Fermer', value: true, primary: true }] });
   if (!current) renderHome();

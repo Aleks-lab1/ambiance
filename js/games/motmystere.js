@@ -1,5 +1,5 @@
 // Le Mot mystère : trouve le mot en 6 essais. Vert = bien placée, jaune = mal placée, gris = absente.
-import { h, topbar, seg, pick, toast } from '../ui.js';
+import { h, topbar, seg, pick, toast, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, sip, getPlayers } from '../store.js';
 import { playersPanel } from '../players.js';
@@ -43,8 +43,8 @@ export function start(ctx) {
       h('p', { class: 'muted small' }, 'Avec une liste de joueurs, chacun propose un mot à son tour : celui qui trouve gagne !'),
       h('p', { class: 'center muted' }, `🏅 Mots trouvés : ${get('mm-wins', 0)} · série : ${get('mm-streak', 0)}`),
       h('div', { class: 'grow' }), btn);
-    loadDico().then((d) => { dico = d; btn.disabled = false; btn.textContent = '🟩 Jouer'; btn.onclick = play; })
-      .catch(() => { btn.textContent = '😵 Impossible de charger les mots'; });
+    loadDico().then((d) => { dico = d; btn.disabled = false; setText(btn, '🟩 Jouer'); btn.onclick = play; })
+      .catch(() => { setText(btn, '😵 Impossible de charger les mots'); });
   }
 
   function newTarget() {

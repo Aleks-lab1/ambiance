@@ -214,14 +214,16 @@ js/bonmot-core.js    dictionnaire et tirage des lettres du Bon Mot
 js/canvas.js         planche à dessin synchronisable
 js/turn.js           moteur des jeux en équipes
 js/data/*.js         tout le contenu
+js/icons.js          icônes de l'interface à la place des emojis (dessins dans js/icons-data.js, généré)
 img/jeux/            image de chaque jeu pour l'accueil (générée par scripts/gen-images.mjs)
 img/ui/              images utilisées pendant les jeux (main du 4 en ligne, emoji Fluent 3D)
 scripts/             gen-sw.mjs (service worker), gen-mots.mjs (dictionnaire), gen-images.mjs (images des jeux,
-                     compositions dans scripts/images/scenes.mjs, emojis 3D dans scripts/images/emoji/)
+                     compositions dans scripts/images/scenes.mjs, silhouettes dans scripts/images/icons/),
+                     gen-icons.mjs (icônes de l'interface, table emoji → icône dans scripts/icons-map.mjs)
 vendor/              PeerJS 1.5.4 et qrcode-generator 1.4.4 (licences MIT)
 ```
 
-Les images des jeux sont composées à partir des emojis 3D [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) de Microsoft (licence MIT, voir `scripts/images/emoji/LICENSE`).
+Les images des jeux (style « boîte de jeu » : silhouettes blanches sur le dégradé de chaque jeu) sont composées à partir des dessins de [game-icons.net](https://game-icons.net) (Lorc, Delapouite et contributeurs, licence CC BY 3.0, voir `scripts/images/icons/CREDITS.md`). Les icônes de l'interface viennent de [Phosphor Icons](https://phosphoricons.com) (licence MIT) : l'interface n'affiche plus d'emojis, sauf quand ils font partie d'un jeu (Émojis mystères, cartes du Memory, mains du Chifoumi). La main du 4 en ligne vient de [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) de Microsoft (licence MIT, `scripts/images/emoji/LICENSE`).
 
 ## Ajouter un jeu
 

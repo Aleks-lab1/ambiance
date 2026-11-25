@@ -1,5 +1,5 @@
 // Jeux en ligne par équipes (Mots interdits, Mime express, Fredonne !, Dis-le comme…, Le Chapeau) et Loup-garou (rôles secrets).
-import { h, uid, shuffle, seg, chip } from '../ui.js';
+import { h, uid, shuffle, seg, chip, setText } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { activePids, isOn, timerPill, actBtn, drawNew, TV_PID, tvTimer, tvSay } from './kit.js';
@@ -172,7 +172,7 @@ function teamTv(root, g, { what, manche = null }) {
       if (ended) {
         const w = v.score[0] === v.score[1] ? -1 : v.score[0] > v.score[1] ? 0 : 1;
         say.set(w < 0 ? '🤝 Égalité !' : `🏆 ${TEAMS[w].emo} ${TEAMS[w].name} gagne !`);
-        big.textContent = '🏆';
+        setText(big, '🏆');
         if (lastKey !== 'end') sfx.fanfare();
         lastKey = 'end';
         return;
@@ -394,10 +394,10 @@ export const loupOnline = {
       update(r, v) {
         const day = v.step >= 4;
         wrap.classList.toggle('day', day);
-        dayN.textContent = `🎙️ Meneur : ${g.nameOf(r.host)} · ${day ? 'Jour' : 'Nuit'} ${v.day}`;
+        setText(dayN, `🎙️ Meneur : ${g.nameOf(r.host)} · ${day ? 'Jour' : 'Nuit'} ${v.day}`);
         const stepKey = v.gid + ':' + v.day + ':' + v.step + ':' + v.over;
         if (stepKey !== lastStep) {
-          script.textContent = v.over ? '🏁 La partie est finie\u00a0: voici tous les rôles\u00a0!' : NIGHT[v.step];
+          setText(script, v.over ? '🏁 La partie est finie\u00a0: voici tous les rôles\u00a0!' : NIGHT[v.step]);
           script.style.animation = 'none'; void script.offsetWidth; script.style.animation = '';
           if (lastStep) (day ? sfx.go : sfx.swoosh)();
           lastStep = stepKey;
@@ -409,7 +409,7 @@ export const loupOnline = {
           win = aliveW === 0 ? '🎉 Le village a gagné !' : aliveW >= aliveAll - aliveW ? '🐺 Les loups-garous ont gagné !' : null;
         }
         banner.classList.toggle('hidden', !win);
-        banner.textContent = win || '';
+        setText(banner, win || '');
         village.replaceChildren(...v.players.map((p) => {
           const R = v.roles[p] ? ROLES[v.roles[p]] : null;
           return h('div', { class: 'tv-villager' + (v.alive[p] ? '' : ' dead') },

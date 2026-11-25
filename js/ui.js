@@ -1,21 +1,45 @@
 // Petits utilitaires d'interface, sans framework.
+import { hasEmoji, emojiNodes, KEEP, KEEP_CLASS } from './icons.js';
 
 // Garde-fou : append()/replaceChildren() natifs affichent « null », « false » ou « [object …] » en texte
 // quand on leur passe une valeur vide ou un tableau. Dans toute l'appli, une valeur vide veut dire
 // « rien à afficher » et un tableau est déplié, exactement comme avec h().
+// Les emojis des textes de l'interface y sont remplacés par des icônes (js/icons.js), sauf dans les
+// conteneurs où ils font partie du jeu (KEEP).
 if (typeof Element !== 'undefined' && !Element.prototype.__ambianceSafe) {
   const keep = (k) => k !== null && k !== undefined && k !== false && k !== true;
   for (const name of ['append', 'replaceChildren', 'prepend']) {
     const native = Element.prototype[name];
-    Element.prototype[name] = function (...kids) { return native.apply(this, kids.flat(Infinity).filter(keep)); };
+    Element.prototype[name] = function (...kids) {
+      const list = kids.flat(Infinity).filter(keep);
+      if (list.some((k) => typeof k === 'string' && hasEmoji(k)) && !this.closest(KEEP)) {
+        return native.apply(this, list.flatMap((k) => (typeof k === 'string' && hasEmoji(k) ? emojiNodes(k) : [k])));
+      }
+      return native.apply(this, list);
+    };
   }
   Element.prototype.__ambianceSafe = true;
+}
+
+/** Remplace les emojis de l'interface par des icônes dans un contenu déjà en place (HTML des règles…). */
+export function iconify(root) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const todo = [];
+  for (let n; (n = w.nextNode());) if (hasEmoji(n.data) && !(n.parentElement && n.parentElement.closest(KEEP))) todo.push(n);
+  for (const n of todo) n.replaceWith(...emojiNodes(n.data));
+}
+
+/** Remplace le texte d'un élément (comme textContent), emojis de l'interface compris (→ icônes). */
+export function setText(el, s) {
+  s = s == null ? '' : String(s);
+  if (hasEmoji(s) && !el.closest(KEEP)) el.replaceChildren(...emojiNodes(s));
+  else el.textContent = s;
 }
 
 /** Crée un élément DOM : h('div', {class:'x', onclick}, enfants...) */
 export function h(tag, props, ...kids) {
   const el = document.createElement(tag);
-  appendKids(el, kids);
+  appendKids(el, kids, (props && typeof props.class === 'string' && KEEP_CLASS.test(props.class)) || tag === 'option' || tag === 'textarea');
   if (props) {
     for (const [k, v] of Object.entries(props)) {
       if (v == null || v === false) continue;
@@ -25,7 +49,7 @@ export function h(tag, props, ...kids) {
           if (sk.startsWith('--')) el.style.setProperty(sk, sv); else el.style[sk] = sv;
         }
       } else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
-      else if (k === 'html') el.innerHTML = v;
+      else if (k === 'html') { el.innerHTML = v; iconify(el); }
       else if (k === 'value' || k === 'checked' || k === 'disabled' || k === 'selected') el[k] = v;
       else el.setAttribute(k, v === true ? '' : v);
     }
@@ -33,10 +57,12 @@ export function h(tag, props, ...kids) {
   return el;
 }
 
-function appendKids(el, kids) {
+function appendKids(el, kids, keepEmoji = false) {
   for (const k of kids.flat(Infinity)) {
     if (k == null || k === false || k === true) continue;
-    el.append(k instanceof Node ? k : String(k));
+    if (k instanceof Node) el.append(k);
+    else if (!keepEmoji && hasEmoji(String(k))) el.append(...emojiNodes(String(k)));
+    else el.append(document.createTextNode(String(k)));
   }
 }
 

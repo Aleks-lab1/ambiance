@@ -1,6 +1,6 @@
 // À l'unisson (en ligne) : un thème s'affiche, chacun écrit UNE réponse en secret.
 // On marque autant de points que de joueurs qui ont écrit la même chose. Les « moutons noirs » sont seuls.
-import { h, uid, seg, levenshtein } from '../ui.js';
+import { h, uid, seg, levenshtein, setText } from '../ui.js';
 import { drawNew, TV_PID, tvWho, tvTimer, tvStage, tvSay } from './kit.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
@@ -148,7 +148,7 @@ const unisson = {
     const iv = setInterval(() => {
       if (!v || v.phase === 'end') { timer.textContent = ''; return; }
       const sec = Math.ceil(Math.max(0, v.deadline - g.now()) / 1000);
-      timer.textContent = (v.phase === 'write' ? '⏱ ' : '⏭ ') + sec;
+      setText(timer, (v.phase === 'write' ? '⏱ ' : '⏭ ') + sec);
       timer.classList.toggle('low', v.phase === 'write' && sec <= 5);
       if (v.phase === 'write' && sec <= 3 && sec > 0 && sec !== lastTick) { lastTick = sec; sfx.tick(); }
     }, 200);
@@ -186,7 +186,7 @@ const unisson = {
             body.dataset.k = k + ':form';
           }
           const total = r.players.filter((p) => p.on).length;
-          status.textContent = `✍️ ${v.answered.length}/${total} ont répondu`;
+          setText(status, `✍️ ${v.answered.length}/${total} ont répondu`);
         } else {
           body.dataset.k = k;
           const lone = v.groups.length > 1 && v.groups[0].pids.length > 1;

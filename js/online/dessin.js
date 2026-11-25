@@ -1,5 +1,5 @@
 // « Je dessine, tu devines » en ligne.
-import { h, pick, norm, levenshtein, seg, toggleRow } from '../ui.js';
+import { h, pick, norm, levenshtein, seg, toggleRow, setText } from '../ui.js';
 import { drawNew, TV_PID, tvTimer, tvEnd } from './kit.js';
 import { createBoard, createTools, applyToLog, validOp } from '../canvas.js';
 import { podium } from '../common.js';
@@ -327,10 +327,10 @@ export default {
       if (v.phase === 'draw' || v.phase === 'choose') {
         const left = Math.max(0, v.deadline - g.now());
         const sec = Math.ceil(left / 1000);
-        timerPill.textContent = '⏱ ' + sec;
+        setText(timerPill, '⏱ ' + sec);
         timerPill.classList.toggle('low', v.phase === 'draw' && sec <= 10);
         if (v.phase === 'draw' && sec <= 5 && sec > 0 && sec !== lastTick) { lastTick = sec; sfx.tick(); }
-      } else timerPill.textContent = '⏱ –';
+      } else setText(timerPill, '⏱ –');
     }
 
     function renderChat() {

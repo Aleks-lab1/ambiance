@@ -1,5 +1,5 @@
 // Jeux d'ambiance en ligne : Qui a écrit ça ?, Le Curseur, Dans sa tête, Dans l'ordre !, Qui suis-je ?, Chifoumi.
-import { h, uid, shuffle, seg, pick, rand } from '../ui.js';
+import { h, uid, shuffle, seg, pick, rand, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { levelPicker } from '../common.js';
 import { sip } from '../store.js';
@@ -96,7 +96,7 @@ export const quiaecritOnline = {
         const statusText = v.phase === 'write' ? `✍️ ${v.nAns}/${n} réponse${v.nAns > 1 ? 's' : ''}`
           : `Réponse ${v.idx + 1}/${v.total} · Qui a écrit ça ? · 🗳️ ${v.nVotes} vote${v.nVotes > 1 ? 's' : ''}`;
         // Même étape : seul le compteur change (la carte et la réponse ne rejouent pas leur animation).
-        if (key === lastKey) { const st = main.querySelector('.tv-status'); if (st) st.textContent = statusText; return; }
+        if (key === lastKey) { const st = main.querySelector('.tv-status'); if (st) setText(st, statusText); return; }
         const bar = h('div', { class: 'tv-bar' }, h('span', { class: 'pill' }, `🕵️‍♀️ Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), tm.el);
         if (v.phase === 'write') {
           main.replaceChildren(bar, h('div', { class: 'tv-card', style }, h('div', { class: 'kicker' }, 'Répondez en secret sur vos téléphones…'), h('div', { class: 'q' }, v.prompt)),
@@ -132,7 +132,7 @@ export const quiaecritOnline = {
         if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}:${v.idx}`;
         tp.set(v.phase === 'write' || v.phase === 'guess' ? v.deadline : 0);
-        if (v.phase === 'write' && key === lastKey && !v.mine && input) { main.querySelector('.status-line').textContent = `✍️ ${v.nAns} réponse${v.nAns > 1 ? 's' : ''}`; return; }
+        if (v.phase === 'write' && key === lastKey && !v.mine && input) { setText(main.querySelector('.status-line'), `✍️ ${v.nAns} réponse${v.nAns > 1 ? 's' : ''}`); return; }
         const parts = [top([pill(`🕵️‍♀️ ${v.round}/${v.rounds}`), tp.el]), card(colors, v.phase === 'write' ? 'Réponds en secret…' : 'La question était…', v.prompt)];
         input = null;
         if (v.phase === 'write') {
@@ -287,7 +287,7 @@ export const curseurOnline = {
         if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         const me = v.giver === g.me;
-        if (key === lastKey && v.phase === 'guess' && !me) { const st = main.querySelector('.status-line'); if (st) st.textContent = `🎚️ ${v.nG} curseur${v.nG > 1 ? 's' : ''} posé${v.nG > 1 ? 's' : ''}`; if (v.mine == null) return; }
+        if (key === lastKey && v.phase === 'guess' && !me) { const st = main.querySelector('.status-line'); if (st) setText(st, `🎚️ ${v.nG} curseur${v.nG > 1 ? 's' : ''} posé${v.nG > 1 ? 's' : ''}`); if (v.mine == null) return; }
         if (key === lastKey && v.phase === 'clue' && me) return;
         const parts = [top([pill(`🎚️ ${v.round}/${v.rounds}`), pill(`💡 ${name(g, v.giver)}`)])];
         if (v.phase === 'clue') {

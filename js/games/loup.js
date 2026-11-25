@@ -1,5 +1,5 @@
 // Loup-garou : distribution des rôles + assistant du meneur.
-import { h, topbar, shuffle, confirmBox, stepper, toggleRow, countdown, timerView, seg } from '../ui.js';
+import { h, topbar, shuffle, confirmBox, stepper, toggleRow, countdown, timerView, seg, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
@@ -106,7 +106,7 @@ export function start(ctx) {
   function stepScreen(game, { num, title, say, body, top }) {
     const rolesVisible = { v: false };
     const rolesBox = h('div', { class: 'hidden' }, h('div', { class: 'scoreboard' }, game.players.map((p) => h('div', { class: 'score-row', style: { opacity: p.alive ? 1 : 0.4 } }, h('span', null, ROLES[p.role].emoji), h('span', { class: 'n' }, p.name + (p.alive ? '' : ' ✝')), h('span', { class: 'muted small' }, ROLES[p.role].name)))));
-    const toggle = h('button', { class: 'btn btn-ghost btn-sm', onclick: () => { rolesVisible.v = !rolesVisible.v; rolesBox.classList.toggle('hidden', !rolesVisible.v); toggle.textContent = rolesVisible.v ? '🙈 Cacher les rôles' : '👁 Voir les rôles (meneur)'; } }, '👁 Voir les rôles (meneur)');
+    const toggle = h('button', { class: 'btn btn-ghost btn-sm', onclick: () => { rolesVisible.v = !rolesVisible.v; rolesBox.classList.toggle('hidden', !rolesVisible.v); setText(toggle, rolesVisible.v ? '🙈 Cacher les rôles' : '👁 Voir les rôles (meneur)'); } }, '👁 Voir les rôles (meneur)');
     root.replaceChildren(top,
       h('div', { class: 'step-card' }, h('div', { class: 'step-num' }, num), h('h3', null, title), say ? h('p', { class: 'say' }, `« ${say} »`) : null),
       body,

@@ -21,7 +21,7 @@ const GAMES = [
   }],
   ['/js/online/vote.js', 'voteQui', {}, 4, async (t, see) => {
     for (const [p, v] of [['A', 'B'], ['B', 'C'], ['C', 'B'], ['D', 'B']]) await t.act(p, { type: 'vote', v });
-    await see('désigné', /👉 Bob/, '.tv-barrow.win');
+    await see('désigné', /Bob/, '.tv-barrow.win');
   }],
   ['/js/online/vote.js', 'voteOp', {}, 3, async (t, see) => { await see('vote', /D'accord/); }],
   ['/js/online/vote.js', 'voteJamais', {}, 3, async (t, see) => {

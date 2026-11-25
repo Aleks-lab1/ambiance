@@ -1,5 +1,5 @@
 // Jeux en ligne de lettres et de plateau : Petit bac, Mot mystère (course), Le Pendu, Morpion & 4 en ligne.
-import { h, uid, shuffle, seg, pick, norm, toast } from '../ui.js';
+import { h, uid, shuffle, seg, pick, norm, toast, setText } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import { sip } from '../store.js';
 import { activePids, addScore, playerOf, nextOn, timerPill, endScreen, actBtn, TV_PID, tvTurn, tvSplit, tvSay, tvStage, tvTimer } from './kit.js';
@@ -409,8 +409,8 @@ export const morpionOnline = {
       const sym = (p) => (v.quatre ? (p ? '🟡' : '🔴') : (p ? '⭕' : '❌'));
       const pScore = (pid) => (playerOf(r, pid) || {}).score || 0;
       head.replaceChildren(h('b', null, `${sym(0)} ${name(g, v.duo[0])} (${pScore(v.duo[0])})`), '  contre  ', h('b', null, `${sym(1)} ${name(g, v.duo[1])} (${pScore(v.duo[1])})`));
-      status.textContent = v.phase === 'play' ? (myTurn ? `${sym(v.turn)} À toi de jouer !` : `${sym(v.turn)} À ${g.nameOf(v.duo[v.turn])} de jouer`)
-        : v.win.p < 0 ? '🤝 Match nul !' : v.duo[v.win.p] === g.me ? '🏆 Tu as gagné !' : `🏆 ${g.nameOf(v.duo[v.win.p])} gagne !`;
+      setText(status, v.phase === 'play' ? (myTurn ? `${sym(v.turn)} À toi de jouer !` : `${sym(v.turn)} À ${g.nameOf(v.duo[v.turn])} de jouer`)
+        : v.win.p < 0 ? '🤝 Match nul !' : v.duo[v.win.p] === g.me ? '🏆 Tu as gagné !' : `🏆 ${g.nameOf(v.duo[v.win.p])} gagne !`);
       foot.replaceChildren(
         v.queue.length ? h('p', { class: 'center muted small' }, `⏳ Prochains challengers : ${v.queue.map((p) => name(g, p)).join(', ')}`) : null,
         v.phase === 'over' && v.win.p >= 0 ? h('p', { class: 'center' }, v.duo[1 - v.win.p] === g.me ? `Tu prends ${sip(1)}.` : `${g.nameOf(v.duo[1 - v.win.p])} prend ${sip(1)}.`) : null,

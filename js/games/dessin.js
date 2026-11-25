@@ -1,5 +1,5 @@
 // Je dessine, tu devines : version un seul écran (+ accès au mode en ligne).
-import { h, topbar, seg, confirmBox, shuffle, countdown, timerView } from '../ui.js';
+import { h, topbar, seg, confirmBox, shuffle, countdown, timerView, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { get, set } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
@@ -80,7 +80,7 @@ export function start(ctx) {
       const tools = createTools(board);
       const tv = timerView(opts.time);
       const wordBtn = h('button', { class: 'btn btn-soft btn-sm' }, '👁 Maintenir pour voir le mot');
-      const showWord = (on) => { wordBtn.textContent = on ? word : '👁 Maintenir pour voir le mot'; };
+      const showWord = (on) => { setText(wordBtn, on ? word : '👁 Maintenir pour voir le mot'); };
       wordBtn.addEventListener('pointerdown', () => showWord(true));
       ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => wordBtn.addEventListener(ev, () => showWord(false)));
       const found = h('button', { class: 'btn btn-ok btn-big grow', onclick: pickFinder }, '✅ Trouvé !');

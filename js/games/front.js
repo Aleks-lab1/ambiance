@@ -1,5 +1,5 @@
 // Sur le front : téléphone sur le front, on incline pour valider ou passer.
-import { h, topbar, seg, shuffle, countdown } from '../ui.js';
+import { h, topbar, seg, shuffle, countdown, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, makeDeck } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
@@ -107,7 +107,7 @@ export function start(ctx) {
       results.push({ w: word, r });
       state = 'cooldown';
       el.classList.add(r === 'ok' ? 'flash-ok' : 'flash-pass');
-      wordEl.textContent = r === 'ok' ? '✅ Trouvé !' : '⏭ Passé';
+      setText(wordEl, r === 'ok' ? '✅ Trouvé !' : '⏭ Passé');
       r === 'ok' ? sfx.ok() : sfx.swoosh();
       buzz(r === 'ok' ? 40 : [20, 30, 20]);
       setTimeout(() => { if (state === 'cooldown') { state = 'play'; nextWord(); } }, 700);

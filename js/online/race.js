@@ -1,5 +1,5 @@
 // Jeux de rapidité en ligne : Quiz (QCM), Émojis mystères & Anagrammes (réponse libre), À vue de nez (estimation).
-import { h, uid, seg } from '../ui.js';
+import { h, uid, seg, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
 import { TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
@@ -233,11 +233,11 @@ function makeRace(mode) {
         if (!v) return;
         if (v.phase === 'q') {
           const sec = Math.ceil(Math.max(0, v.deadline - g.now()) / 1000);
-          timer.textContent = '⏱ ' + sec;
+          setText(timer, '⏱ ' + sec);
           timer.classList.toggle('low', sec <= 5);
           if (sec <= 5 && sec > 0 && sec !== lastTick) { lastTick = sec; sfx.tick(); }
         } else if (v.phase === 'reveal') {
-          timer.textContent = '⏭ ' + Math.ceil(Math.max(0, v.revealUntil - g.now()) / 1000);
+          setText(timer, '⏭ ' + Math.ceil(Math.max(0, v.revealUntil - g.now()) / 1000));
           timer.classList.remove('low');
         } else timer.textContent = '';
       }
@@ -317,7 +317,7 @@ function makeRace(mode) {
             answerSlot.replaceChildren(...answerUI().filter(Boolean));
             if (keepFocus && input) { input.value = typed; input.focus(); }
             const total = r.players.filter((p) => p.on).length;
-            status.textContent = text ? `🔎 ${v.answered.length}/${total} ont trouvé` : `🗳️ ${v.answered.length}/${total} ont répondu`;
+            setText(status, text ? `🔎 ${v.answered.length}/${total} ont trouvé` : `🗳️ ${v.answered.length}/${total} ont répondu`);
           } else {
             if (!qcm || !answerSlot.querySelector('.quiz-opts')) answerSlot.replaceChildren(...answerUI().filter(Boolean));
             const keep = answerSlot.querySelector('.quiz-opts');

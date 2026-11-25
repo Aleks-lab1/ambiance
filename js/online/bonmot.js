@@ -1,5 +1,5 @@
 // Le Bon Mot en ligne : chacun sur son téléphone, à tour de rôle. L'hôte vérifie les mots.
-import { h, uid, seg, timerView } from '../ui.js';
+import { h, uid, seg, timerView, setText } from '../ui.js';
 import { sfx, buzz } from '../sfx.js';
 import { TV_PID, tvSay } from './kit.js';
 import { loadDico, normWord, fits, minLength } from '../bonmot-core.js';
@@ -262,7 +262,7 @@ const bonmot = {
         }
       } else if (v.phase === 'pick') {
         const el = card.querySelector('.bm-pick-time');
-        if (el) el.textContent = `⏱ ${Math.ceil(Math.max(0, v.until - g.now()) / 1000)} s`;
+        if (el) setText(el, `⏱ ${Math.ceil(Math.max(0, v.until - g.now()) / 1000)} s`);
       }
     }
 

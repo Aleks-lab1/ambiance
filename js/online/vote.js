@@ -1,5 +1,5 @@
 // Jeux de vote en ligne : Tu préfères, C'est un 10 mais…, Qui de nous…
-import { h } from '../ui.js';
+import { h, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { LEVELS } from '../data/levels.js';
 import { levelPicker } from '../common.js';
@@ -157,7 +157,7 @@ function makeVote(mode) {
           if (v.phase === 'vote') {
             who.el.classList.remove('hidden');
             who.set(room, v.voted);
-            status.textContent = mode === 'qui' ? '📱 Votez en secret sur vos téléphones : qui de vous ?' : mode === 'dix' ? '📱 Donnez votre nouvelle note sur vos téléphones' : '📱 Votez sur vos téléphones !';
+            setText(status, mode === 'qui' ? '📱 Votez en secret sur vos téléphones : qui de vous ?' : mode === 'dix' ? '📱 Donnez votre nouvelle note sur vos téléphones' : '📱 Votez sur vos téléphones !');
             if (!fresh && lastPhase !== 'vote') { buildCard(v); resSlot.replaceChildren(); }
           } else {
             who.el.classList.add('hidden');
@@ -257,7 +257,7 @@ function makeVote(mode) {
           const active = room.players.filter((p) => p.on);
           if (v.phase === 'vote') {
             const missing = active.filter((p) => !v.voted.includes(p.pid)).map((p) => p.name);
-            status.textContent = `🗳️ ${v.voted.length}/${active.length} ont voté` + (missing.length && missing.length <= 4 ? ` · on attend ${missing.join(', ')}` : '');
+            setText(status, `🗳️ ${v.voted.length}/${active.length} ont voté` + (missing.length && missing.length <= 4 ? ` · on attend ${missing.join(', ')}` : ''));
           } else status.textContent = '';
           if (v.phase === 'results' && lastPhase === 'vote') { sfx.end(); buzz(40); }
           lastPhase = v.phase;

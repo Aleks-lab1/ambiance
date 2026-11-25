@@ -12,6 +12,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `index.html`, `manifest.webmanifest`, `sw.js` | Page unique, manifeste PWA, service worker (**généré**, ne pas modifier à la main) |
 | `js/` | Cœur : `app.js` (accueil 3 modes, écran Local `#/local`, routes `#/…`, réglages), `modes-art.js` (cases des 3 modes de l'accueil : illustration, icône), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
+| `js/icons.js`, `js/icons-data.js` | **Icônes de l'interface à la place des emojis** (voir « Icônes, pas d'emojis ») ; `icons-data.js` est **généré** par `scripts/gen-icons.mjs` |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
 | `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `tv.js` (écran télé), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
@@ -19,7 +20,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
 | `img/ui/` | Images de l'interface : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow), `mode-<id>.webp` (illustrations des 3 cases de l'accueil, découpées dans la maquette par `node scripts/gen-images.mjs modes`) |
 | `fonts/` | Police **Fredoka** (600, 700, licence OFL dans `OFL.txt`) pour les titres des cases de l'accueil |
-| `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main), `gen-images.mjs` (images des jeux, compositions dans `images/scenes.mjs`, emojis 3D dans `images/emoji/`) |
+| `scripts/` | `gen-sw.mjs` (service worker), `gen-mots.mjs` (dictionnaire), `argot.txt` (argot/verlan ajoutés à la main), `gen-images.mjs` (images des jeux, compositions dans `images/scenes.mjs`, silhouettes game-icons.net dans `images/icons/` + `CREDITS.md`), `gen-icons.mjs` + `icons-map.mjs` (icônes de l'interface : table emoji → icône) |
 | `css/style.css` | Toute la feuille de style |
 | `tests/` | Outils de test, hors appli (voir plus bas et `tests/README.md`) |
 
@@ -88,21 +89,39 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 - En haut de l'accueil, bandeau de reprise (voir « Partie coupée »). Le champ `players` de chaque jeu doit rester lisible
   (`2-16`, `3+`, `2`) : `unit/accueil.test.mjs` le vérifie.
 
-## Accueil : images des jeux
-- Chaque case (`.tile`, `renderGrid` dans `js/app.js`) : l'image `img/jeux/<id>.webp` (fond transparent, 540 × 360) posée sur le
-  dégradé du jeu (`gameColors`, donc le thème) avec un halo de lumière en CSS, un voile sombre en bas et le **nom incrusté en bas
-  à gauche**. **Pas de description.** Case rectangulaire (3:2), pastilles (« Nouveau », joueurs) en haut à gauche, étoile en haut
-  à droite. Mêmes images dans les favoris (`.mini-tile`). Si l'image manque, l'emoji du jeu la remplace (`gameArt`).
-- Composition de chaque image dans `scripts/images/scenes.mjs` (repère 300 × 200, élément principal vers (206, 90), garder dégagés
-  le bas à gauche et les coins du haut) : emojis 3D Fluent Emoji (Microsoft, MIT, copiés dans `scripts/images/emoji/`), lettres
-  en relief, cartes à jouer, boules de bingo, roue, mots, anneau. Puis `node scripts/gen-images.mjs <id>` : dessin dans Chromium
-  (Playwright), compression WebP par Pillow (Python), deux fois plus léger que l'encodeur de Chromium (~15 Ko par image).
-- Emoji pas encore copié : récupérer le paquet `@lobehub/fluent-emoji-3d` (commande en tête de `gen-images.mjs`) et relancer
-  avec `EMOJI_DIR=…` : le fichier manquant est copié dans `scripts/images/emoji/`.
-- **Regarder le résultat** (capture d'écran de l'accueil) avant de publier. `unit/images.test.mjs` vérifie une image par jeu.
+## Accueil : images des jeux (style « boîte de jeu »)
+- L'utilisateur **n'aime pas les emojis** (« ça fait trop IA ») : plus d'emojis 3D sur les cases, ni dans l'interface.
+- Chaque case (`.tile`, `renderGrid` dans `js/app.js`) : l'image `img/jeux/<id>.webp` (fond transparent, 540 × 360) = **silhouettes
+  blanches avec une ombre franche** posées sur le dégradé du jeu (`gameColors`, donc le thème). En CSS : lumière douce en haut à
+  droite, **trame de points** qui s'efface vers la gauche et liseré clair (`::before`), voile sombre en bas, **nom incrusté en bas
+  à gauche**. **Pas de description.** Case 3:2, pastilles en haut à gauche, étoile en haut à droite. Mêmes styles pour les favoris
+  (`.mini-tile`) et le salon en ligne (`.pick-tile`).
+- Composition de chaque image dans `scripts/images/scenes.mjs` (repère 300 × 200, élément principal `M(…)` vers (206, 90) en grand,
+  un petit élément `L(…)` à gauche et `R(…)` à droite, un peu transparents ; garder dégagés le bas à gauche et les coins du haut) :
+  silhouettes de **game-icons.net** (CC BY 3.0, copiées dans `scripts/images/icons/<nom>.svg`, crédits dans `CREDITS.md`, dans
+  les réglages et le README), tuiles de lettres, cartes à jouer et boules de bingo blanches avec le texte **découpé** (on voit le
+  dégradé au travers), mots en Fredoka, roue, potence, touches de la Séquence. Puis `node scripts/gen-images.mjs <id>` : dessin
+  dans Chromium (Playwright), compression WebP par Pillow (~17 Ko par image).
+- Silhouette pas encore copiée : récupérer le paquet `@iconify-json/game-icons` (commande en tête de `gen-images.mjs`) et relancer
+  avec `ICONS_JSON=…` : le dessin manquant est copié dans `scripts/images/icons/`.
+- **Regarder le résultat** (capture d'écran de l'écran Local) avant de publier. `unit/images.test.mjs` vérifie une image par jeu.
 - Service worker : `img/` a son propre cache (`IMG_CACHE`, versionné sur les images seulement), les images ne sont donc pas
   retéléchargées à chaque mise à jour de l'appli. Testé par `local/sw.test.cjs`.
 
+## Icônes, pas d'emojis (`js/icons.js`)
+- Le code garde ses emojis dans les textes (« 🎯 Au tour de Bob », `emoji: '🎲'` des jeux, niveaux, thèmes…), mais **à l'affichage
+  ils deviennent des icônes SVG** (Phosphor Icons « fill », MIT ; quelques silhouettes game-icons.net, noms `gi:…`) de la taille et
+  de la couleur du texte (`.ic`, 1.15em). C'est fait automatiquement par `h()`, `append()`, `replaceChildren()`, `prepend()`
+  (`js/ui.js`), le HTML des règles (`html:` → `iconify`) et **`setText(el, texte)`** : **ne jamais écrire `el.textContent = '…🎯…'`**
+  (l'emoji resterait), utiliser `setText`. Comparer un texte déjà affiché avec `textContent` ne marche plus s'il a des emojis :
+  garder la dernière valeur dans une variable (exemple : `tvSay`).
+- Table emoji → icône : `scripts/icons-map.mjs` (« nom#couleur » pour une icône colorée : équipes 🔴🔵, médailles). Un emoji absent de
+  la table reste un emoji : l'y ajouter, puis `node scripts/gen-icons.mjs` (paquets à récupérer : commande en tête du script) →
+  `js/icons-data.js`. `icon('nom')` crée une icône directement.
+- **Emojis qui font partie du jeu = gardés** : conteneurs `KEEP` de `js/icons.js` (`.keep-emo`, `.emoji-big` des Émojis mystères,
+  `.mc-front` du Memory, mains du Chifoumi…). Pour du contenu fait d'emojis, mettre la classe `keep-emo`.
+- Tests : le texte d'un bouton n'a plus d'emoji (`getByRole('button', { name: 'Lancer la télé' })`, pas `'▶ Lancer la télé'`), ni
+  `innerText` (« 3 » et non « 👤 3 »).
 
 ## Ajouter un jeu en ligne
 Créer un objet dans un fichier de `js/online/`, puis l'ajouter à `ONLINE_GAMES` dans `js/online/games.js`.
@@ -251,6 +270,7 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - Animations : `#theme-fx` (particules), classes `fx-…`, `html[data-anim]`. Les particules doivent couvrir tout l'écran, pas seulement le haut.
 
 ## Pièges déjà rencontrés
+- **`el.textContent = '🎯 …'` affiche l'emoji** (l'utilisateur n'en veut pas) : utiliser `setText(el, …)` de `js/ui.js`.
 - **Une parenthèse manquante dans `css/style.css`** (ex. `var(--font, …` non fermé) casse **toute** la feuille de style. Relire chaque `var(…)`.
 - **`makeDico()` doit toujours renvoyer `has`** (sinon Mot mystère et le Bon Mot plantent). Le test `unit/dico.test.mjs` le vérifie.
 - **Grammaire avec « Toi »** : ne jamais écrire `${nom} a…` quand le nom peut être « Toi » (« Toi a désigné », « Toi prend »). Écrire « Tu as… » ou adapter la phrase.

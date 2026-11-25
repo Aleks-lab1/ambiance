@@ -1,6 +1,6 @@
 // Jeux de hasard en ligne : La Bouteille, La roue des gages, Qui commence ?, Boîte à outils.
 // Le joueur dont c'est le tour (ou l'hôte) lance, tout le monde voit l'animation sur son téléphone.
-import { h, uid, shuffle, pick, randInt, seg, stepper } from '../ui.js';
+import { h, uid, shuffle, pick, randInt, seg, stepper, setText } from '../ui.js';
 import { levelPicker, dieFace, tumble, spinTicks, TEAM_COLORS, podium } from '../common.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
@@ -156,8 +156,8 @@ export const bouteilleOnline = {
           el.style.opacity = r.players.some((x) => x.pid === p && x.on) ? '' : '.4';
         }
         const me = v.spinner === g.me;
-        if (v.phase === 'spin') status.textContent = '🍾 Ça tourne…';
-        else if (v.phase === 'result') status.textContent = `🍾 ${name(g, v.target)} !`;
+        if (v.phase === 'spin') setText(status, '🍾 Ça tourne…');
+        else if (v.phase === 'result') setText(status, `🍾 ${name(g, v.target)} !`);
         else status.textContent = me ? 'À toi de faire tourner !' : `${g.nameOf(v.spinner)} fait tourner la bouteille…`;
         result.replaceChildren(v.phase === 'result' ? h('div', { class: 'qcard' + (lastKey !== `${v.n}:result` ? ' anim' : ''), style: { minHeight: '0', padding: '18px' } },
           h('div', { class: 'kicker' }, `${name(g, v.from)} → ${name(g, v.target)}`),
@@ -310,7 +310,7 @@ export const roueOnline = {
         v = view;
         if (first) { cv.style.transition = 'none'; cv.style.transform = `rotate(${v.angle}deg)`; void cv.offsetWidth; cv.style.transition = ''; first = false; } else cv.style.transform = `rotate(${v.angle}deg)`;
         const me = v.who === g.me;
-        if (v.phase === 'spin') status.textContent = v.victim === g.me ? '🎡 Ta roue tourne…' : `🎡 La roue de ${g.nameOf(v.victim)} tourne…`;
+        if (v.phase === 'spin') setText(status, v.victim === g.me ? '🎡 Ta roue tourne…' : `🎡 La roue de ${g.nameOf(v.victim)} tourne…`);
         else status.textContent = me ? 'À toi de tourner la roue !' : `Au tour de ${g.nameOf(v.who)}`;
         const key = `${v.n}:${v.phase}`;
         if (key !== lastKey) result.replaceChildren(v.phase === 'result' && v.res ? resultCard() : null);
@@ -402,7 +402,7 @@ export const doigtOnline = {
           const on = r.players.filter((p) => p.on);
           const held = new Set(v.hold);
           say.set(v.phase === 'count' ? '✋ Ne lâchez plus !' : '☝️ Tout le monde pose son doigt sur son téléphone');
-          sub.textContent = `${v.mode === 'teams' ? '👥 2 équipes' : v.mode === 'order' ? '🔢 Ordre de jeu' : '👑 1 gagnant'} · ${held.size}/${on.length} doigt${held.size > 1 ? 's' : ''} posé${held.size > 1 ? 's' : ''}`;
+          setText(sub, `${v.mode === 'teams' ? '👥 2 équipes' : v.mode === 'order' ? '🔢 Ordre de jeu' : '👑 1 gagnant'} · ${held.size}/${on.length} doigt${held.size > 1 ? 's' : ''} posé${held.size > 1 ? 's' : ''}`);
           chips.replaceChildren(...on.map((p) => h('span', { class: 'tv-chip' + (held.has(p.pid) ? ' done' : '') }, `${held.has(p.pid) ? '☝️' : '⏳'} ${p.name}`)));
           if (v.phase === 'count') { count(); iv = setInterval(count, 100); } else big.textContent = '';
         }
@@ -452,7 +452,7 @@ export const doigtOnline = {
           const res = v.res;
           if (res.winner) {
             const me = res.winner === g.me;
-            status.textContent = me ? '👑 C\'est toi qui commences !' : `👑 ${g.nameOf(res.winner)} commence !`;
+            setText(status, me ? '👑 C\'est toi qui commences !' : `👑 ${g.nameOf(res.winner)} commence !`);
             pad.classList.add(me ? 'win' : 'lose');
             pad.replaceChildren(me ? '👑' : '😌');
             out.replaceChildren();
@@ -477,7 +477,7 @@ export const doigtOnline = {
           pad.classList.toggle('on', pressing);
           if (v.phase === 'count') { if (key !== lastKey) delete pad.dataset.n; padText(); iv = setInterval(padText, 100); } else pad.replaceChildren(pressing ? '☝️ Garde ton doigt…' : '☝️ Pose ton doigt ici');
           status.textContent = v.phase === 'count' ? 'Ne lâchez plus !' : 'Tout le monde pose son doigt';
-          sub.textContent = `${v.mode === 'teams' ? '👥 2 équipes' : v.mode === 'order' ? '🔢 Ordre de jeu' : '👑 1 gagnant'} · ${held.size}/${on.length} doigt${held.size > 1 ? 's' : ''} posé${held.size > 1 ? 's' : ''}`;
+          setText(sub, `${v.mode === 'teams' ? '👥 2 équipes' : v.mode === 'order' ? '🔢 Ordre de jeu' : '👑 1 gagnant'} · ${held.size}/${on.length} doigt${held.size > 1 ? 's' : ''} posé${held.size > 1 ? 's' : ''}`);
           list.replaceChildren(...on.map((p) => h('span', { class: 'chip' + (held.has(p.pid) ? ' on' : '') }, `${held.has(p.pid) ? '☝️' : '⏳'} ${p.pid === g.me ? 'Toi' : p.name}`)));
           out.replaceChildren();
           hostSlot.replaceChildren(g.isHost ? h('button', { class: 'btn btn-soft btn-block', onclick: () => g.send({ type: 'draw' }) }, '🎲 Tirer au sort sans attendre') : null);

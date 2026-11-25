@@ -1,5 +1,5 @@
 // Briques partagées par plusieurs jeux.
-import { h, modal, chip, toast } from './ui.js';
+import { h, modal, chip, toast, setText } from './ui.js';
 import { settings, saveSettings } from './store.js';
 import { gameColors } from './themes.js';
 import { sfx } from './sfx.js';
@@ -57,7 +57,7 @@ export function levelPicker(levels, selected, onChange) {
       return c;
     }));
     const sel = levels.filter((l) => selected.has(l.id));
-    desc.textContent = sel.map((l) => `${l.emoji} ${l.desc}`).join('  ·  ');
+    setText(desc, sel.map((l) => `${l.emoji} ${l.desc}`).join('  ·  '));
   }
   render();
   wrap.append(chips, desc);

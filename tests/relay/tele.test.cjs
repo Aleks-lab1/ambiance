@@ -39,7 +39,7 @@ run(async () => {
   check(true, 'télé : Bob et Chloé apparaissent dans le salon');
   await W(host, 500);
   check(/1 écran télé branché/.test(await host.locator('.tv-hint').innerText()), 'hôte : « 📺 1 écran télé branché »');
-  check((await host.locator('.topbar .pill').innerText()).trim() === '👤 3' && (await host.locator('.lobby-players .lp').count()) === 3, 'la télé n\'est pas comptée comme joueur (3 joueurs)');
+  check((await host.locator('.topbar .pill').innerText()).trim() === '3' && await host.locator('.topbar .pill svg.ic').count() === 1 && (await host.locator('.lobby-players .lp').count()) === 3, 'la télé n\'est pas comptée comme joueur (3 joueurs)');
 
   const launch = async (name) => {
     if (!(await host.locator('.game-pick').count())) {
@@ -77,7 +77,7 @@ run(async () => {
   check(opts.length === 3 && /raton/.test(opts.join()) && /koala/.test(opts.join()) && !/Alice|Bob|Chloé/.test(opts.join()), 'Punchlines : au vote, les 3 réponses en grand, sans les auteurs', opts);
   for (const p of [host, bob, chloe]) { await p.locator('.plist-sel button:not([disabled])').first().click(); await W(p, 250); }
   await tv.waitForSelector('.tv-option .by', { timeout: 8000 });
-  check(/✍️ (Alice|Bob|Chloé)/.test((await tv.locator('.tv-option .by').allInnerTexts()).join()), 'Punchlines : révélation des auteurs et des votes');
+  check(/(Alice|Bob|Chloé)/.test((await tv.locator('.tv-option .by').allInnerTexts()).join()), 'Punchlines : révélation des auteurs et des votes');
 
   // ---- Je dessine, tu devines ----
   await launch('Je dessine');

@@ -1,6 +1,6 @@
 // Téléphone dessiné : écrire → dessiner → deviner → dessiner… puis on révèle chaque chaîne.
 // Chaque joueur traite une chaîne différente à chaque manche, il ne voit que l'étape précédente.
-import { h, uid, shuffle, pick, seg } from '../ui.js';
+import { h, uid, shuffle, pick, seg, setText } from '../ui.js';
 import { createBoard, createTools } from '../canvas.js';
 import { sfx, buzz } from '../sfx.js';
 import PROMPTS from '../data/telephone.js';
@@ -136,7 +136,7 @@ export default {
     const iv = setInterval(() => {
       if (!v || v.phase !== 'play' || !timerEl) return;
       const sec = Math.ceil(Math.max(0, v.deadline - g.now()) / 1000);
-      timerEl.textContent = '⏱ ' + sec;
+      setText(timerEl, '⏱ ' + sec);
       timerEl.classList.toggle('low', sec <= 10);
       if (sec <= 5 && sec > 0 && sec !== lastTick && submitFn) { lastTick = sec; sfx.tick(); }
     }, 250);
@@ -156,7 +156,7 @@ export default {
       return h('div', { class: 'row' }, h('span', { class: 'pill' }, label), h('div', { class: 'grow' }), progress, timerEl);
     }
 
-    function setProgress() { if (progress) progress.textContent = `✅ ${v.done}/${v.total}`; }
+    function setProgress() { if (progress) setText(progress, `✅ ${v.done}/${v.total}`); }
 
     function buildTask(key, msg) {
       clearTimeout(autoTimer);

@@ -1,5 +1,5 @@
 // Images des jeux (cases de l'accueil) : une composition dans scripts/images/scenes.mjs et une image
-// img/jeux/<id>.webp pour chaque jeu du catalogue, au bon format, et tous les emojis utilisés présents.
+// img/jeux/<id>.webp pour chaque jeu du catalogue, au bon format, et toutes les silhouettes utilisées présentes.
 // Sans navigateur. Un jeu ajouté sans image → node scripts/gen-images.mjs <id> (voir l'en-tête du script).
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -35,19 +35,17 @@ check(total < 1.5 * 1024 * 1024, `poids total des images raisonnable (${Math.rou
 const orphans = readdirSync(new URL('img/jeux/', ROOT)).filter((f) => f.endsWith('.webp') && !ids.includes(f.slice(0, -5)));
 check(!orphans.length, 'aucune image en trop dans img/jeux/', orphans);
 
-// Tous les emojis des compositions sont dans scripts/images/emoji/ (sinon le générateur échoue).
-const have = new Set(readdirSync(new URL('scripts/images/emoji/', ROOT)));
-const code = (ch) => [...ch].map((c) => c.codePointAt(0).toString(16)).join('-');
+// Toutes les silhouettes des compositions sont dans scripts/images/icons/ (sinon le générateur échoue), avec leurs crédits.
+const have = new Set(readdirSync(new URL('scripts/images/icons/', ROOT)));
 const missing = [];
-for (const [id, items] of Object.entries(SCENES)) {
-  for (const it of items) {
-    if (it.k !== 'e') continue;
-    const c = code(it.ch);
-    if (![c, c.replace(/-fe0f/g, ''), c + '-fe0f'].some((n) => have.has(n + '.webp'))) missing.push(`${id} : ${it.ch}`);
-  }
-}
-check(!missing.length, 'tous les emojis des compositions sont dans scripts/images/emoji/', missing);
-check(have.has('LICENSE'), 'licence des emojis Fluent (MIT) présente');
+for (const [id, items] of Object.entries(SCENES)) for (const it of items) if (it.k === 'i' && !have.has(it.n + '.svg')) missing.push(`${id} : ${it.n}`);
+check(!missing.length, 'toutes les silhouettes des compositions sont dans scripts/images/icons/', missing);
+check(have.has('CREDITS.md'), 'crédits des silhouettes game-icons.net (CC BY 3.0) présents');
+check(existsSync(new URL('scripts/images/emoji/LICENSE', ROOT)), 'licence de l\'emoji Fluent de la main du 4 en ligne (MIT) présente');
+// Icônes de l'interface : chaque emoji de la table a son dessin.
+const { ICONS, EMOJI } = await import('../../js/icons-data.js');
+const noIcon = Object.entries(EMOJI).filter(([, v]) => !ICONS[v.split('#')[0]]).map(([k]) => k);
+check(!noIcon.length && Object.keys(EMOJI).length > 300, `icônes de l'interface : ${Object.keys(EMOJI).length} emojis remplacés, chacun a son dessin`, noIcon);
 // Les 3 cases de l'accueil : illustration découpée dans la maquette (gen-images.mjs modes), police Fredoka et sa licence.
 const modeBad = ['local', 'online', 'tv'].filter((m) => { const f = new URL(`img/ui/mode-${m}.webp`, ROOT); return !MODE_CROPS[m] || !existsSync(f) || readFileSync(f).toString('ascii', 8, 12) !== 'WEBP'; });
 check(!modeBad.length && existsSync(new URL('scripts/images/maquette-accueil.webp', ROOT)), 'accueil : maquette et illustration de chacun des 3 modes', modeBad);

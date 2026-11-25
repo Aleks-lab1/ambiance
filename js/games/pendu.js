@@ -1,5 +1,5 @@
 // Le Pendu : devinez le mot lettre par lettre avant que le dessin soit complet.
-import { h, topbar, seg, pick, toast } from '../ui.js';
+import { h, topbar, seg, pick, toast, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, sip, getPlayers } from '../store.js';
 import { playersPanel } from '../players.js';
@@ -34,8 +34,8 @@ export function start(ctx) {
       playersPanel(0),
       h('p', { class: 'muted small' }, 'Avec une liste de joueurs, chacun propose une lettre à son tour.'),
       h('div', { class: 'grow' }), btn);
-    loadDico().then((d) => { dico = d; btn.disabled = false; btn.textContent = '🪢 Jouer'; btn.onclick = () => (opts.mode === 'secret' ? secret() : play(randomWord())); })
-      .catch(() => { btn.textContent = '😵 Impossible de charger les mots'; });
+    loadDico().then((d) => { dico = d; btn.disabled = false; setText(btn, '🪢 Jouer'); btn.onclick = () => (opts.mode === 'secret' ? secret() : play(randomWord())); })
+      .catch(() => { setText(btn, '😵 Impossible de charger les mots'); });
   }
 
   function randomWord() {
@@ -97,7 +97,7 @@ export function start(ctx) {
         return el;
       }));
       const p = players.length ? players[turn % players.length] : null;
-      if (!over) status.textContent = `${p ? `À ${p} de proposer une lettre · ` : ''}❤️ ${MAX - errors} erreur${MAX - errors > 1 ? 's' : ''} restante${MAX - errors > 1 ? 's' : ''}`;
+      if (!over) setText(status, `${p ? `À ${p} de proposer une lettre · ` : ''}❤️ ${MAX - errors} erreur${MAX - errors > 1 ? 's' : ''} restante${MAX - errors > 1 ? 's' : ''}`);
     }
 
     function guess(k) {

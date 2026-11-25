@@ -1,5 +1,5 @@
 // Petits outils partagés par les jeux en ligne.
-import { h } from '../ui.js';
+import { h, setText } from '../ui.js';
 import { podium } from '../common.js';
 import { sfx } from '../sfx.js';
 import { makeDeck } from '../store.js';
@@ -58,7 +58,7 @@ export function timerPill(g) {
   const iv = setInterval(() => {
     if (!dl) { el.textContent = ''; return; }
     const sec = Math.ceil(Math.max(0, dl - g.now()) / 1000);
-    el.textContent = '⏱ ' + sec;
+    setText(el, '⏱ ' + sec);
     el.classList.toggle('low', sec <= 5);
     if (sec <= 3 && sec > 0 && sec !== last) { last = sec; sfx.tick(); }
   }, 200);
@@ -153,7 +153,8 @@ export function tvBars(rows, total) {
 /** Grande phrase d'état de la télé (« Bob réfléchit… »), qui saute quand elle change. */
 export function tvSay() {
   const el = h('div', { class: 'tv-say' });
-  return { el, set(t) { if (el.textContent === t) return; el.textContent = t; el.classList.remove('pop-in'); void el.offsetWidth; el.classList.add('pop-in'); } };
+  let cur = null;
+  return { el, set(t) { if (cur === t) return; cur = t; setText(el, t); el.classList.remove('pop-in'); void el.offsetWidth; el.classList.add('pop-in'); } };
 }
 
 /**

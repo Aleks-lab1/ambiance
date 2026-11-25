@@ -64,7 +64,7 @@ run(async () => {
   await W(1000);
   check(await page.locator('.chi-arena.done').count() === 1 && /Gagné|Perdu|Égalité/.test(await scr()), 'Chifoumi : les deux choix révélés, puis le résultat');
 
-  await go('outils'); await page.getByRole('button', { name: /🎲 Lancer/ }).click(); await W(150);
+  await go('outils'); await page.getByRole('button', { name: /Lancer/ }).click(); await W(150);
   check(await page.locator('.dice-row .die.tumble').count() > 0, 'Outils : les dés roulent');
   await W(900);
   const dice = await page.$$eval('.dice-row .die', (els) => els.map((e) => [Number(e.dataset.v), e.querySelectorAll('i.on').length]));

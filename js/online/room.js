@@ -2,7 +2,7 @@
 // Architecture : l'hôte garde l'état complet du jeu. Les clients envoient des
 // actions ; l'hôte les applique puis diffuse à chacun SA vue de l'état
 // (filtrée : par ex. le mot à dessiner n'est envoyé qu'au dessinateur).
-import { h, toast, modal, confirmBox, uid, chip } from '../ui.js';
+import { h, toast, modal, confirmBox, uid, chip, setText } from '../ui.js';
 import { getName, setName, get, set } from '../store.js';
 import { CONFIG } from '../config.js';
 import { ONLINE_GAMES, onlineGame, localIdOf } from './games.js';
@@ -853,7 +853,7 @@ export function start(ctx) {
       const text = hostAway
         ? `⏸️ ${hostName || 'L\'hôte'} a quitté l'appli un instant… La partie reprendra à son retour.`
         : '📶 Connexion à l\'hôte perdue… on réessaie. La partie reprendra toute seule.';
-      if (banner) banner.textContent = text;
+      if (banner) setText(banner, text);
       else if (room && (tvMode || tvHostMode)) root.prepend(h('div', { class: 'conn-banner live' }, text));
       else if (room) root.insertBefore(h('div', { class: 'conn-banner live' }, text), root.children[1] || null);
     } else if (banner) banner.remove();
@@ -954,7 +954,7 @@ export function start(ctx) {
     const prevPlayers = room ? room.players.length : 0;
     room = r;
     ensureShell();
-    headCount.textContent = `👤 ${r.players.filter((p) => p.on).length}`;
+    setText(headCount, `👤 ${r.players.filter((p) => p.on).length}`);
     if (!r.game) {
       destroyView();
       renderLobby(prevPlayers);
@@ -1131,9 +1131,9 @@ export function start(ctx) {
       t.el.classList.toggle('few', tooFew);
       t.go.classList.toggle('hidden', !(lead && id === lobbyPick && lobbyArmed === id));
       t.votes.classList.toggle('hidden', !nv);
-      if (nv) t.votes.textContent = `🗳️ ${nv}`;
+      if (nv) setText(t.votes, `🗳️ ${nv}`);
       t.lock.classList.toggle('hidden', !tooFew);
-      if (tooFew) t.lock.textContent = `👥 ${t.g.minPlayers}+`;
+      if (tooFew) setText(t.lock, `👥 ${t.g.minPlayers}+`);
     }
     // Les plus demandés (touche = choisir pour le chef, voter pour les autres).
     const ranked = Object.entries(votes).sort((a, b) => b[1].length - a[1].length).slice(0, 4);
@@ -1143,7 +1143,7 @@ export function start(ctx) {
     const chef = room.players.find((p) => p.pid === room.host);
     const picked = room.pick && onlineGame(room.pick);
     if (lead) {
-      lobby.info.textContent = '👆 Touche un jeu pour le choisir, une 2e fois pour le lancer. 🗳️ = votes des joueurs.';
+      setText(lobby.info, '👆 Touche un jeu pour le choisir, une 2e fois pour le lancer. 🗳️ = votes des joueurs.');
       const mod = lobbyPick && onlineGame(lobbyPick);
       lobby.bar.replaceChildren(...(mod
         ? [h('span', { class: 'lb-name' }, h('span', null, mod.emoji), ' ', mod.name, mod.minPlayers > n ? h('small', null, ` · ${mod.minPlayers} joueurs min.`) : null),
@@ -1151,7 +1151,7 @@ export function start(ctx) {
           h('button', { class: 'btn btn-primary', onclick: () => { sfx.go(); launch(); } }, `▶ Lancer ${mod.name}`)]
         : [h('span', { class: 'lb-name muted' }, 'Choisis un jeu pour le lancer')]));
     } else {
-      lobby.info.textContent = `👑 ${chef ? chef.name : 'Le chef'} lance le jeu.${picked ? ` Il a choisi : ${picked.emoji} ${picked.name}.` : ''} Touche un jeu pour voter !`;
+      setText(lobby.info, `👑 ${chef ? chef.name : 'Le chef'} lance le jeu.${picked ? ` Il a choisi : ${picked.emoji} ${picked.name}.` : ''} Touche un jeu pour voter !`);
       const mine = myVote && onlineGame(myVote);
       lobby.bar.replaceChildren(h('span', { class: 'lb-name' }, mine ? `🗳️ Ton vote : ${mine.emoji} ${mine.name}` : '🗳️ Touche le jeu que tu veux pour voter'));
     }

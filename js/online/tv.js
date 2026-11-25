@@ -3,7 +3,7 @@
 // (Host.viewForTv dans room.js) : jamais le mot secret, le rôle ou la réponse d'un joueur.
 // Un jeu peut fournir son propre écran : tv(room, s) chez l'hôte + tvMount(root, g) ici (voir race.js).
 // Sinon : écran commun (jeu en cours, « regardez vos téléphones », podium à la fin).
-import { h } from '../ui.js';
+import { h, setText } from '../ui.js';
 import { sfx } from '../sfx.js';
 import { gameColors } from '../themes.js';
 import { onlineGame } from './games.js';
@@ -111,7 +111,7 @@ export function createTvUi(root, g) {
   // ---------- Classement (à droite) ----------
   function renderBoard() {
     const inGame = !!room.game;
-    sideTitle.textContent = inGame ? '🏆 Classement' : `👥 ${room.players.length} joueur${room.players.length > 1 ? 's' : ''}`;
+    setText(sideTitle, inGame ? '🏆 Classement' : `👥 ${room.players.length} joueur${room.players.length > 1 ? 's' : ''}`);
     const list = room.players.slice().sort((a, b) => (inGame ? b.score - a.score : 0));
     board.replaceChildren(...list.map((p, i) => {
       const before = shownScore[p.pid];

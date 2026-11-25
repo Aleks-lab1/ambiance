@@ -1,8 +1,8 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = 'e855713d7d';
+const VERSION = '4e68e260d1';
 const CACHE = 'ambiance-' + VERSION;
 // Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
-const IMG_CACHE = 'ambiance-img-61049ecc5b';
+const IMG_CACHE = 'ambiance-img-7ac6945ebe';
 const ASSETS = [
   "./",
   "./css/style.css",
@@ -99,6 +99,8 @@ const ASSETS = [
   "./js/games/sequence.js",
   "./js/games/soiree.js",
   "./js/games/teamwords.js",
+  "./js/icons-data.js",
+  "./js/icons.js",
   "./js/modes-art.js",
   "./js/morpion-vue.js",
   "./js/online/bingo.js",

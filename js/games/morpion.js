@@ -1,6 +1,6 @@
 // Morpion et 4 en ligne : à deux sur le même téléphone, ou contre le téléphone.
 // Les plateaux animés (main qui lâche le jeton, traits au feutre) sont dans js/morpion-vue.js.
-import { h, topbar, seg } from '../ui.js';
+import { h, topbar, seg, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
@@ -144,7 +144,7 @@ export function start(ctx) {
     const wait = (ms) => new Promise((ok) => timers.push(setTimeout(ok, ms)));
     function info() {
       score.textContent = `${N[0]} ${scores[0]} – ${scores[1]} ${N[1]}`;
-      if (!over) status.textContent = `${quatre ? (turn ? '🟡' : '🔴') : SYM[turn]} ${isAI(turn) ? 'Le téléphone réfléchit…' : `À ${N[turn] === 'Toi' ? 'toi' : N[turn]} de jouer`}`;
+      if (!over) setText(status, `${quatre ? (turn ? '🟡' : '🔴') : SYM[turn]} ${isAI(turn) ? 'Le téléphone réfléchit…' : `À ${N[turn] === 'Toi' ? 'toi' : N[turn]} de jouer`}`);
     }
     function nextTurn() {
       view.setTurn(turn, !isAI(turn));
@@ -184,11 +184,11 @@ export function start(ctx) {
       over = true;
       view.win(w.cells);
       if (quatre) view.rest(); else view.setTurn(turn, false);
-      if (w.p === -1) { status.textContent = '🤝 Match nul !'; sfx.swoosh(); }
+      if (w.p === -1) { setText(status, '🤝 Match nul !'); sfx.swoosh(); }
       else {
         scores[w.p]++;
         const loser = N[1 - w.p];
-        status.textContent = `🏆 ${N[w.p] === 'Toi' ? 'Tu as gagné' : N[w.p] + ' gagne'} !`;
+        setText(status, `🏆 ${N[w.p] === 'Toi' ? 'Tu as gagné' : N[w.p] + ' gagne'} !`);
         if (isAI(w.p)) sfx.bad(); else sfx.fanfare();
         buzz([40, 30, 120]);
         score.dataset.extra = `${loser === 'Toi' ? 'Tu prends' : loser + ' prend'} ${sip(1)}.`;

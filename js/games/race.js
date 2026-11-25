@@ -1,5 +1,5 @@
 // Quiz, Émojis mystères, Anagrammes, À vue de nez : version un seul téléphone.
-import { h, topbar, seg } from '../ui.js';
+import { h, topbar, seg, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { get, set, getPlayers } from '../store.js';
 import { levelPicker, onlineBanner, podium } from '../common.js';
@@ -113,7 +113,7 @@ function raceLocal(mode, load, onlineId) {
             const ok = k === Q.ans.i;
             btns.forEach((b, j) => { b.disabled = true; b.classList.add(j === Q.ans.i ? 'good' : j === k ? 'bad' : 'dim'); });
             if (who && ok) scores[who]++;
-            result.textContent = ok ? (who ? `✅ Bien joué ${who} ! +1 point` : '✅ Bonne réponse !') : (who ? `❌ Raté pour ${who}…` : '❌ Raté…');
+            setText(result, ok ? (who ? `✅ Bien joué ${who} ! +1 point` : '✅ Bonne réponse !') : (who ? `❌ Raté pour ${who}…` : '❌ Raté…'));
             result.classList.remove('hidden');
             answer.classList.remove('hidden');
             next.classList.remove('hidden');

@@ -1,5 +1,5 @@
 // Couleurs pièges : touche la couleur de l'ENCRE, pas celle du mot écrit.
-import { h, topbar, seg, countdown, timerView } from '../ui.js';
+import { h, topbar, seg, countdown, timerView, setText } from '../ui.js';
 import { get, set, getPlayers, sip } from '../store.js';
 import { playersPanel } from '../players.js';
 import { podium, onlineBanner } from '../common.js';
@@ -117,7 +117,7 @@ export function start(ctx) {
         frozen = true; // petite pénalité de temps
         timers.push(setTimeout(() => { frozen = false; next(); }, 600));
       }
-      scoreEl.textContent = `⭐ ${score}${streak >= 5 ? ' 🔥' : ''}`;
+      setText(scoreEl, `⭐ ${score}${streak >= 5 ? ' 🔥' : ''}`);
     }
 
     next();

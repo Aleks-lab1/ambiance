@@ -1,5 +1,5 @@
 // Jeux de plateau en ligne : Bataille navale (le gagnant reste), Memory, Yam's.
-import { h, uid, seg } from '../ui.js';
+import { h, uid, seg, setText } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { dieFace, tumble } from '../common.js';
@@ -157,19 +157,19 @@ export const batailleOnline = {
         const hitOn = v.last ? 1 - v.last.by : -1;
         if (v.phase === 'place') {
           say.set(`🚢 ${N(0)} contre ${N(1)}`);
-          sub.textContent = `Les capitaines placent leur flotte… ${v.ready.map((x, k) => (x ? '✅ ' : '⏳ ') + N(k)).join(' · ')}`;
+          setText(sub, `Les capitaines placent leur flotte… ${v.ready.map((x, k) => (x ? '✅ ' : '⏳ ') + N(k)).join(' · ')}`);
           seas.replaceChildren();
         } else {
           if (v.phase === 'over') say.set(`🏆 ${N(v.winner)} a coulé toute la flotte !`);
           else say.set(`🎯 ${N(v.turn)} tire…`);
-          sub.textContent = v.phase === 'over' ? `${N(1 - v.winner)} prend ${sip(2)} !`
-            : v.last ? `${N(v.last.by)} : ${v.last.res === 'miss' ? 'à l\'eau 🌊' : v.last.res === 'hit' ? 'touché 🔥 (rejoue)' : `coulé 💥 (bateau de ${v.last.len})`}` : 'Touché = on rejoue';
+          setText(sub, v.phase === 'over' ? `${N(1 - v.winner)} prend ${sip(2)} !`
+            : v.last ? `${N(v.last.by)} : ${v.last.res === 'miss' ? 'à l\'eau 🌊' : v.last.res === 'hit' ? 'touché 🔥 (rejoue)' : `coulé 💥 (bateau de ${v.last.len})`}` : 'Touché = on rejoue');
           // Mer de chaque capitaine : les tirs qu'il a reçus.
           seas.replaceChildren(...[0, 1].map((k) => h('div', { class: 'tv-sea' + (v.phase === 'play' && v.turn === 1 - k ? ' aimed' : '') },
             h('b', null, `🚢 ${N(k)} · ${sc(k)} 🏆`),
             bnGrid(v.shotsOn[k], { ships: v.fleets ? v.fleets[k] : null, fx: hitOn === k ? fresh : null }))));
         }
-        queue.textContent = v.queue.length ? `⏳ Prochains capitaines : ${v.queue.map((p) => g.nameOf(p)).join(', ')}` : '';
+        setText(queue, v.queue.length ? `⏳ Prochains capitaines : ${v.queue.map((p) => g.nameOf(p)).join(', ')}` : '');
         if (fresh) { v.last.res === 'miss' ? sfx.splash() : sfx.boom(); }
         if (v.phase === 'over' && !/:over:/.test(lastKey || '')) sfx.fanfare();
         lastKey = key;
@@ -324,7 +324,7 @@ export const memoryOnline = {
         board.update(v, myTurn);
         head.replaceChildren(h('span', { class: 'pill' }, `🧩 ${Object.keys(v.owners).length / 2}/${v.total} paires`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, myTurn ? '👆 ' + yourTurn(g) : `⏳ ${g.nameOf(v.cur)}`));
         chips.replaceChildren(...r.players.map((p) => h('span', { class: 'chip' + (p.pid === v.cur ? ' on' : '') }, `${name(g, p.pid)} · ${p.score}`)));
-        msg.textContent = v.phase === 'show' ? '❌ Pas une paire…' : v.lastPair ? (name(g, v.lastPair) === 'Toi' ? '✅ Paire trouvée : rejoue !' : `✅ Paire pour ${g.nameOf(v.lastPair)} : rejoue !`) : 'Une paire trouvée = un point, et on rejoue.';
+        setText(msg, v.phase === 'show' ? '❌ Pas une paire…' : v.lastPair ? (name(g, v.lastPair) === 'Toi' ? '✅ Paire trouvée : rejoue !' : `✅ Paire pour ${g.nameOf(v.lastPair)} : rejoue !`) : 'Une paire trouvée = un point, et on rejoue.');
         if (key !== lastKey) { if (v.phase === 'show') setTimeout(() => sfx.bad(), 300); else if (v.lastPair && lastKey) setTimeout(() => sfx.ok(), 250); if (myTurn && v.flipped === 0) buzz(20); }
         lastKey = key;
       },

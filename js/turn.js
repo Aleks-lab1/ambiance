@@ -1,5 +1,5 @@
 // Moteur des jeux en équipes : équipes, tours chronométrés, correction, scores.
-import { h, toast, countdown, timerView, shuffle } from './ui.js';
+import { h, toast, countdown, timerView, shuffle, setText } from './ui.js';
 import { get, set, getPlayers } from './store.js';
 import { editPlayers } from './players.js';
 import { TEAM_COLORS, podium } from './common.js';
@@ -97,8 +97,8 @@ export function playTurn(root, { label, duration, draw, render, buttons, color }
       onEnd: () => { if (done) return; sfx.bad(); buzz([200, 100, 300]); finish(true); },
     });
     function togglePause() {
-      if (t.paused) { t.resume(); pause.textContent = '⏸'; card.style.filter = ''; btns.style.pointerEvents = ''; }
-      else { t.pause(); pause.textContent = '▶️'; card.style.filter = 'blur(14px)'; btns.style.pointerEvents = 'none'; }
+      if (t.paused) { t.resume(); setText(pause, '⏸'); card.style.filter = ''; btns.style.pointerEvents = ''; }
+      else { t.pause(); setText(pause, '▶️'); card.style.filter = 'blur(14px)'; btns.style.pointerEvents = 'none'; }
     }
     function answer(r) {
       if (done) return;

@@ -1,5 +1,5 @@
 // Moteur générique des jeux de cartes/questions + Tu préfères, Je n'ai jamais, C'est un 10 mais, Qui de nous.
-import { h, topbar, onSwipe, toast } from '../ui.js';
+import { h, topbar, onSwipe, toast, setText } from '../ui.js';
 import { get, set, makeDeck, getCustom, setCustom, drinkPl, drinks, getPlayers, sip } from '../store.js';
 import { levelPicker } from '../common.js';
 import { LEVELS } from '../data/levels.js';
@@ -210,7 +210,7 @@ export const qui = cardGame({
         let n = 3;
         const step = () => {
           if (n > 0) { btn.textContent = String(n); sfx.beep(); n--; setTimeout(step, 750); }
-          else { btn.textContent = '👉 POINTEZ !'; sfx.go(); buzz([60, 40, 60]); out.textContent = `Le plus désigné ${drinks(1)} par doigt pointé sur lui !`; }
+          else { setText(btn, '👉 POINTEZ !'); sfx.go(); buzz([60, 40, 60]); out.textContent = `Le plus désigné ${drinks(1)} par doigt pointé sur lui !`; }
         };
         step();
       },
@@ -311,7 +311,7 @@ export const unisson = cardGame({
         let n = 3;
         const step = () => {
           if (n > 0) { btn.textContent = String(n); sfx.beep(); n--; setTimeout(step, 800); }
-          else { btn.textContent = '🗣️ DITES-LE !'; sfx.go(); buzz([60, 40, 60]); out.textContent = `Ceux qui ont dit la même chose que la majorité marquent 1 point. Les moutons noirs ${drinkPl(1)} !`; }
+          else { setText(btn, '🗣️ DITES-LE !'); sfx.go(); buzz([60, 40, 60]); out.textContent = `Ceux qui ont dit la même chose que la majorité marquent 1 point. Les moutons noirs ${drinkPl(1)} !`; }
         };
         step();
       },

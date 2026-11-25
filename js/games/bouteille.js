@@ -1,5 +1,5 @@
 // La Bouteille : on fait tourner la bouteille au milieu du cercle des joueurs, elle désigne quelqu'un.
-import { h, topbar, seg, pick } from '../ui.js';
+import { h, topbar, seg, pick, setText } from '../ui.js';
 import { get, set, sip } from '../store.js';
 import { requirePlayers, playersPanel } from '../players.js';
 import { ensureAdult, onlineBanner, spinTicks } from '../common.js';
@@ -102,7 +102,7 @@ export function start(ctx) {
       names.forEach((el, i) => { el.classList.toggle('cur', i === spinner); el.classList.remove('hit'); });
       status.textContent = `${players[spinner]}, fais tourner !`;
       btn.disabled = false;
-      btn.textContent = '🍾 Tourner !';
+      setText(btn, '🍾 Tourner !');
     }
 
     function spin() {
@@ -130,13 +130,13 @@ export function start(ctx) {
       names[target].classList.add('hit');
       sfx.ok(); buzz([40, 30, 80]);
       const txt = pick(DEFIS[opts.level] || DEFIS.soft).replace(/\{a\}/g, a).replace(/\{b\}/g, b).replace(/\{sip2\}/g, sip(2)).replace(/\{sip\}/g, sip(1));
-      status.textContent = `🍾 ${b} !`;
+      setText(status, `🍾 ${b} !`);
       result.replaceChildren(h('div', { class: 'qcard anim', style: { minHeight: '0', padding: '18px' } },
         h('div', { class: 'kicker' }, `${a} → ${b}`), h('div', { class: 'big', style: { fontSize: 'clamp(20px,5.6vw,26px)' } }, txt),
         h('div', { class: 'foot' }, `Refus ? ${sip(2)} !`)));
       spinner = target; // c'est la personne désignée qui fait tourner ensuite
       btn.disabled = false;
-      btn.textContent = `🍾 À ${b} de faire tourner`;
+      setText(btn, `🍾 À ${b} de faire tourner`);
       btn.onclick = () => { idle(); spin(); };
     }
 

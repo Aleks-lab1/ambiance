@@ -1,5 +1,5 @@
 // Jeux avec un paquet de 52 cartes : Plus ou moins, Le Bus.
-import { h, topbar, shuffle } from '../ui.js';
+import { h, topbar, shuffle, setText } from '../ui.js';
 import { onlineBanner } from '../common.js';
 import { get, set, getPlayers, sip, drinks } from '../store.js';
 import { playersPanel } from '../players.js';
@@ -78,10 +78,10 @@ export const plusmoins = {
       function render(next = null, ok = null) {
         const p = who(players, turn);
         status.textContent = p ? `Au tour de ${p}` : 'Plus ou moins ?';
-        sub.textContent = streak ? `🔥 ${streak} d'affilée — si tu rates, tu prends ${sip(streak + 1)}` : 'La prochaine carte sera-t-elle plus haute ou plus basse ?';
+        setText(sub, streak ? `🔥 ${streak} d'affilée — si tu rates, tu prends ${sip(streak + 1)}` : 'La prochaine carte sera-t-elle plus haute ou plus basse ?');
         table.replaceChildren(cardEl(cur, 'big'), next ? revealCard(next, 'big ' + (ok ? 'good' : 'bad')) : cardEl(null, 'big'));
         passBtn.classList.toggle('hidden', !(players.length > 1 && streak >= 3 && !next));
-        passBtn.textContent = `✋ Passer la main à ${who(players, turn + 1)} (série de ${streak} gagnée !)`;
+        setText(passBtn, `✋ Passer la main à ${who(players, turn + 1)} (série de ${streak} gagnée !)`);
       }
       function guess(up) {
         if (busy) return;
@@ -100,7 +100,7 @@ export const plusmoins = {
           } else {
             sfx.bad(); buzz([150, 60, 150]);
             const p = who(players, turn);
-            sub.textContent = `❌ ${next.v === cur.v ? 'Égalité, c\'est perdu !' : 'Raté !'} ${p ? p + ' ' + drinks(streak + 1) : cap(sip(streak + 1))} !`;
+            setText(sub, `❌ ${next.v === cur.v ? 'Égalité, c\'est perdu !' : 'Raté !'} ${p ? p + ' ' + drinks(streak + 1) : cap(sip(streak + 1))} !`);
           }
         }, 420);
         if (ok) { streak++; if (streak > get('pm-record', 0)) set('pm-record', streak); }
@@ -171,7 +171,7 @@ export const bus = {
 
       function render(fresh = -1) {
         const p = who(players, turn);
-        status.textContent = p ? `${p} est dans le bus 🚌` : 'Dans le bus 🚌';
+        setText(status, p ? `${p} est dans le bus 🚌` : 'Dans le bus 🚌');
         prog.replaceChildren(STEPS.map((s, i) => h('span', { class: 'bus-step' + (i < step ? ' done' : i === step ? ' cur' : '') }, String(i + 1))));
         table.replaceChildren(...[0, 1, 2, 3].map((i) => (cards[i] ? (i === fresh ? revealCard(cards[i], 'mid-size') : cardEl(cards[i], 'mid-size')) : cardEl(null, 'mid-size' + (i === step ? ' next' : '')))));
         sub.textContent = `Étape ${step + 1}/4 : ${STEPS[step].q}${tries > 1 ? ` · essai n°${tries}` : ''}`;
@@ -192,7 +192,7 @@ export const bus = {
           if (step === 3) {
             setTimeout(() => { sfx.fanfare(); buzz([40, 30, 40, 30, 120]); }, 600);
             const p = who(players, turn);
-            sub.textContent = `🎉 ${p ? p + ' descend' : 'Tu descends'} du bus en ${tries} essai${tries > 1 ? 's' : ''} ! ${players.length ? 'Il ou elle distribue ' + sip(4) + '.' : ''}`;
+            setText(sub, `🎉 ${p ? p + ' descend' : 'Tu descends'} du bus en ${tries} essai${tries > 1 ? 's' : ''} ! ${players.length ? 'Il ou elle distribue ' + sip(4) + '.' : ''}`);
             btns.replaceChildren(h('button', { class: 'btn btn-primary btn-big btn-block', onclick: () => { turn++; step = 0; cards = []; tries = 1; busy = false; render(); } },
               players.length > 1 ? `Au tour de ${who(players, turn + 1)} →` : '🚌 Remonter dans le bus'));
             return;
@@ -201,7 +201,7 @@ export const bus = {
           setTimeout(() => { if (root.isConnected) { busy = false; render(); } }, 1000);
         } else {
           const p = who(players, turn);
-          sub.textContent = `❌ Raté ! ${p ? p + ' ' + drinks(step + 1) : cap(sip(step + 1))} et on repart de zéro…`;
+          setText(sub, `❌ Raté ! ${p ? p + ' ' + drinks(step + 1) : cap(sip(step + 1))} et on repart de zéro…`);
           setTimeout(() => { if (!root.isConnected) return; step = 0; cards = []; tries++; busy = false; render(); }, 2600);
         }
       }

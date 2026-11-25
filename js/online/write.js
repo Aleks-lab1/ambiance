@@ -1,6 +1,6 @@
 // Jeux d'écriture en ligne : Punchlines (réponse la plus drôle) et Dico bluff (fausses définitions).
 // Déroulé d'une manche : écrire → voter (anonyme) → révélation des auteurs et des points.
-import { h, uid, shuffle, seg, norm } from '../ui.js';
+import { h, uid, shuffle, seg, norm, setText } from '../ui.js';
 import { drawNew, TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -199,8 +199,8 @@ function makeWrite(mode) {
               sfx.end();
             }
           }
-          if (v.phase === 'write') { who.set(room, v.submitted); status.textContent = `✍️ ${v.submitted.length}/${total} ont écrit`; }
-          else if (v.phase === 'vote') status.textContent = `🗳️ ${v.voted.length} vote${v.voted.length > 1 ? 's' : ''} · ${dico ? 'Laquelle est la vraie définition ?' : 'Votez pour la plus drôle !'}`;
+          if (v.phase === 'write') { who.set(room, v.submitted); setText(status, `✍️ ${v.submitted.length}/${total} ont écrit`); }
+          else if (v.phase === 'vote') setText(status, `🗳️ ${v.voted.length} vote${v.voted.length > 1 ? 's' : ''} · ${dico ? 'Laquelle est la vraie définition ?' : 'Votez pour la plus drôle !'}`);
           else status.textContent = '';
           lastKey = key;
         },
@@ -223,7 +223,7 @@ function makeWrite(mode) {
         if (!v) return;
         if (v.phase === 'write' || v.phase === 'vote') {
           const sec = Math.ceil(Math.max(0, v.deadline - g.now()) / 1000);
-          timer.textContent = '⏱ ' + sec;
+          setText(timer, '⏱ ' + sec);
           timer.classList.toggle('low', sec <= 10);
           if (sec <= 5 && sec > 0 && sec !== lastTick) { lastTick = sec; sfx.tick(); }
         } else timer.textContent = '';
@@ -296,11 +296,11 @@ function makeWrite(mode) {
           if (v.phase === 'write') {
             // On ne reconstruit pas la zone de saisie (pour ne pas effacer ce qui est en cours de frappe).
             const btn = body.querySelector('.btn');
-            if (btn) btn.textContent = v.mySub ? '✏️ Modifier ma réponse' : '📨 Envoyer';
-            status.textContent = `${v.mySub ? '✅ Envoyé ! ' : ''}${v.submitted.length}/${total} ont écrit`;
+            if (btn) setText(btn, v.mySub ? '✏️ Modifier ma réponse' : '📨 Envoyer');
+            setText(status, `${v.mySub ? '✅ Envoyé ! ' : ''}${v.submitted.length}/${total} ont écrit`);
           } else if (v.phase === 'vote') {
             body.replaceChildren(...voteUI());
-            status.textContent = `🗳️ ${v.voted.length} vote${v.voted.length > 1 ? 's' : ''}`;
+            setText(status, `🗳️ ${v.voted.length} vote${v.voted.length > 1 ? 's' : ''}`);
           } else {
             body.replaceChildren(...revealUI());
             status.textContent = '';

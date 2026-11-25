@@ -22,8 +22,8 @@ run(async () => {
   // ---- La télé : accueil → TV Mode → Lancer la télé ----
   await tv.goto(URL); await W(tv, 500);
   await tv.locator('.mode-card', { hasText: 'TV Mode' }).click(); await W(tv, 400);
-  check(/#\/tv$/.test(tv.url()) && await tv.getByRole('button', { name: '▶ Lancer la télé' }).count() === 1, 'TV Mode : écran de départ avec « ▶ Lancer la télé »');
-  await tv.getByRole('button', { name: '▶ Lancer la télé' }).click();
+  check(/#\/tv$/.test(tv.url()) && await tv.getByRole('button', { name: 'Lancer la télé' }).count() === 1, 'TV Mode : écran de départ avec « ▶ Lancer la télé »');
+  await tv.getByRole('button', { name: 'Lancer la télé' }).click();
   await tv.waitForSelector('.tv-bigcode', { timeout: 30000 });
   const code = (await tv.locator('.tv-bigcode').innerText()).trim();
   check(/^[A-Z]{4}$/.test(code) && await tv.locator('.tv-bigqr svg').count() === 1, `télé : salon ${code} créé, grand QR code`);
@@ -37,7 +37,7 @@ run(async () => {
     await p.waitForSelector('.game-pick', { timeout: 40000 });
   }
   check(await until(tv, async () => /David/.test(await tv.locator('.tv-bubbles').innerText())), 'télé : les 3 joueurs apparaissent');
-  check(/👑 Bob choisit le jeu/.test(await txt(tv)), 'télé : Bob, premier arrivé, est le chef 👑');
+  check(/Bob choisit le jeu/.test(await txt(tv)), 'télé : Bob, premier arrivé, est le chef 👑');
   check(/Choisis le jeu/i.test(await txt(bob)) && /Vote pour ton jeu/i.test(await txt(chloe)), 'Bob choisit le jeu, Chloé et David votent');
   check(!(await bob.locator('.room-code').count()), 'les téléphones n\'affichent pas le code (il est sur la télé)');
 

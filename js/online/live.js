@@ -1,5 +1,5 @@
 // Jeux en ligne en temps réel : Patate chaude, Réflexes, Couleurs pièges, La Séquence.
-import { h, uid, shuffle, seg, pick, rand } from '../ui.js';
+import { h, uid, shuffle, seg, pick, rand, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
@@ -88,8 +88,8 @@ export const patateOnline = {
         if (key === lastKey) return;
         clearTimeout(timer);
         cardSlot.replaceChildren(h('div', { class: 'tv-card tv-bigcard', style: { '--g1': colors[0], '--g2': colors[1] } }, h('div', { class: 'kicker' }, v.theme.kicker), h('div', { class: 'q' }, v.theme.text)));
-        if (v.phase === 'play') { bomb.textContent = '💣'; bomb.classList.add('shake'); bomb.classList.remove('fast'); sfx.go(); loop(); }
-        else { bomb.textContent = '💥'; bomb.classList.remove('shake', 'fast'); say.set(`BOUM ! ${g.nameOf(v.loser)} avait la bombe et prend ${sip(2)} !`); sfx.boom(); }
+        if (v.phase === 'play') { setText(bomb, '💣'); bomb.classList.add('shake'); bomb.classList.remove('fast'); sfx.go(); loop(); }
+        else { setText(bomb, '💥'); bomb.classList.remove('shake', 'fast'); say.set(`BOUM ! ${g.nameOf(v.loser)} avait la bombe et prend ${sip(2)} !`); sfx.boom(); }
         lastKey = key;
       },
       destroy() { clearTimeout(timer); },
@@ -192,7 +192,7 @@ export const reflexesOnline = {
           const label = h('div', { class: 'reflex-txt' });
           zone.append(label);
           const setGreen = () => { if (!zone.classList.contains('wait')) return; zone.classList.replace('wait', 'go'); label.textContent = 'TOUCHE !'; sfx.go(); buzz(30); };
-          if (v.mine) label.textContent = v.mine.fs ? '😬 Trop tôt ! (−1)' : `⚡ ${v.mine.rt} ms`;
+          if (v.mine) setText(label, v.mine.fs ? '😬 Trop tôt ! (−1)' : `⚡ ${v.mine.rt} ms`);
           else {
             label.textContent = 'Attends le vert…';
             clearTimeout(t);
@@ -293,7 +293,7 @@ export const couleursOnline = {
             e.preventDefault();
             if (frozen) return;
             if (c.id === target) { streak++; score += streak >= 5 ? 2 : 1; sfx.pop(); next(); } else { streak = 0; score = Math.max(0, score - 1); sfx.bad(); buzz([80, 40, 80]); b.classList.add('wrong'); frozen = true; timers.push(setTimeout(() => { frozen = false; next(); }, 600)); }
-            scoreEl.textContent = `⭐ ${score}${streak >= 5 ? ' 🔥' : ''}`;
+            setText(scoreEl, `⭐ ${score}${streak >= 5 ? ' 🔥' : ''}`);
           });
           return b;
         }));
@@ -302,7 +302,7 @@ export const couleursOnline = {
       sfx.go();
       iv = setInterval(() => {
         const left = v.endAt - g.now();
-        timeEl.textContent = '⏱ ' + Math.max(0, Math.ceil(left / 1000));
+        setText(timeEl, '⏱ ' + Math.max(0, Math.ceil(left / 1000)));
         if (left <= 0 && !sent) {
           sent = true; frozen = true; clearInterval(iv);
           g.send({ type: 'score', n: score });
@@ -466,14 +466,14 @@ export const sequenceOnline = {
       // Le texte d'abord : chez l'hôte, l'envoi met l'écran à jour tout de suite (résultat de la manche).
       if (i !== v.seq[pos]) {
         input = false;
-        status.textContent = '❌ Raté !';
+        setText(status, '❌ Raté !');
         sfx.bad(); buzz([200, 80, 200]);
         grid.classList.add('shake'); later(() => grid.classList.remove('shake'), 500);
         g.send({ type: 'answer', seq: entered });
         return;
       }
       pos++;
-      if (pos === v.seq.length) { input = false; status.textContent = '✅ Parfait !'; sub.textContent = 'On attend les autres…'; sfx.ok(); g.send({ type: 'answer', seq: entered }); }
+      if (pos === v.seq.length) { input = false; setText(status, '✅ Parfait !'); sub.textContent = 'On attend les autres…'; sfx.ok(); g.send({ type: 'answer', seq: entered }); }
     }
 
     function showRound() {
@@ -481,7 +481,7 @@ export const sequenceOnline = {
       input = false; pos = 0; entered = [];
       grid.classList.add('dim');
       pads.forEach((b) => b.classList.remove('lit'));
-      status.textContent = amAlive() ? 'Regarde bien…' : '👀 Tu regardes les autres';
+      setText(status, amAlive() ? 'Regarde bien…' : '👀 Tu regardes les autres');
       sub.textContent = `Suite de ${v.seq.length} couleur${v.seq.length > 1 ? 's' : ''}`;
       // Compte à rebours 3, 2, 1 puis la suite, calés sur l'horloge de l'hôte.
       for (let n = 3; n >= 1; n--) {
@@ -507,19 +507,19 @@ export const sequenceOnline = {
         }
         play.classList.remove('hidden'); endWrap.replaceChildren();
         const key = `${v.gid}:${v.round}:${v.phase}`;
-        pill.textContent = `🔴 Manche ${v.round} · ${v.alive.length} en lice`;
+        setText(pill, `🔴 Manche ${v.round} · ${v.alive.length} en lice`);
         tp.set(v.phase === 'input' ? v.deadline : 0);
         if (key !== lastKey) {
           if (v.phase === 'show') showRound();
           if (v.phase === 'input') {
             count.textContent = ''; grid.classList.remove('dim');
             if (amAlive() && !v.mine) { input = true; pos = 0; entered = []; status.textContent = 'À toi !'; sub.textContent = `Reproduis la suite (${v.seq.length})`; sfx.go(); }
-            else if (!amAlive()) { status.textContent = '👀 Les autres reproduisent la suite…'; sub.textContent = ''; }
+            else if (!amAlive()) { setText(status, '👀 Les autres reproduisent la suite…'); sub.textContent = ''; }
           }
           if (v.phase === 'result') {
             clear(); input = false;
             const mine = v.res[g.me];
-            status.textContent = mine == null ? '👀 Résultats de la manche' : mine ? '✅ Manche réussie !' : amAlive() ? '❌ Tout le monde a raté : on rejoue !' : `❌ Éliminé ! ${sip(1)}`;
+            setText(status, mine == null ? '👀 Résultats de la manche' : mine ? '✅ Manche réussie !' : amAlive() ? '❌ Tout le monde a raté : on rejoue !' : `❌ Éliminé ! ${sip(1)}`);
             sub.textContent = '';
             // Montre la bonne suite à ceux qui ont raté.
             if (mine === false) v.seq.forEach((c, k) => later(() => light(c, 200), 500 + k * 260));
@@ -532,7 +532,7 @@ export const sequenceOnline = {
             h('p', { class: 'status-line' }, v.over ? 'Fin de la partie…' : 'Manche suivante, la suite s\'allonge…'));
         } else if (v.phase === 'input') {
           extra.replaceChildren(h('p', { class: 'status-line' }, `${v.answered.length}/${total} ont répondu`));
-          if (v.mine && amAlive()) { status.textContent = v.mine.ok ? '✅ Parfait !' : '❌ Raté…'; sub.textContent = 'On attend les autres…'; }
+          if (v.mine && amAlive()) { setText(status, v.mine.ok ? '✅ Parfait !' : '❌ Raté…'); sub.textContent = 'On attend les autres…'; }
         } else extra.replaceChildren(amAlive() ? null : h('p', { class: 'status-line' }, '😵 Tu es éliminé : regarde les autres jouer.'));
         lastKey = key;
       },

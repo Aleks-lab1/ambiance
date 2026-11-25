@@ -22,6 +22,8 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* Icônes de l'interface (js/icons.js), à la place des emojis : taille et couleur du texte autour. */
+.ic { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; flex: none; overflow: visible; }
 html, body { margin: 0; min-height: 100%; }
 body {
   background: var(--bg);
@@ -204,14 +206,23 @@ details.panel[open] summary { margin-bottom: 10px; }
 
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (min-width: 560px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-/* Case d'un jeu : image du jeu (img/jeux/<id>.webp, fond transparent, générée par scripts/gen-images.mjs) posée
-   sur le dégradé du jeu (couleurs du thème) avec un halo de lumière, nom incrusté en bas à gauche. */
+/* Case d'un jeu, style « boîte de jeu » : silhouettes blanches (img/jeux/<id>.webp, fond transparent, générée par
+   scripts/gen-images.mjs) posées sur le dégradé du jeu (couleurs du thème), une lumière douce en haut à droite,
+   une trame de points qui s'efface vers la gauche et un liseré clair ; nom incrusté en bas à gauche. */
+.tile, .mini-tile, .pick-tile {
+  background:
+    radial-gradient(120% 95% at 88% 8%, rgba(255, 255, 255, .3), rgba(255, 255, 255, .08) 45%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(150deg, var(--g1), var(--g2));
+}
+.tile::before, .mini-tile::before, .pick-tile::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(rgba(255, 255, 255, .16) 1.1px, transparent 1.6px) 0 0 / 11px 11px;
+  -webkit-mask-image: linear-gradient(115deg, transparent 25%, #000 75%); mask-image: linear-gradient(115deg, transparent 25%, #000 75%);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .2);
+}
 .tile, .mini-tile {
   position: relative; isolation: isolate; border: 0; padding: 0; text-align: left; color: #fff; overflow: hidden;
   aspect-ratio: 3 / 2;
-  background:
-    radial-gradient(38% 57% at 68.5% 45%, rgba(255, 255, 255, .42), rgba(255, 255, 255, .16) 45%, rgba(255, 255, 255, 0)),
-    linear-gradient(150deg, var(--g1), var(--g2));
   transition: transform .1s ease;
 }
 .tile { display: block; width: 100%; border-radius: 20px; box-shadow: 0 4px 12px rgba(30, 10, 80, .16); }
@@ -517,7 +528,6 @@ canvas.board { display: block; width: 100%; height: 100%; touch-action: none; ba
 .pick-tile {
   position: relative; isolation: isolate; overflow: hidden; aspect-ratio: 3 / 2; border: 3px solid transparent; border-radius: 16px; padding: 0;
   color: #fff; text-align: left; box-shadow: 0 3px 10px rgba(30, 10, 80, .16); transition: transform .1s ease, opacity .2s ease, border-color .2s ease;
-  background: radial-gradient(38% 57% at 68.5% 45%, rgba(255, 255, 255, .42), rgba(255, 255, 255, 0)), linear-gradient(150deg, var(--g1), var(--g2));
 }
 .pick-tile:active { transform: scale(.95); }
 .pick-tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(20, 5, 40, .42)); pointer-events: none; }
