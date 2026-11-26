@@ -1317,7 +1317,14 @@ body.tv-mode .screen > .conn-banner { position: fixed; top: 12px; left: 50%; tra
 .tv-generic h1, .tv-stage h1 { font-size: 2.8em; }
 .tv-sub { font-size: 1.35em; color: var(--muted); }
 .tv-phones { font-size: 1.6em; font-weight: 800; margin-top: .8em; animation: pulse 1.6s ease-in-out infinite alternate; }
-.tv-podium { width: min(100%, 26em); zoom: 1.4; }
+.tv-end { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6em; text-align: center; }
+.tv-end h1 { font-size: 2.6em; }
+/* Le podium (tailles en px) est agrandi avec zoom, selon la taille de l'écran (la télé grandit avec la largeur, voir .tv). */
+.tv-podium { width: min(100%, 26em); zoom: 1.3; }
+@media (max-height: 650px) { .tv-podium { zoom: 1.05; } }
+@media (min-width: 1500px) and (min-height: 820px) { .tv-podium { zoom: 1.55; } }
+@media (min-width: 1800px) and (min-height: 1000px) { .tv-podium { zoom: 1.9; } }
+@media (min-width: 2500px) and (min-height: 1400px) { .tv-podium { zoom: 2.6; } }
 .tv-podium .scoreboard { display: none; } /* le classement complet est déjà à droite */
 /* Éléments communs des écrans spéciaux */
 .tv-bar { display: flex; align-items: center; gap: .8em; }

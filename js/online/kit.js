@@ -81,10 +81,9 @@ export const waitHost = () => h('p', { class: 'status-line' }, '⏳ En attente d
 /** Identifiant « personne » : view(room, s, TV_PID) = ce que voit un spectateur, sans aucun secret. */
 export const TV_PID = '__tv';
 
-/** Fin de partie à la télé : podium en grand. */
+/** Fin de partie à la télé : le podium en grand, centré (son spectacle, ses sons et ses confettis : js/podium.js). */
 export function tvEnd(room) {
-  return [h('div', { class: 'tv-hero' }, '🏆'), h('h1', null, 'Fin de la partie !'),
-    h('div', { class: 'tv-podium' }, podium(ranking(room)))];
+  return [h('div', { class: 'tv-end' }, h('h1', null, '🏆 Fin de la partie !'), h('div', { class: 'tv-podium' }, podium(ranking(room))))];
 }
 
 /** Compte à rebours de la télé : { el, set(deadline) } (tic-tac les 5 dernières secondes). */
