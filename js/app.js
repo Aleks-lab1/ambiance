@@ -160,15 +160,17 @@ const isLocal = (g) => g && !g.onlineOnly;
 
 function renderLocal(ctx) {
   document.title = 'Local — Ambiance';
+  // « Nouveaux » seulement s'il y a un nouveau jeu dans Local (le dernier lot peut ne contenir qu'un jeu TV Mode).
+  const filters = FILTERS.filter((f) => f.id !== 'new' || LOCAL_GAMES.some((g) => g.new));
   let filter = get('filter', 'all');
-  if (!FILTERS.some((f) => f.id === filter)) filter = 'all'; // ancien filtre supprimé (ex. « En ligne »)
+  if (!filters.some((f) => f.id === filter)) filter = 'all'; // ancien filtre supprimé (ex. « En ligne »)
   let count = getCount(); // « On est combien ? » (0 = peu importe)
   let query = '';
   const grid = h('div', { class: 'grid' });
-  const filters = h('div', { class: 'scroll-x', role: 'tablist' });
+  const filterBar = h('div', { class: 'scroll-x', role: 'tablist' });
 
   function renderFilters() {
-    filters.replaceChildren(...FILTERS.map((f) => h('button', {
+    filterBar.replaceChildren(...filters.map((f) => h('button', {
       class: 'chip' + (filter === f.id ? ' on' : ''), role: 'tab', 'aria-selected': filter === f.id ? 'true' : 'false',
       onclick: () => { filter = f.id; set('filter', filter); renderFilters(); renderGrid(); renderFavs(); },
     }, f.label)));
@@ -311,7 +313,7 @@ function renderLocal(ctx) {
     favSlot,
     recentSlot,
     searchBox,
-    filters,
+    filterBar,
     counts,
     resultBar,
     grid,

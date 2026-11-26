@@ -1534,3 +1534,64 @@ body.tv-mode #toasts { top: auto; bottom: 24px; font-size: clamp(15px, 1.2vw, 26
 .tv-seq .seq-count { font-size: 9em; }
 .vote-strip .count-label { font-weight: 800; font-size: 14px; color: var(--muted); white-space: nowrap; flex: none; }
 .game-pick { margin-bottom: 4px; }
+
+/* ---------- Dans la foule (js/online/foule.js) : manette du téléphone et place à la télé ---------- */
+.pick-tile .badge.tvonly { background: linear-gradient(135deg, #5b6cff, #22c1c3); color: #fff; }
+.foule-pad { display: flex; flex-direction: column; gap: 10px; min-height: calc(100dvh - 120px); user-select: none; -webkit-user-select: none; }
+.fp-top { display: flex; align-items: center; gap: 12px; }
+.fp-avatar { width: 66px; height: 66px; flex: none; }
+.fp-top .pill { align-self: flex-start; }
+.fp-status { margin: 0; font-weight: 700; font-size: 14px; line-height: 1.3; color: var(--text); }
+.fp-goals { display: flex; justify-content: center; gap: 12px; padding: 4px 0; }
+.fp-goal { --c: #3fa9f5; position: relative; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 20px;
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 42%), var(--c); border: 3px solid #fff;
+  box-shadow: 0 3px 10px rgba(40, 20, 80, .18); opacity: .5; transition: transform .3s, opacity .3s; }
+.fp-goal b { text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.fp-goal.next { opacity: 1; transform: scale(1.18); animation: pulse .8s ease-in-out infinite alternate; }
+.fp-goal.done { opacity: 1; }
+.fp-goal.done b { visibility: hidden; }
+.fp-goal.done::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 26px; text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.fp-next { margin: 0; text-align: center; font-weight: 800; font-size: 16px; }
+.fp-msg { padding: 10px 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); font-weight: 800; text-align: center; box-shadow: var(--shadow); }
+.fp-msg.good { background: #e7f8ee; color: #137a43; border-color: #bfe8cf; }
+.fp-msg.bad { background: #ffeef0; color: #b3261e; border-color: #f6c7cc; }
+.fp-msg.pop-in { animation: pop .4s ease; }
+.fp-over { padding: 18px 16px; border-radius: 20px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); text-align: center; font-weight: 800; font-size: 18px; line-height: 1.35; }
+.fp-ctrl { margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; padding-bottom: 6px; touch-action: none; }
+.fp-ctrl.wait { opacity: .55; }
+.fp-stick { position: relative; height: min(46vh, 260px); min-height: 180px; border-radius: 26px; touch-action: none; cursor: grab;
+  background: repeating-radial-gradient(circle at 50% 50%, rgba(91, 108, 255, .05) 0 14px, transparent 14px 28px), var(--card2); border: 2px dashed var(--line); }
+.fp-base { position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, .9), rgba(91, 108, 255, .16)); border: 3px solid rgba(91, 108, 255, .35); box-shadow: inset 0 3px 10px rgba(40, 20, 80, .12); }
+.fp-knob { position: absolute; left: 28px; top: 28px; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(145deg, #7d8bff, #4b5bea);
+  box-shadow: 0 6px 14px rgba(60, 50, 200, .35), inset 0 3px 6px rgba(255, 255, 255, .45); transition: transform .12s ease-out; }
+.fp-stick.on .fp-knob { transition: none; }
+.fp-stick.on { cursor: grabbing; }
+.fp-hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); pointer-events: none; }
+.fp-stick.on .fp-hint { opacity: 0; }
+.fp-push { position: relative; overflow: hidden; width: 132px; height: 132px; border-radius: 50%; border: 0; color: #fff; font-weight: 900; font-size: 16px; touch-action: none;
+  background: radial-gradient(circle at 35% 28%, #ff9ab4, #ff3d6e 60%, #d81b55); box-shadow: 0 8px 0 #b3134a, 0 12px 22px rgba(216, 27, 85, .35); transition: transform .08s, box-shadow .08s; }
+.fp-push-in { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fp-push-in .ic { font-size: 30px; }
+.fp-push:active, .fp-push.hit { transform: translateY(6px); box-shadow: 0 2px 0 #b3134a, 0 4px 10px rgba(216, 27, 85, .3); }
+.fp-push.hit { animation: fp-hit .25s ease; }
+@keyframes fp-hit { 0% { transform: translateY(6px) scale(.94); } 100% { transform: none; } }
+.fp-cd { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: rgba(40, 20, 60, .45); }
+.fp-push.cool .fp-cd { animation: fp-cool 2.5s linear forwards; }
+@keyframes fp-cool { from { height: 100%; } to { height: 0; } }
+/* Télé */
+.foule-tv { position: relative; flex: 1; min-height: 0; border-radius: 1.2em; overflow: hidden; background: #c4e4a6; box-shadow: var(--shadow); }
+.foule-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.foule-hud { position: absolute; top: .7em; left: .8em; right: .8em; display: flex; gap: .6em; align-items: center; pointer-events: none; }
+.fh-pill { background: rgba(255, 255, 255, .92); color: #2b1f45; border-radius: 999px; padding: .3em .9em; font-weight: 900; box-shadow: 0 .15em .5em rgba(40, 20, 80, .15); }
+.fh-time { margin-left: auto; font-variant-numeric: tabular-nums; }
+.fh-time.low { background: #ff4d6d; color: #fff; animation: pulse .5s ease-in-out infinite alternate; }
+.foule-say { position: absolute; left: 4%; right: 4%; top: 36%; pointer-events: none; }
+.foule-say.num .tv-say { font-size: 7em; }
+.foule-say .tv-say { font-size: 2.6em; color: #fff; -webkit-text-stroke: .06em #3b2a5e; paint-order: stroke fill; text-shadow: 0 .12em .4em rgba(40, 20, 80, .35); }
+.fh-tip { position: absolute; left: 50%; bottom: .7em; transform: translateX(-50%); max-width: 92%; background: rgba(255, 255, 255, .9); color: #2b1f45; border-radius: 999px; padding: .3em 1em; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .foule-pad { min-height: calc(100dvh - 80px); }
+  .fp-stick { height: 52vh; min-height: 150px; }
+  .fp-push { width: 116px; height: 116px; }
+}

@@ -378,6 +378,11 @@ class Host {
   startGame(type, settings) {
     const mod = onlineGame(type);
     if (!mod) return;
+    // Jeux réservés au TV Mode (tvOnly) : c'est la télé qui doit faire tourner la partie.
+    if (mod.tvOnly && !this.room.tvHost) {
+      this.sendTo(this.room.host, { t: 'toast', msg: `📺 ${mod.name} se joue en TV Mode : c'est la télé qui crée le salon.` });
+      return;
+    }
     const active = this.room.players.filter((p) => p.on);
     if (active.length < mod.minPlayers) {
       this.sendTo(this.room.host, { t: 'toast', msg: `Il faut au moins ${mod.minPlayers} joueurs connectés pour ce jeu.` });
@@ -400,6 +405,24 @@ class Host {
     if (this.room.game && this.mod && this.mod.tick) {
       try { if (this.mod.tick(this.room, this.gs, this.api)) this.broadcast(); } catch (e) { console.error(e); }
     }
+    if (this.room.game && this.mod && this.mod.frame && !this.raf) this.startFrames();
+  }
+
+  /**
+   * Jeux en temps réel (mod.frame, ex. Dans la foule) : la partie avance à chaque image de l'écran, pas
+   * seulement 4 fois par seconde. frame(room, s, dt, api) renvoie true quand il faut renvoyer la vue à tous.
+   * La boucle s'arrête d'elle-même quand le jeu change (et se met en pause quand la page est cachée).
+   */
+  startFrames() {
+    let last = performance.now();
+    const loop = (ts) => {
+      if (this.dead || !this.room.game || !this.mod || !this.mod.frame) { this.raf = 0; return; }
+      this.raf = requestAnimationFrame(loop);
+      const dt = Math.min(0.05, Math.max(0, (ts - last) / 1000));
+      last = ts;
+      try { if (this.mod.frame(this.room, this.gs, dt, this.api)) this.broadcast(); } catch (e) { console.error(e); }
+    };
+    this.raf = requestAnimationFrame(loop);
   }
 
   viewFor(pid) {
@@ -465,6 +488,7 @@ class Host {
     this.dead = true;
     clearInterval(this.iv);
     clearInterval(this.hb);
+    if (this.raf) cancelAnimationFrame(this.raf);
     clearTimeout(this.saveT);
     clearTimeout(this.peerT);
     document.removeEventListener('visibilitychange', this.onHide);
@@ -1031,7 +1055,9 @@ export function start(ctx) {
       const grid = h('div', { class: 'game-pick' });
       const bar = h('div', { class: 'lobby-bar' });
       const tiles = new Map();
-      for (const g of ONLINE_GAMES) {
+      // Jeux réservés au TV Mode : seulement dans le salon créé par la télé, en premier.
+      const list = room.tvHost ? [...ONLINE_GAMES.filter((g) => g.tvOnly), ...ONLINE_GAMES.filter((g) => !g.tvOnly)] : ONLINE_GAMES.filter((g) => !g.tvOnly);
+      for (const g of list) {
         const m = metaOf(g);
         const [c1, c2] = gameColors(m.id, m.colors);
         const img = h('img', { class: 'tile-art', src: `img/jeux/${m.id}.webp`, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' });
@@ -1040,7 +1066,7 @@ export function start(ctx) {
         const lock = h('span', { class: 'badge lock hidden' });
         const go = h('span', { class: 'go hidden' }, '▶ Touche encore pour lancer');
         const el = h('button', { class: 'pick-tile', style: { '--g1': c1, '--g2': c2 }, onclick: () => onTile(g) },
-          img, h('span', { class: 'badges' }, lock), votes, h('span', { class: 'nm' }, g.name), go);
+          img, h('span', { class: 'badges' }, g.tvOnly ? h('span', { class: 'badge tvonly' }, '📺 Spécial télé') : null, lock), votes, h('span', { class: 'nm' }, g.name), go);
         tiles.set(g.id, { el, votes, lock, go, g, m });
         grid.append(el);
       }

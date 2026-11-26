@@ -88,6 +88,11 @@ run(async () => {
   check(/Bob/.test(await scr()), 'Yam\'s : au tour de Bob');
 
   for (const id of ['quiaecrit', 'danssatete', 'quisuisje']) { await go(id); check(/en ligne/i.test(await scr()), `${id} : propose le jeu en ligne`); }
+  // Jeu réservé au TV Mode : sa fiche propose de lancer la télé (ou de la rejoindre comme joueur).
+  await go('foule');
+  check(/Se joue en TV Mode/.test(await scr()) && await page.getByRole('button', { name: 'Lancer la télé' }).count() === 1 && await page.getByRole('button', { name: 'Je suis un joueur' }).count() === 1, 'Dans la foule : « Se joue en TV Mode », Lancer la télé / Je suis un joueur', await scr());
+  await page.getByRole('button', { name: 'Lancer la télé' }).click(); await W(600);
+  check(/#\/tv$/.test(page.url()), 'Dans la foule : « Lancer la télé » ouvre le TV Mode', page.url());
   // Tous les jeux se jouent en ligne : chaque écran de réglages propose de créer une partie.
   const ids = await page.evaluate(async () => (await import('/js/games/index.js')).GAMES.map((g) => g.id));
   const games = await page.evaluate(async () => (await import('/js/online/games.js')).ONLINE_GAMES.length);
@@ -95,7 +100,7 @@ run(async () => {
   const missing = [];
   for (const id of ids) {
     await go(id);
-    const ok = (await page.getByRole('button', { name: /Créer une partie|Jouer en ligne/ }).count()) > 0;
+    const ok = (await page.getByRole('button', { name: /Créer une partie|Jouer en ligne|Lancer la télé/ }).count()) > 0;
     if (!ok) missing.push(id);
   }
   check(!missing.length, 'chaque jeu propose le mode en ligne', missing);
@@ -107,7 +112,7 @@ run(async () => {
   check(JSON.stringify(modes) === '["Local","Online","TV Mode"]' && ys[0] < ys[1] && ys[1] < ys[2], 'accueil : Local, Online, TV Mode, de haut en bas', modes);
   check(!(await page.locator('.tile').count()), 'accueil : pas de liste de jeux (elle est dans « Local »)');
   const localIds = await page.evaluate(async () => (await import('/js/games/index.js')).LOCAL_GAMES.map((g) => g.id));
-  check(localIds.length === ids.length - 7 && !['quiaecrit', 'danssatete', 'quisuisje', 'punchlines', 'telephone', 'dico', 'menteur'].some((x) => localIds.includes(x)), `Local : ${localIds.length} jeux, sans les 7 jeux qui n'existent qu'en ligne`);
+  check(localIds.length === ids.length - 8 && !['quiaecrit', 'danssatete', 'quisuisje', 'punchlines', 'telephone', 'dico', 'menteur', 'foule'].some((x) => localIds.includes(x)), `Local : ${localIds.length} jeux, sans les 7 jeux qui n'existent qu'en ligne ni Dans la foule (TV Mode)`);
   await page.locator('.mode-card', { hasText: 'Local' }).click(); await W(600);
   check(/#\/local$/.test(page.url()), 'Local : adresse #/local');
   check(!(await page.locator('.chip', { hasText: /En ligne/ }).count()), 'plus de filtre « En ligne »');
@@ -157,9 +162,17 @@ run(async () => {
   await page.locator('.reel-wrap button', { hasText: 'Jouer' }).click(); await W(800);
   check((await page.title()).startsWith(picked), 'au hasard : « Jouer » ouvre ce jeu', await page.title());
 
-  await go('local'); await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
-  const n = await page.locator('.tile').count();
-  check(n > 0 && n <= 12, 'filtre Nouveaux : uniquement le dernier lot', n);
+  // Badge « Nouveau » : uniquement le dernier lot. Si ce lot n'a pas de jeu dans Local (ex. un jeu TV Mode seulement),
+  // le filtre « Nouveaux » n'est pas proposé dans Local.
+  const lot = await page.evaluate(async () => { const m = await import('/js/games/index.js'); return { all: m.GAMES.filter((g) => g.new).map((g) => g.id), local: m.LOCAL_GAMES.filter((g) => g.new).length }; });
+  await go('local');
+  const chip = await page.locator('button', { hasText: /Nouveaux/ }).count();
+  if (lot.local) {
+    await page.locator('button', { hasText: /Nouveaux/ }).first().click(); await W(300);
+    const n = await page.locator('.tile').count();
+    check(n === lot.local, 'filtre Nouveaux : uniquement le dernier lot', n);
+  } else check(!chip && lot.all.length > 0 && lot.all.length <= 12, `dernier lot sans jeu local (${lot.all.join(', ')}) : pas de filtre « Nouveaux » dans Local`, lot);
+  check(!(await page.locator('.tile .badge.new').count()) || lot.local > 0, 'Local : badge « Nouveau » seulement sur le dernier lot');
   check(!errors.length, 'aucune erreur JS', errors);
   await browser.close();
 });

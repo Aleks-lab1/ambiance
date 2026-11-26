@@ -1,6 +1,6 @@
 # 🎉 Ambiance — jeux de soirée (PWA)
 
-Une application web installable (PWA) avec **61 jeux de soirée** en français, **tous jouables en ligne, chacun sur son téléphone** (ou sur un seul téléphone qu'on se passe).
+Une application web installable (PWA) avec **62 jeux de soirée** en français, **tous jouables en ligne, chacun sur son téléphone** (ou sur un seul téléphone qu'on se passe).
 Aucun framework, aucune étape de build : ce sont des fichiers statiques à héberger n'importe où.
 
 ## L'accueil : 3 modes
@@ -12,6 +12,12 @@ Aucun framework, aucune étape de build : ce sont des fichiers statiques à héb
 | 📺 | **TV Mode** | Sur un ordinateur ou une télé : **▶ Lancer la télé**, chacun scanne le QR code avec son téléphone. Le premier arrivé est le **chef 👑** (il lance les jeux, les autres votent), la télé affiche tout en grand. |
 
 ## Les jeux
+
+### 📺 Spécial TV Mode : les téléphones deviennent des manettes
+
+| | Jeu | Principe |
+|---|---|---|
+| 👥 | **Dans la foule** | La télé montre une place pleine de bonshommes en gelée, tous pareils. Chacun pilote le sien en secret (joystick + bouton « Pousser » sur le téléphone) et doit toucher ses 4 fontaines dans l'ordre sans se faire repérer. Les passants ne poussent jamais : pousser te démasque ! Faire tomber un joueur l'élimine de la manche, le dernier debout gagne. Révélation de qui était qui à la fin de chaque manche. Se joue uniquement en TV Mode (la télé fait tourner la partie en temps réel). |
 
 ### 🌐 En ligne : tous les jeux (chacun sur son téléphone)
 
@@ -163,7 +169,7 @@ Le script liste tous les fichiers et calcule un numéro de version. Les utilisat
 - Code à 4 lettres + QR code + lien de partage. Reconnexion automatique si un joueur perd le réseau ou recharge la page (le dessin en cours est restauré).
 - **Partie coupée, partie reprise** (`js/online/save.js`) : le téléphone de l'hôte enregistre la partie en continu (joueurs, scores, jeu en cours). S'il ferme l'appli, si son téléphone se verrouille ou si la page se recharge, l'accueil propose « 🔁 Reprendre la partie » : même code, mêmes scores, le jeu repart au même point (les minuteurs sont mis en pause). Les autres sont prévenus (« Alice a quitté l'appli un instant… »), patientent jusqu'à 5 minutes et reviennent tout seuls.
 - **Un joueur qui revient retrouve sa place et ses points** : bandeau « 🔌 Revenir dans la partie » sur l'accueil, et l'hôte reconnaît aussi un joueur parti qui revient avec le même prénom depuis un autre navigateur.
-- 📺 **Mode télé** (`js/online/tv.js`) : accueil → **TV Mode** → « ▶ Lancer la télé » (la télé crée le salon, les téléphones scannent le QR code, le premier arrivé est le chef 👑), ou « Afficher un salon déjà créé » (code, ou `#/tv/CODE`). La partie s'affiche en grand pour tout le monde (code et QR pour rejoindre, classement en direct, podium) et les téléphones servent de manettes. **55 jeux sur 61 ont un vrai écran télé**, pensé pour le grand écran : le Quiz et les jeux de rapidité (question et 4 grandes réponses), Je dessine (le dessin en direct, mot caché), les votes (barres qui s'allongent), les cartes à tour de rôle (Action ou vérité, Cap…), la Bouteille et la Roue qui tournent en grand, Le Roi, Plus ou moins et Le Bus (cartes qui se retournent), Memory, Yam's, Bataille navale, Morpion et 4 en ligne, le Pendu, le Petit bac, les jeux par équipes (scores, chrono), Le Bon Mot (saisie en direct), Loup-garou… Les autres (Réflexes, Couleurs pièges, L'Imposteur, Menteur, Téléphone dessiné, Qui suis-je) gardent l'écran commun, car tout s'y joue sur les téléphones ou en secret. La télé ne reçoit jamais de secret (mot, rôle, réponse pas encore révélée).
+- 📺 **Mode télé** (`js/online/tv.js`) : accueil → **TV Mode** → « ▶ Lancer la télé » (la télé crée le salon, les téléphones scannent le QR code, le premier arrivé est le chef 👑), ou « Afficher un salon déjà créé » (code, ou `#/tv/CODE`). La partie s'affiche en grand pour tout le monde (code et QR pour rejoindre, classement en direct, podium) et les téléphones servent de manettes. **56 jeux sur 62 ont un vrai écran télé**, pensé pour le grand écran : le Quiz et les jeux de rapidité (question et 4 grandes réponses), Je dessine (le dessin en direct, mot caché), les votes (barres qui s'allongent), les cartes à tour de rôle (Action ou vérité, Cap…), la Bouteille et la Roue qui tournent en grand, Le Roi, Plus ou moins et Le Bus (cartes qui se retournent), Memory, Yam's, Bataille navale, Morpion et 4 en ligne, le Pendu, le Petit bac, les jeux par équipes (scores, chrono), Le Bon Mot (saisie en direct), Loup-garou… Dans la foule n'existe qu'en TV Mode : la télé fait tourner la partie en temps réel et chaque téléphone devient une manette. Les autres (Réflexes, Couleurs pièges, L'Imposteur, Menteur, Téléphone dessiné, Qui suis-je) gardent l'écran commun, car tout s'y joue sur les téléphones ou en secret. La télé ne reçoit jamais de secret (mot, rôle, réponse pas encore révélée).
 - Ça marche en Wi-Fi comme en 4G/5G, même à distance (relais automatique, voir ci-dessous).
 
 ### En 4G/5G ou sur des Wi-Fi différents
@@ -203,6 +209,9 @@ js/online/room.js    salon en ligne, hôte, clients, reconnexion
 js/online/save.js    partie enregistrée chez l'hôte (reprise) et place du joueur
 js/online/tv.js      écran télé (grand écran, vue publique)
 js/online/relay.js   relais MQTT de secours, messages chiffrés
+js/online/foule.js   Dans la foule (TV Mode seulement) : règles, manette du téléphone, écran télé
+js/foule-core.js     Dans la foule : la place, les passants, les poussées, les fontaines (sans interface)
+js/foule-art.js      Dans la foule : dessin animé des bonshommes, de la place et des fontaines
 js/finder.js         accueil : nombre de joueurs, recherche, au hasard, joués récemment
 js/online/*.js       jeux en ligne (dessin, imposteur, votes, quiz/rapidité, écriture,
                      téléphone dessiné, bingo, menteur, cartes, paquet, hasard, oral…)

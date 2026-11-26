@@ -66,6 +66,9 @@ export const sfx = {
   rattle() { for (let k = 0; k < 5; k++) noise(0.04, 0.35, { type: 'bandpass', freq: 1500 + k * 260, q: 2, decay: 4, when: k * 0.07 + Math.random() * 0.03 }); },
   card() { noise(0.12, 0.3, { type: 'highpass', freq: 2400, q: 0.7, decay: 1.6 }); },
   splash() { noise(0.55, 0.45, { type: 'bandpass', freq: 1100, q: 0.6, decay: 1.8 }); tone(420, 0.25, 'sine', 0.08, 0, 160); },
+  // Dans la foule : bonhomme en gelée qu'on pousse (boing) et qui tombe par terre (pouf).
+  boing() { tone(170, 0.24, 'sine', 0.28, 0, 520); tone(340, 0.12, 'triangle', 0.1, 0.02, 760); },
+  thud() { noise(0.2, 0.5, { type: 'lowpass', freq: 380, q: 0.8, decay: 4 }); tone(96, 0.18, 'sine', 0.32, 0, 52); },
 };
 
 export function buzz(pattern = 40) {

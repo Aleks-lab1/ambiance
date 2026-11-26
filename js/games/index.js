@@ -36,9 +36,24 @@ export const GAMES = [
     load: () => import('./imposteur.js'),
   },
   {
-    id: 'quiaecrit', name: 'Qui a écrit ça ?', emoji: '🕵️‍♀️', colors: ['#8e2de2', '#4a00e0'], new: true,
+    id: 'foule', name: 'Dans la foule', emoji: '👥', colors: ['#5b6cff', '#22c1c3'], new: true,
+    desc: 'Sur la télé, une foule de bonshommes tous pareils. Pilote le tien en secret avec ton téléphone… et pousse les autres !',
+    tags: ['rapide', 'bluff'], players: '2-12', badges: ['Nouveau'],
+    rules: [
+      '<b>Se joue en TV Mode :</b> la télé (ou un ordinateur) affiche une place pleine de bonshommes qui se promènent. Chaque téléphone devient une manette : un joystick pour marcher et un bouton « Pousser ».',
+      'Chaque joueur pilote <b>un</b> des bonshommes, mais personne ne sait lequel ! Au départ, bouge un peu pour te retrouver… sans te faire repérer. Les autres sont des passants pilotés par l\'ordinateur.',
+      'Ton téléphone t\'indique <b>tes 4 fontaines, dans l\'ordre</b>. Le premier qui les touche toutes gagne la manche (+3). Marche comme les passants : ils flânent, s\'arrêtent, vont eux aussi toucher les fontaines.',
+      '<b>Pousse</b> un bonhomme pour le faire tomber. Si c\'est un joueur, il est éliminé de la manche (+1 pour toi) ; le dernier debout gagne la manche (+2). Mais attention : <b>les passants ne poussent jamais</b>. Pousser te démasque… et pousser un passant aussi !',
+      'À la fin de chaque manche, la télé révèle qui était qui. Le bonhomme change de couleur à chaque manche (tout le monde a la même).',
+    ],
+    onlineOnly: true, // n'existe qu'en ligne : pas dans « Local »
+    tvOnly: true, // se joue uniquement en TV Mode (la télé fait tourner la partie)
+    load: () => import('./enligne.js').then((m) => m.launcher('foule', { tv: true })),
+  },
+  {
+    id: 'quiaecrit', name: 'Qui a écrit ça ?', emoji: '🕵️‍♀️', colors: ['#8e2de2', '#4a00e0'],
     desc: 'Chacun répond en secret à une question perso… puis devinez qui a écrit quoi !',
-    tags: ['bluff', 'hot'], players: '3-16', badges: ['Nouveau'],
+    tags: ['bluff', 'hot'], players: '3-16',
     rules: [
       'Une question perso s\'affiche (« Ton plus gros mensonge à tes parents »). Chacun écrit sa réponse en secret sur son téléphone.',
       'Les réponses sont ensuite révélées une par une, anonymement : votez pour celui ou celle qui l\'a écrite ! +1 si tu trouves, et l\'auteur gagne +1 par joueur piégé.',
@@ -47,9 +62,9 @@ export const GAMES = [
     load: () => import('./enligne.js').then((m) => m.launcher('quiaecrit')),
   },
   {
-    id: 'curseur', name: 'Le Curseur', emoji: '🎚️', colors: ['#ff6a00', '#ee0979'], new: true,
+    id: 'curseur', name: 'Le Curseur', emoji: '🎚️', colors: ['#ff6a00', '#ee0979'],
     desc: 'Froid ↔ Chaud : un indice, et tout le monde place le curseur au bon endroit.',
-    tags: ['equipes'], players: '2-16', badges: ['Nouveau'],
+    tags: ['equipes'], players: '2-16',
     rules: [
       'Une échelle entre deux opposés s\'affiche (Froid ↔ Chaud, Nul ↔ Génial…). Un joueur voit en secret une cible sur l\'échelle et donne un indice (« soupe », « Brad Pitt »…).',
       'Les autres placent le curseur là où ils pensent que se trouve la cible. Plus on est proche, plus on marque (jusqu\'à 4 points). En ligne, chacun place son propre curseur.',
@@ -57,9 +72,9 @@ export const GAMES = [
     load: () => import('./soiree.js').then((m) => m.curseur),
   },
   {
-    id: 'danssatete', name: 'Dans sa tête', emoji: '🧠', colors: ['#c94b4b', '#4b134f'], new: true,
+    id: 'danssatete', name: 'Dans sa tête', emoji: '🧠', colors: ['#c94b4b', '#4b134f'],
     desc: 'Les meilleures pizzas, les pires corvées… Devine le classement d\'un ami.',
-    tags: [], players: '3-16', badges: ['Nouveau'],
+    tags: [], players: '3-16',
     rules: [
       'Un thème et 5 éléments s\'affichent (« Les pires corvées »). Le joueur désigné les classe selon SES goûts, en secret.',
       'Les autres essaient de deviner son classement : +1 par élément à la bonne place. Le joueur désigné gagne 1 point par ami qui en a trouvé au moins 3.',
@@ -68,9 +83,9 @@ export const GAMES = [
     load: () => import('./enligne.js').then((m) => m.launcher('danssatete')),
   },
   {
-    id: 'ordre', name: 'Dans l\'ordre !', emoji: '📅', colors: ['#2193b0', '#6dd5ed'], new: true,
+    id: 'ordre', name: 'Dans l\'ordre !', emoji: '📅', colors: ['#2193b0', '#6dd5ed'],
     desc: 'Pyramides, iPhone, Titanic… Remets 4 événements dans l\'ordre chronologique.',
-    tags: ['rapide'], players: '1-16', badges: ['Nouveau'],
+    tags: ['rapide'], players: '1-16',
     rules: [
       'Quatre événements s\'affichent (« Naufrage du Titanic », « Sortie du premier iPhone »…). Classe-les du plus ancien au plus récent.',
       'En ligne : +1 par événement bien placé, +2 si tout est juste, et +1 pour le plus rapide sans faute. Sur un seul téléphone, le groupe classe ensemble puis on vérifie les dates.',
@@ -78,9 +93,9 @@ export const GAMES = [
     load: () => import('./soiree.js').then((m) => m.ordre),
   },
   {
-    id: 'quisuisje', name: 'Qui suis-je ?', emoji: '🎭', colors: ['#f7971e', '#ffd200'], new: true,
+    id: 'quisuisje', name: 'Qui suis-je ?', emoji: '🎭', colors: ['#f7971e', '#ffd200'],
     desc: 'Tout le monde voit ton personnage sur son téléphone… sauf toi !',
-    tags: ['rapide'], players: '3-16', badges: ['Nouveau'],
+    tags: ['rapide'], players: '3-16',
     rules: [
       'Chaque joueur reçoit une identité secrète (célébrité, personnage, animal…) que tous les autres voient sur leur téléphone, mais pas lui !',
       'À tour de rôle, pose une question fermée à voix haute (« Suis-je une femme ? »), les autres répondent oui ou non. Quand tu crois savoir, tape ta réponse : les premiers à trouver marquent le plus.',
@@ -89,9 +104,9 @@ export const GAMES = [
     load: () => import('./enligne.js').then((m) => m.launcher('quisuisje')),
   },
   {
-    id: 'chifoumi', name: 'Chifoumi', emoji: '✂️', colors: ['#56ab2f', '#a8e063'], new: true,
+    id: 'chifoumi', name: 'Chifoumi', emoji: '✂️', colors: ['#56ab2f', '#a8e063'],
     desc: 'Pierre, feuille, ciseaux… chacun contre tous, en même temps !',
-    tags: ['rapide'], players: '1-16', badges: ['Nouveau'],
+    tags: ['rapide'], players: '1-16',
     rules: [
       'En ligne : à chaque manche, tout le monde choisit en secret pierre, feuille ou ciseaux. Tu marques 1 point par joueur que tu bats. Pas de choix à temps ? Le hasard choisit pour toi !',
       'Seul : affronte le téléphone, premier à 3 points.',
@@ -99,9 +114,9 @@ export const GAMES = [
     load: () => import('./soiree.js').then((m) => m.chifoumi),
   },
   {
-    id: 'bataille', name: 'Bataille navale', emoji: '🚢', colors: ['#0d4d8c', '#2ec5ff'], new: true,
+    id: 'bataille', name: 'Bataille navale', emoji: '🚢', colors: ['#0d4d8c', '#2ec5ff'],
     desc: 'Coule la flotte adverse ! En ligne, le gagnant reste et affronte le suivant.',
-    tags: [], players: '1-16', badges: ['Nouveau'],
+    tags: [], players: '1-16',
     rules: [
       'Chacun a 5 bateaux sur une grille de 8 × 8 (placés au hasard, tu peux les remélanger). À ton tour, tire sur une case de l\'adversaire : à l\'eau, touché ou coulé ! Touché = tu rejoues.',
       'Le premier qui coule toute la flotte adverse gagne. En ligne, les autres attendent leur tour et regardent la bataille. Seul, affronte le téléphone.',
@@ -109,16 +124,16 @@ export const GAMES = [
     load: () => import('./plateau.js').then((m) => m.bataille),
   },
   {
-    id: 'memory', name: 'Memory', emoji: '🧩', colors: ['#fc466b', '#3f5efb'], new: true,
+    id: 'memory', name: 'Memory', emoji: '🧩', colors: ['#fc466b', '#3f5efb'],
     desc: 'Retourne les cartes deux par deux et trouve les paires.',
-    tags: [], players: '1-16', badges: ['Nouveau'],
+    tags: [], players: '1-16',
     rules: ['Les cartes sont face cachée. À ton tour, retournes-en deux : si c\'est une paire, tu marques un point et tu rejoues. Sinon, elles se retournent et c\'est au suivant. Le plus de paires gagne !'],
     load: () => import('./plateau.js').then((m) => m.memory),
   },
   {
-    id: 'yams', name: 'Yam\'s', emoji: '🎲', colors: ['#7a1f3d', '#c79a2a'], new: true,
+    id: 'yams', name: 'Yam\'s', emoji: '🎲', colors: ['#7a1f3d', '#c79a2a'],
     desc: '5 dés, 3 lancers, 13 combinaisons : brelan, full, suites, Yam\'s !',
-    tags: [], players: '1-16', badges: ['Nouveau'],
+    tags: [], players: '1-16',
     rules: [
       'À ton tour, lance les 5 dés jusqu\'à 3 fois en gardant ceux que tu veux, puis inscris ton score dans une case encore libre (même 0 si rien ne va).',
       'Haut de la feuille : total des 1, des 2… des 6 (bonus de 35 si tu atteins 63). Bas : brelan, carré, full (25), petite suite (30), grande suite (40), Yam\'s (50) et chance. Le plus gros total gagne.',

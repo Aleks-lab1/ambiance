@@ -199,6 +199,12 @@ const GAMES = [
     await W(3600);
     await see('suite', /Regardez bien/, '.tv-seq .seq-pad');
   }],
+  // Dans la foule (TV Mode seulement, temps réel) : la place et la foule ; partie complète dans online/foule.test.cjs.
+  ['/js/online/foule.js', 'fouleOnline', { rounds: 1 }, 3, async (t, see) => {
+    await see('compte à rebours', /Manche 1 \/ 1/);
+    await W(3000);
+    await see('partez', /Les passants ne poussent jamais/);
+  }],
 ];
 
 run(async () => {

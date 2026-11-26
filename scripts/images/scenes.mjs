@@ -14,6 +14,7 @@
 //   ball(7, x, y, taille, { c })                    boule de bingo
 //   word('VRAI', x, y, taille, rotation, { c })     mot en grosses lettres (police Fredoka)
 //   ring(x, y, taille), wheel(…), gallows(…), pads(…), arrow(…), arcs(…)   formes dessinées
+//   blob(x, y, taille, { pose, mood, f })          bonhomme de Dans la foule (js/foule-art.js) : pose stand / walk / push / down
 // Après une modification : node scripts/gen-images.mjs (ou node scripts/gen-images.mjs <id> pour un seul jeu).
 
 const i = (n, x, y, s, r = 0, o = {}) => ({ k: 'i', n, x, y, s, r, ...o });
@@ -22,6 +23,7 @@ const card = (rank, suit, x, y, s, r = 0, o = {}) => ({ k: 'card', rank, suit, x
 const ball = (t, x, y, s, o = {}) => ({ k: 'ball', t, x, y, s, r: 0, ...o });
 const word = (t, x, y, s, r = 0, o = {}) => ({ k: 'word', t, x, y, s, r, ...o });
 const shape = (k) => (x, y, s, r = 0, o = {}) => ({ k, x, y, s, r, ...o });
+const blob = (x, y, s, o = {}) => ({ k: 'blob', x, y, s, r: 0, ...o });
 const ring = shape('ring'), wheel = shape('wheel'), gallows = shape('gallows'), pads = shape('pads'), arrow = shape('arrow'), arcs = shape('arcs');
 
 // Couleurs.
@@ -33,6 +35,8 @@ const L = (n, c, r = -12, o = {}) => i(n, 110, 66, 58, r, { c, ...o });
 const Rt = (n, c, r = 12, o = {}) => i(n, 272, 146, 52, r, { c, ...o });
 
 export const SCENES = {
+  // Tous pareils (c'est le jeu) : un bonhomme en pousse un autre, les autres flânent derrière.
+  foule: [blob(118, 70, 58, { pose: 'walk' }), blob(158, 54, 44, { pose: 'stand', look: 0.6 }), blob(180, 108, 112, { pose: 'push' }), blob(246, 128, 84, { pose: 'down', fall: 0.42 })],
   dessin: [L('paint-brush', B, -30), M('palette', BR, -8), Rt('pencil', Y, 20)],
   imposteur: [L('magnifying-glass', C, -14), M('spy', Y, 0), Rt('domino-mask', P, 10)],
   quiaecrit: [L('papers', B, -10), M('quill-ink', C, 6), Rt('magnifying-glass', Y, 10)],

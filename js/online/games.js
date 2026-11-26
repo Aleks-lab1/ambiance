@@ -19,13 +19,14 @@ import { etsiOnline, confidencesOnline, capOnline, actionOnline } from './cartes
 import { roiOnline, plusmoinsOnline, busOnline } from './paquet.js';
 import { bouteilleOnline, roueOnline, doigtOnline, outilsOnline } from './hasard.js';
 import { frontOnline, niouiOnline, histoireOnline } from './oral.js';
+import { fouleOnline } from './foule.js';
 
 export const ONLINE_GAMES = [dessin, imposteur, raceQuiz, writePunch, telephone, writeDico, menteur, raceEmoji, raceAnag, raceEstim, raceVf, raceCalc, bonmot, unisson, bingo, voteTP, voteDix, voteQui, voteOp, voteJamais,
   eqMI, eqMime, eqFredonne, eqDisle, petitbacOnline, patateOnline, reflexesOnline, couleursOnline, motmystereOnline, morpionOnline,
   paranoiaOnline, debatsOnline, cinqOnline, deuxOnline, loupOnline,
   quiaecritOnline, curseurOnline, danssateteOnline, ordreOnline, quisuisjeOnline, chifoumiOnline, batailleOnline, memoryOnline, yamsOnline,
   actionOnline, capOnline, etsiOnline, confidencesOnline, bouteilleOnline, roueOnline, roiOnline, plusmoinsOnline, busOnline,
-  chapeauOnline, frontOnline, niouiOnline, histoireOnline, penduOnline, sequenceOnline, doigtOnline, outilsOnline];
+  chapeauOnline, frontOnline, niouiOnline, histoireOnline, penduOnline, sequenceOnline, doigtOnline, outilsOnline, fouleOnline];
 export const onlineGame = (id) => ONLINE_GAMES.find((g) => g.id === id);
 
 // Jeu du catalogue (js/games/index.js) qui correspond à chaque jeu en ligne : image de la case, couleurs,

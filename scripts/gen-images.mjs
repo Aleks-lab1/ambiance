@@ -106,6 +106,11 @@ await page.evaluate(async ({ srcs, font }) => {
   const f = new FontFace('Fredoka', `url(${font})`, { weight: '700' });
   document.fonts.add(await f.load());
 }, { srcs: icons, font });
+// Bonshommes de Dans la foule (élément blob) : on charge leur dessin (js/foule-core.js + js/foule-art.js, code de
+// l'appli) dans la page, sans les import/export, pour avoir window.FOULE.drawGuy et palette.
+const fouleSrc = ['js/foule-core.js', 'js/foule-art.js'].map((f) => readFileSync(join(root, f), 'utf8')).join('\n')
+  .replace(/^import .*$/gm, '').replace(/^export (const|function)/gm, '$1');
+await page.addScriptTag({ content: fouleSrc + '\nwindow.FOULE = { drawGuy, palette };' });
 
 const tmp = mkdtempSync(join(tmpdir(), 'ambiance-img-'));
 for (const id of todo) {
@@ -213,6 +218,24 @@ function draw({ items, W, H }) {
         for (const [a0, a1, r] of [[-2.6, -1.7, 0.46], [0.5, 1.4, 0.46], [-2.4, -1.95, 0.56], [0.7, 1.15, 0.56]]) { x.beginPath(); x.arc(0, 0, S * r, a0, a1); x.stroke(); }
       },
     },
+  };
+  // Bonhomme de Dans la foule : pose (stand, walk, push, down), humeur des yeux, côté (f), couleur (pal).
+  const guyPose = (it) => {
+    const f = it.f ? -1 : 1, mood = it.mood || 'open';
+    if (it.pose === 'push') return { push: 1, f, mood: 'angry', lookX: f * 0.8, lookY: 0.3, lean: 0.05 * f };
+    if (it.pose === 'down') return { fall: it.fall ?? 0.55, fallDir: f, flail: 0.8, t: 0.3, mood: 'ko', lookY: 0.4 };
+    if (it.pose === 'walk') return { sp: 1, ph: 1.1, dirX: f, lookX: f * 0.8, lookY: 0.2, lean: 0.08 * f, mood };
+    return { mood, lookX: it.look || 0, lookY: 0.4 };
+  };
+  const guy = (x, S, it, pal) => {
+    x.save(); x.scale(S / 100, S / 100); x.translate(0, 48);
+    if (it.f) x.scale(-1, 1); // le miroir est fait ici (la pose garde son côté)
+    window.FOULE.drawGuy(x, pal, { ...guyPose(it), f: 1, fallDir: 1 });
+    x.restore();
+  };
+  KINDS.blob = {
+    shape: (x, S, it) => { const k = '#000'; guy(x, S, it, { head: k, body: k, arm: k, armR: k, leg: k, legR: k, line: k }); },
+    detail: (x, S, it) => guy(x, S, it, window.FOULE.palette(x, it.pal || 0)),
   };
   const DEF = { tile: '#fff1d6', card: '#ffffff', wheel: '#ffffff', gallows: '#b07a45', arcs: '#ffffff' };
 

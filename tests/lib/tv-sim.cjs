@@ -6,6 +6,7 @@
 //   await t.act('B', { type: 'vote', v: 0 });              // action envoyée par le joueur B
 //   await t.txt() → texte de l'écran ; await t.fits() → tout tient dans l'écran ; await t.shot('vote') si SHOTS=1
 //   await t.get(() => window.__tv.s) → état de l'hôte ; (await t.state()).log → erreurs levées par le module
+// Jeux en temps réel (module.frame, ex. Dans la foule) : frame() est appelé à chaque image.
 const path = require('path');
 const fs = require('fs');
 const { open } = require('./pw-helper.cjs');
@@ -38,6 +39,17 @@ async function tvSim({ width = 1280, height = 720 } = {}) {
     };
     H.act = (pid, a) => { let ok = false; try { ok = G.action(room, H.s, pid, a, api); } catch (e) { H.log.push('ERR ' + e.message); } if (ok) H.push(); return ok; };
     H.iv = setInterval(() => { try { if (G.tick && G.tick(room, H.s, api)) H.push(); } catch (e) { H.log.push('TICK ' + e.message); } }, 200);
+    // Jeux en temps réel (frame) : la partie avance à chaque image, comme chez l'hôte (Host.startFrames).
+    if (G.frame) {
+      let last = performance.now();
+      const loop = (ts) => {
+        if (window.__tv !== H) return;
+        requestAnimationFrame(loop);
+        const dt = Math.min(0.05, Math.max(0, (ts - last) / 1000)); last = ts;
+        try { if (G.frame(room, H.s, dt, api)) H.push(); } catch (e) { H.log.push('FRAME ' + e.message); }
+      };
+      requestAnimationFrame(loop);
+    }
     H.push();
   }, { modPath, exportName, settings, n });
   const act = (pid, a) => page.evaluate(([p, x]) => window.__tv.act(p, x), [pid, a]);

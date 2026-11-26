@@ -1,8 +1,8 @@
 // Service worker d'Ambiance — fichier généré par scripts/gen-sw.mjs, ne pas modifier à la main.
-const VERSION = '3a9100f5bc';
+const VERSION = '8fe5551d6d';
 const CACHE = 'ambiance-' + VERSION;
 // Images des jeux : cache à part, qui ne change que si une image change (pas retéléchargées à chaque mise à jour).
-const IMG_CACHE = 'ambiance-img-ef00b44484';
+const IMG_CACHE = 'ambiance-img-94471d4bca';
 const ASSETS = [
   "./",
   "./css/style.css",
@@ -65,6 +65,8 @@ const ASSETS = [
   "./js/data/vraifaux.js",
   "./js/favorites.js",
   "./js/finder.js",
+  "./js/foule-art.js",
+  "./js/foule-core.js",
   "./js/games/action.js",
   "./js/games/bingo.js",
   "./js/games/bonmot.js",
@@ -108,6 +110,7 @@ const ASSETS = [
   "./js/online/cartes.js",
   "./js/online/dessin.js",
   "./js/online/equipes.js",
+  "./js/online/foule.js",
   "./js/online/games.js",
   "./js/online/hasard.js",
   "./js/online/imposteur.js",
@@ -170,6 +173,7 @@ const IMAGES = [
   "./img/jeux/emojis.webp",
   "./img/jeux/estimations.webp",
   "./img/jeux/etsi.webp",
+  "./img/jeux/foule.webp",
   "./img/jeux/fredonne.webp",
   "./img/jeux/front.webp",
   "./img/jeux/histoire.webp",

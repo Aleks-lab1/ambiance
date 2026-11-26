@@ -40,6 +40,7 @@ run(async () => {
   check(/Bob choisit le jeu/.test(await txt(tv)), 'télé : Bob, premier arrivé, est le chef 👑');
   check(/Choisis le jeu/i.test(await txt(bob)) && /Vote pour ton jeu/i.test(await txt(chloe)), 'Bob choisit le jeu, Chloé et David votent');
   check(!(await bob.locator('.room-code').count()), 'les téléphones n\'affichent pas le code (il est sur la télé)');
+  check(/Dans la foule/.test(await bob.locator('.pick-tile').first().innerText()) && /Spécial télé/.test(await bob.locator('.pick-tile').first().innerText()), 'salon de la télé : « Dans la foule » (spécial télé) en premier');
 
   // ---- Votes ----
   await chloe.locator('.pick-tile', { hasText: 'Le Quiz' }).click();
@@ -77,6 +78,25 @@ run(async () => {
   // Départ vu par la télé au bout de ~16 s (page fermée sans prévenir), puis le chef passe au suivant.
   const chef = () => tv2.evaluate(() => { const s = JSON.parse(localStorage.getItem('ambiance:host-save')); return s.room.players.find((p) => p.pid === s.room.host)?.name; });
   check(await until(chloe, async () => (await chef()) === 'Chloé' && await chloe.getByRole('button', { name: /Révéler maintenant|Question suivante|Voir le classement/ }).count() > 0, 45000), 'Bob parti : Chloé devient le chef 👑 (et a les boutons de l\'hôte)', await chef());
+
+  // ---- Dans la foule (jeu réservé au TV Mode, en temps réel) : la chef le lance, les téléphones deviennent des manettes ----
+  await chloe.getByRole('button', { name: 'Menu de la partie' }).click(); await W(chloe, 300);
+  await chloe.getByRole('button', { name: 'Retour au salon' }).click();
+  await chloe.waitForSelector('.game-pick', { timeout: 15000 });
+  await chloe.locator('.pick-tile', { hasText: 'Dans la foule' }).click(); await W(chloe, 200);
+  await chloe.locator('.pick-tile', { hasText: 'Dans la foule' }).click();
+  await chloe.waitForSelector('.fp-stick', { timeout: 15000 });
+  await david.waitForSelector('.fp-stick', { timeout: 15000 });
+  await tv2.waitForSelector('.foule-cv', { timeout: 15000 });
+  check(/Manche 1 \/ 5/.test(await tv2.locator('.tv-stage').innerText()), 'Dans la foule : la place s\'affiche sur la télé, les téléphones ont leur manette');
+  const hostGs = () => tv2.evaluate(() => { const s = JSON.parse(localStorage.getItem('ambiance:host-save')); return s.game && s.game.gs; });
+  check(await until(tv2, async () => { const g = await hostGs(); return g && g.phase === 'play'; }, 15000), 'Dans la foule : la télé fait tourner la partie (compte à rebours, puis « Partez ! »)');
+  const st = await chloe.locator('.fp-stick').boundingBox();
+  await chloe.mouse.move(st.x + st.width / 2, st.y + st.height / 2); await chloe.mouse.down();
+  await chloe.mouse.move(st.x + st.width / 2 + 60, st.y + st.height / 2, { steps: 5 });
+  const cpid = await chloe.evaluate(() => JSON.parse(localStorage.getItem('ambiance:seat') || 'null')?.pid);
+  check(await until(tv2, async () => { const g = await hostGs(); return g && g.input && Object.entries(g.input).some(([p, v]) => (!cpid || p === cpid) && v.d === 0); }, 15000), 'la manette de Chloé arrive à la télé (vers la droite), par le réseau');
+  await chloe.mouse.up();
 
   // ---- La télé ferme le salon ----
   await tv2.locator('.tv-head button[aria-label="Fermer la télé"]').click(); await W(tv2, 300);

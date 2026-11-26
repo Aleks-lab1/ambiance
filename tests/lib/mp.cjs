@@ -39,6 +39,16 @@ async function mp(modPath, exportName, settings = {}, n = 3) {
       H.views[pid] = G.mount(root, g);
     }
     setInterval(() => { try { if (G.tick && G.tick(room, H.s, {})) push(); } catch (e) { H.log.push('TICK ' + e.message); } }, 200);
+    // Jeux en temps réel (frame, ex. Dans la foule) : la partie avance à chaque image, comme chez l'hôte.
+    if (G.frame) {
+      let last = performance.now();
+      const loop = (ts) => {
+        requestAnimationFrame(loop);
+        const dt = Math.min(0.05, Math.max(0, (ts - last) / 1000)); last = ts;
+        try { if (G.frame(room, H.s, dt, {})) push(); } catch (e) { H.log.push('FRAME ' + e.message); }
+      };
+      requestAnimationFrame(loop);
+    }
     push();
   }, { modPath, exportName, settings, n });
   const txt = async (pid) => (await page.locator('#v-' + pid).innerText()).replace(/\n+/g, ' | ');

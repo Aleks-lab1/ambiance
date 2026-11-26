@@ -1,7 +1,7 @@
 # Ambiance : mémo pour Claude
 
 ## Le projet
-**Ambiance** est une appli web installable (PWA) de jeux de soirée en français : 61 jeux, **tous jouables en
+**Ambiance** est une appli web installable (PWA) de jeux de soirée en français : 62 jeux, **tous jouables en
 ligne** (chacun sur son téléphone) et aussi sur un seul téléphone. Elle est écrite en JavaScript simple (modules ES), **sans compilation ni dépendance
 npm**. Il suffit d'ouvrir `index.html`. Elle est publiée sur **GitHub Pages depuis la branche `gh-pages`**.
 Le nom reste « Ambiance » : ne pas renommer l'appli.
@@ -11,11 +11,12 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 |---|---|
 | `index.html`, `manifest.webmanifest`, `sw.js` | Page unique, manifeste PWA, service worker (**généré**, ne pas modifier à la main) |
 | `js/` | Cœur : `app.js` (accueil 3 modes, écran Local `#/local`, routes `#/…`, réglages), `modes-art.js` (cases des 3 modes de l'accueil : illustration, icône), `finder.js` (accueil : nombre de joueurs, recherche, au hasard, joués récemment), `ui.js` (helper DOM `h()`, `topbar`, `shuffle`…), `common.js` (`onlineBanner`, dés…), `themes.js`, `config.js` (PeerJS, relais), `store.js`, `players.js`, `sfx.js` |
-| `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js` |
+| `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js`, `foule-core.js` (Dans la foule : place, passants, poussées, fontaines) |
+| `js/foule-art.js` | Dans la foule : dessin animé des bonshommes (formes `SHAPE_D` / `EYE_D`), de la place et des fontaines (`createScene`, `drawGuy`, `drawAvatar`) |
 | `js/icons.js`, `js/icons-data.js` | **Icônes de l'interface à la place des emojis** (voir « Icônes, pas d'emojis ») ; `icons-data.js` est **généré** par `scripts/gen-icons.mjs` |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
-| `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 61 jeux) |
-| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `tv.js` (écran télé), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle)…) |
+| `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 62 jeux) |
+| `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `tv.js` (écran télé), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle), `foule.js` (Dans la foule, TV Mode seulement)…) |
 | `js/data/` | Contenu des jeux (questions, mots, défis…) : `ordre.js`, `quiaecrit.js`, `curseur.js`… et le dictionnaire généré `mots.js` |
 | `img/jeux/` | Image de chaque jeu pour l'accueil (`<id>.webp`), **générée** par `scripts/gen-images.mjs` : ne pas modifier à la main |
 | `img/ui/` | Images de l'interface : `main.webp` (main du 4 en ligne, emoji Fluent 3D 🫳 `1faf3`, recadré, compressé par Pillow), `mode-<id>.webp` (illustrations des 3 cases de l'accueil, découpées dans la maquette par `node scripts/gen-images.mjs modes`) |
@@ -27,7 +28,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 ## Règles obligatoires après chaque modification
 1. **`node scripts/gen-sw.mjs`** : régénère `sw.js` (liste des fichiers + version). Sans ça, les téléphones gardent l'ancienne version.
 2. Si un jeu est ajouté ou retiré, **mettre à jour le nombre de jeux** dans `README.md`, `index.html` (meta description) et
-   `manifest.webmanifest` (description). `js/app.js` utilise `GAMES.length`. Vérifier avec `grep -n "61"` (ancien nombre).
+   `manifest.webmanifest` (description). `js/app.js` utilise `GAMES.length`. Vérifier avec `grep -n "62"` (ancien nombre).
    Un jeu ajouté a besoin de **son image** (voir « Accueil : images des jeux »).
 3. **Tester** (`cd tests && node run-all.cjs`), puis **publier sur les trois branches** : `main`, `gh-pages` et la branche de travail
    de la session (`claude/…`). Les trois pointent sur le même commit, par exemple : `git push origin HEAD:main HEAD:gh-pages HEAD:<branche-de-travail>`.
@@ -35,6 +36,8 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 ## Tous les jeux se jouent en ligne
 - **Chaque jeu doit exister aussi en ligne** : plus de badge « En ligne », plus de tag `'online'` ni de filtre « En ligne » (tous les jeux le sont).
   Le test `local/jeux-locaux.test.cjs` vérifie qu'il y a autant de jeux en ligne que de jeux et que chaque écran propose « Créer une partie ».
+- **Exception : les jeux réservés au TV Mode** (`tvOnly`, voir plus bas), comme Dans la foule : ils sont en ligne, mais seulement
+  dans un salon créé par la télé. Ils comptent quand même parmi les jeux en ligne (`ONLINE_GAMES`).
 - Quand tous les joueurs ne peuvent pas participer (Et si…, La Bouteille, Le Roi…), **le joueur dont c'est le tour (ou l'hôte) agit et les autres
   regardent** en direct sur leur téléphone. Ne jamais afficher les boutons d'action aux spectateurs.
 - Jeux à choix (Quiz, Vrai ou faux…) : **on touche directement la réponse**, pas de bouton « Révéler la réponse ». La bonne réponse s'affiche
@@ -66,8 +69,9 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
     « … › », étincelles, reflet qui balaie la case, petite profondeur à la souris (`parallax`). Couleurs fixes (pas de thème).
   - Tailles en **`cqh`** relatives à `.mode-in` (couche intérieure `container-type: size` : un `<button>` ne peut pas être ce repère).
   Accès aux modes :
-  - **Local** → `#/local` (`renderLocal`, `LOCAL_META`) : les jeux à un seul téléphone = `LOCAL_GAMES` (`GAMES` sans les 7 jeux
-    `onlineOnly: true` : Qui a écrit ça, Dans sa tête, Qui suis-je, Punchlines, Téléphone dessiné, Dico bluff, Menteur).
+  - **Local** → `#/local` (`renderLocal`, `LOCAL_META`) : les jeux à un seul téléphone = `LOCAL_GAMES` (`GAMES` sans les 8 jeux
+    `onlineOnly: true` : Qui a écrit ça, Dans sa tête, Qui suis-je, Punchlines, Téléphone dessiné, Dico bluff, Menteur, et Dans la foule
+    qui est en plus `tvOnly`).
   - **Online** → `#/online` : prénom, puis « Créer le salon » / « Rejoindre le salon » (code).
   - **TV Mode** → `#/tv` : « ▶ Lancer la télé » (la télé crée le salon), « Je suis un joueur » (code), « Afficher un salon déjà créé ».
 - Les écrans `local` et `online` sont des « menus » pour `openScreen` (pas de « joué récemment », pas d'étoile favori).
@@ -105,6 +109,8 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
   **Couleurs** (constantes en tête de `scenes.mjs`) : choisir une couleur qui ressort sur la case, et **jamais blanc pour un dessin
   qui a des détails** (dés, carte, livre…) : ses trous sont remplis de blanc par le liseré, les détails disparaîtraient. Puis
   `node scripts/gen-images.mjs <id>` : dessin dans Chromium (Playwright), compression WebP par Pillow (~20 Ko par image).
+- Élément `blob(x, y, taille, { pose, mood, f })` : un bonhomme de Dans la foule (dessin de `js/foule-art.js`, chargé dans la page par
+  `gen-images.mjs`), poses `stand`, `walk`, `push`, `down`.
 - Silhouette pas encore copiée : récupérer le paquet `@iconify-json/game-icons` (commande en tête de `gen-images.mjs`) et relancer
   avec `ICONS_JSON=…` : le dessin manquant est copié dans `scripts/images/icons/`.
 - **Regarder le résultat** (capture d'écran de l'écran Local) avant de publier. `unit/images.test.mjs` vérifie une image par jeu.
@@ -136,6 +142,8 @@ export const monJeuOnline = {
   init(room, st, api) { return { gid: uid(), st, phase: 'play', round: 1 }; },  // état de l'hôte
   action(room, s, pid, a, api) { /* a = ce qu'un joueur a envoyé ; true = renvoyer la vue à tous */ },
   tick(room, s, api) { /* toutes les 250 ms chez l'hôte (minuteurs) ; true = renvoyer */ },
+  // Facultatif, jeux en temps réel : frame(room, s, dt, api) à chaque image chez l'hôte (true = renvoyer, sur un événement
+  // seulement) ; tvOnly: true = jeu réservé au TV Mode (voir « Jeux réservés au TV Mode »).
   onJoin(room, s, pid, api) {}, onLeave(room, s, pid, api) {},   // facultatifs
   view(room, s, pid) { /* ce que voit CE joueur : ne jamais y mettre les secrets des autres */ },
   mount(root, g) { return { update(room, view) {}, destroy() {} }; },
@@ -161,12 +169,36 @@ export const monJeuOnline = {
   `players`, `badges`, `rules`, `load: () => import('./fichier.js').then((m) => m.monjeu)`. Le module exporte `{ start(ctx) }`
   (`ctx.root`, `ctx.meta`, `ctx.open(...)`).
 - **Badge « Nouveau »** (`new: true` + `'Nouveau'` dans `badges`) : **uniquement sur le dernier lot ajouté**. Il faut l'enlever du lot précédent.
+  Dernier lot : Dans la foule (jeu TV Mode, absent de Local) : le filtre « Nouveaux » de Local n'est alors pas proposé (aucun jeu local nouveau).
 - Mettre `onlineBanner(ctx, 'idEnLigne')` (`js/common.js`) sur l'écran de réglages (bandeau « 🌐 En ligne (recommandé) »). Jeux de cartes
   (`cardGame` dans `js/games/cartes.js`) : `online: 'idEnLigne'` (+ `onlineLabel` pour le texte du bouton). Ajouter une règle « <b>En ligne :</b> … ».
   S'il n'existe **qu'en ligne** : `load: () => import('./enligne.js').then((m) => m.launcher('idEnLigne'))`.
 - **Image de la case** : composition dans `scripts/images/scenes.mjs`, puis `node scripts/gen-images.mjs <id>`.
 - Mode « on se passe le téléphone » : `hotseat(ctx, moduleEnLigne, réglages, onExit)` dans `js/games/plateau.js` fait tourner un module en ligne
   localement, `g.me` = joueur dont c'est le tour, `g.hotseat = true` (exemples : Memory, Yam's).
+
+## Jeux réservés au TV Mode (`tvOnly`) et jeux en temps réel (`frame`)
+- Un jeu **`tvOnly: true`** (module en ligne et entrée du catalogue, avec `onlineOnly: true`) ne se joue que dans un salon créé par la
+  télé (`room.tvHost`) : la télé fait tourner la partie et l'affiche, les téléphones servent de **manettes**. Salon : la case n'apparaît
+  que dans le salon du TV Mode, en premier, avec le badge « 📺 Spécial télé » ; `startGame` refuse de le lancer ailleurs (message au chef).
+  Sa fiche (`launcher(id, { tv: true })` de `js/games/enligne.js`) dit « Se joue en TV Mode » : « ▶ Lancer la télé » / « Je suis un joueur ».
+  Pas de version sur un seul téléphone (exception à « chaque jeu existe aussi en local »).
+- **Temps réel** : un module avec **`frame(room, s, dt, api)`** est appelé à chaque image chez l'hôte (`Host.startFrames`, boucle
+  `requestAnimationFrame`, démarrée par `tick` ; en pause quand la page est cachée). `frame` renvoie `true` **seulement sur un événement**
+  (phase, poussée, fontaine…), jamais à chaque image : la vue n'est pas renvoyée en continu. Les entrées de manette (`{ type: 'mv', d }`)
+  renvoient `false`. Le temps du jeu est celui du monde (`s.world.t`, secondes, avance avec `dt`) : pas de date, la reprise marche sans
+  `shiftTimes`. La télé (même page que l'hôte en TV Mode) reçoit la vue **sans copie** : `tv()` donne `s.world` lui-même, que l'écran
+  redessine à chaque image (`createScene` de `js/foule-art.js`) sans attendre de nouvelle vue.
+- **Dans la foule** (`js/online/foule.js`, `js/foule-core.js`, `js/foule-art.js`) : une place (repère 1600 × 900) avec 4 fontaines et
+  une foule de bonshommes tous pareils (`crowdSize(n)`, 20 à 36) ; chaque joueur en pilote un en secret (`s.who` : pid → numéro, jamais
+  dans les bonshommes eux-mêmes). Les passants marchent à la **même vitesse** (`SPEED`), vont toucher les fontaines, ont les mêmes
+  expressions… et **ne poussent jamais** (pousser démasque). But : toucher ses 4 fontaines dans l'ordre du téléphone (+3), faire tomber un
+  joueur (+1, éliminé de la manche), dernier debout (+2), temps écoulé (+1 au plus avancé s'il est seul). Révélation des noms à chaque fin
+  de manche, une couleur par manche. Manette : joystick qui se place sous le doigt (16 directions, redite chaque seconde ; sans nouvelles
+  depuis 2,6 s le bonhomme s'arrête), bouton « Pousser » qui se recharge, clavier (flèches/ZQSD, Espace).
+- Les bonshommes viennent des dessins fournis par l'utilisateur (faits avec Gemini) : tête, corps, bras, jambe, yeux (ouverts, contents,
+  en colère, sonnés) dans `SHAPE_D` / `EYE_D`. Ne pas les redessiner : animer les morceaux (ressorts = effet gélatine). Style voulu :
+  bonshommes mous et dodus « genre Gang Beasts », **sans copier** les personnages de ce jeu.
 
 ## Animations « comme en vrai » (fluidité)
 L'utilisateur tient à ce que les jeux soient **fluides et satisfaisants** : on manipule directement (glisser plutôt que taper des numéros),
@@ -201,18 +233,18 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   pas un joueur** (ni dans `room.players`, ni dans les scores), ses actions sont ignorées. Elle reçoit `viewForTv()` :
   - jeu avec écran télé : `mod.tv(room, s)` = **`view(room, s, TV_PID)`** (un spectateur qui ne connaît aucun secret) ;
   - autres jeux : seulement `{ ended }` → écran commun (« 📱 À vous de jouer sur vos téléphones ! », podium à la fin).
-  **Ne jamais envoyer à la télé la vue d'un vrai joueur**, ni `settings`. `online/tele-secrets.test.cjs` vérifie, pour les 61 jeux,
+  **Ne jamais envoyer à la télé la vue d'un vrai joueur**, ni `settings`. `online/tele-secrets.test.cjs` vérifie, pour les 62 jeux,
   que la télé ne reçoit aucun texte visible seulement par certains joueurs.
 - Traits de dessin (`api.relay`) et `onSync` : envoyés à la télé **seulement si le module a `tvRelay: true`** (Je dessine). Le
   Téléphone dessiné relaie des dessins privés : il ne doit pas l'avoir.
-- **Écrans spéciaux : 55 jeux sur 61**, pensés pour un écran paysage (tout tient dans l'écran, rien ne défile) : jeux de rapidité
+- **Écrans spéciaux : 56 jeux sur 62**, pensés pour un écran paysage (tout tient dans l'écran, rien ne défile) : jeux de rapidité
   (`makeRace`), Je dessine, Qui a écrit ça ?, Punchlines, Dico bluff, Loup-garou, les 5 votes (question, puis barres qui
   s'allongent), Et si / Confidences / Cap / Action ou vérité (à qui le tour, la carte en grand), Bouteille et Roue (elles
   tournent en grand, `spinTicks`), Qui commence ?, Boîte à outils, Le Roi / Plus ou moins / Le Bus (cartes qui se retournent),
   Memory, Yam's, Bataille navale (les tirs seulement, bateaux cachés), Morpion & 4 en ligne, Pendu, Mot mystère (couleurs
   seulement, aucune lettre), Petit bac, Paranoïa, Pour ou contre, 3 en 5 s, Deux vérités, Curseur, Dans sa tête, Dans l'ordre,
   Chifoumi, les 5 jeux par équipes (scores des équipes, jamais le mot), Unisson, Bon Mot (la saisie en direct), Bingo,
-  Sur le front, Ni oui ni non, Histoire folle, Patate chaude, La Séquence. **Sans écran spécial** (écran commun) : Réflexes,
+  Sur le front, Ni oui ni non, Histoire folle, Patate chaude, La Séquence, Dans la foule (la place en temps réel, TV Mode seulement). **Sans écran spécial** (écran commun) : Réflexes,
   Couleurs pièges, L'Imposteur, Menteur, Téléphone dessiné, Qui suis-je (le jeu se passe sur les téléphones ou tout y est secret).
 - Outils dans `kit.js` : `tvTimer(g)` (compte à rebours), `tvEnd(room)` (podium), `tvWho()` (pastilles « ✓ a répondu », gardées
   d'une mise à jour à l'autre), `tvTurn(emoji, prénom, phrase)` (« à qui le tour »), `tvSplit(gauche, droite)` (deux colonnes :
@@ -239,7 +271,7 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
   de classe (sinon la partie reprend au salon). Ce qui vit hors de l'état (dictionnaire, pioche `questionSource` dans une WeakMap)
   se recrée dans un crochet **`restore(room, s, api)`** du module (exemples : `race.js`, `bonmot.js`, Mot mystère, Pendu).
   Le dictionnaire peut être encore en chargement juste après la reprise : protéger chaque `dico.…` (`if (!dico)`).
-  `online/reprise-jeux.test.cjs` recharge chacun des 61 jeux et compare la vue de chaque joueur.
+  `online/reprise-jeux.test.cjs` recharge chacun des 62 jeux et compare la vue de chaque joueur.
 - Côté joueur : attente de l'hôte jusqu'à `CONFIG.hostWait` (5 min) ; après 2 échecs en direct, il passe au relais (un hôte
   qui reprend n'a parfois que le relais). L'hôte prévient en partant (`{ t: 'away', gone }` → « Alice a quitté l'appli un instant… »).
 - Place du joueur (`seat` : code + pid) : il revient avec le même identifiant (bandeau « Revenir dans la partie »). L'hôte rend
@@ -282,6 +314,10 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - `#theme-fx span { top: 0 }` écrasait les animations (particules bloquées en haut) : attention à la spécificité CSS.
 - Filtres sur des mots normalisés (sans accents) : écrire les regex sans accents (`ee`, pas `ée`).
 - Ne pas supprimer des clés d'un objet pendant qu'on le parcourt (bug du Petit bac).
+- Jeu en temps réel : renvoyer la vue à chaque image saturerait le réseau (et le relais). `frame` ne renvoie `true` que sur un événement ;
+  ce qui bouge en continu (positions) n'est lu que par la télé, dans `s.world`, sans passer par le réseau.
+- Dans la foule : rien ne doit trahir un joueur (vitesse, expressions, sons de la télé quand il touche une fontaine). Tout ce que font les
+  joueurs, les passants le font aussi, sauf pousser.
 - Chez l'hôte, `g.send()` met l'écran à jour **tout de suite** (sans réseau) : modifier le texte affiché **avant** `g.send()`, sinon il écrase
   l'écran suivant (bug de La Séquence).
 - Animations partagées (bouteille, roue) : garder les mêmes éléments d'un `update` à l'autre, sinon la rotation CSS repart de zéro.
@@ -310,6 +346,9 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - Tout lancer : `cd tests && node run-all.cjs` (ou `node run-all.cjs online|local|unit|relay`).
 - `tests/lib/pw-helper.cjs` : ouvre l'appli dans un iPhone simulé, en servant le dépôt sur `http://app.test/` (pas de serveur web).
 - `tests/lib/mp.cjs` : simulateur multijoueur, n joueurs côte à côte branchés sur la logique de l'hôte. C'est l'outil pour tester un jeu en ligne.
+  `mp.cjs` et `tv-sim.cjs` appellent aussi `frame()` à chaque image (jeux en temps réel).
+- `tests/online/foule.test.cjs` : Dans la foule (logique de la place, partie complète sur la télé simulée, manette des téléphones :
+  joystick à la souris, clavier, bouton « Pousser »). `relay/tvmode.test.cjs` lance aussi Dans la foule par le réseau (joystick → télé).
 - `tests/lib/tv-sim.cjs` : **écran télé simulé** (1280 × 720) branché sur la logique de l'hôte (`load(module, export, réglages, n)`,
   `act(joueur, action)`, `txt()`, `fits()` = rien ne dépasse de l'écran). `online/tele-jeux.test.cjs` joue chaque écran télé
   (sauf les 11 premiers) et vérifie l'affichage ; `SHOTS=1` enregistre une capture par étape dans `tests/out/`. Pour un nouvel

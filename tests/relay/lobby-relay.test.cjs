@@ -24,6 +24,7 @@ run(async () => {
   // Les joueurs votent pour le jeu qu'ils veulent ; l'hôte (le chef) voit les votes.
   await c1.waitForSelector('.game-pick', { timeout: 15000 });
   check(/Vote pour ton jeu/i.test(await c1.locator('body').innerText()), 'Bob (joueur) : « Vote pour ton jeu »');
+  check(!(await c1.locator('.pick-tile', { hasText: 'Dans la foule' }).count()) && !(await host.locator('.pick-tile', { hasText: 'Dans la foule' }).count()), 'salon Online : pas de « Dans la foule » (jeu réservé au TV Mode)');
   await c1.locator('.pick-tile', { hasText: 'Bataille navale' }).click();
   await host.waitForFunction(() => ([...document.querySelectorAll('.pick-tile')].find((t) => /Bataille navale/.test(t.innerText))?.querySelector('.vote-badge')?.innerText || '').trim() === '1', null, { timeout: 10000 })
     .then(() => check(true, 'l\'hôte voit le vote de Bob (« 🗳️ 1 » sur Bataille navale)'), () => check(false, 'l\'hôte voit le vote de Bob'));
