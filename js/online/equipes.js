@@ -3,6 +3,7 @@ import { h, uid, shuffle, seg, chip, setText } from '../ui.js';
 import { sip } from '../store.js';
 import { sfx, buzz } from '../sfx.js';
 import { activePids, isOn, timerPill, actBtn, drawNew, TV_PID, tvTimer, tvSay } from './kit.js';
+import { celebrate } from '../podium.js';
 import { ROLES } from '../games/loup.js';
 import { ROUNDS as CH_ROUNDS } from '../games/chapeau.js';
 import CHAPEAU from '../data/chapeau.js';
@@ -103,7 +104,7 @@ function makeTeamGame(type) {
             const w = v.score[0] === v.score[1] ? -1 : v.score[0] > v.score[1] ? 0 : 1;
             parts.push(h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, w < 0 ? 'Égalité !' : `${TEAMS[w].emo} ${TEAMS[w].name} gagne !`)),
               w >= 0 ? h('p', { class: 'center' }, `${v.myTeam === w ? 'Bravo ! 🎉' : `Ton équipe perd : ${sip(1)} chacun !`}`) : null, g.hostBar());
-            if (lastKey !== 'end') sfx.fanfare();
+            if (lastKey !== 'end') celebrate();
             lastKey = 'end';
             main.replaceChildren(...parts);
             return;
@@ -173,7 +174,7 @@ function teamTv(root, g, { what, manche = null }) {
         const w = v.score[0] === v.score[1] ? -1 : v.score[0] > v.score[1] ? 0 : 1;
         say.set(w < 0 ? '🤝 Égalité !' : `🏆 ${TEAMS[w].emo} ${TEAMS[w].name} gagne !`);
         setText(big, '🏆');
-        if (lastKey !== 'end') sfx.fanfare();
+        if (lastKey !== 'end') celebrate();
         lastKey = 'end';
         return;
       }
@@ -290,7 +291,7 @@ export const chapeauOnline = {
           const w = v.score[0] === v.score[1] ? -1 : v.score[0] > v.score[1] ? 0 : 1;
           parts.push(h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, w < 0 ? 'Égalité !' : `${TEAMS[w].emo} ${TEAMS[w].name} gagne !`)),
             w >= 0 ? h('p', { class: 'center' }, v.myTeam === w ? 'Bravo ! 🎉' : `Ton équipe perd : ${sip(1)} chacun !`) : null, g.hostBar());
-          if (lastKey !== 'end') sfx.fanfare();
+          if (lastKey !== 'end') celebrate();
           lastKey = 'end';
           main.replaceChildren(...parts);
           return;

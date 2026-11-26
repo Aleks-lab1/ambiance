@@ -211,7 +211,7 @@ export const plusmoinsOnline = {
     let lastKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, 'Points = séries encaissées.'))); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, 'Points = séries encaissées.'))); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.n}:${v.phase}:${v.turn}`;
         const me = v.who === g.me;
         const N = g.nameOf(v.who);
@@ -350,7 +350,7 @@ export const busOnline = {
     let lastKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g, 'Tout le monde est descendu !', h('p', { class: 'center muted' }, '4 points pour une descente du premier coup, puis 3, 2, 1.'))); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g, 'Tout le monde est descendu !', h('p', { class: 'center muted' }, '4 points pour une descente du premier coup, puis 3, 2, 1.'))); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.n}:${v.phase}`;
         const me = v.who === g.me;
         const N = g.nameOf(v.who);

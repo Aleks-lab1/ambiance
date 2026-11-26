@@ -2,7 +2,7 @@
 import { h, uid, seg, setText, modal } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { podium, themeGrid } from '../common.js';
-import { TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
+import { TV_PID, tvTimer, tvEnd, tvWho, ranking } from './kit.js';
 import { sfx, buzz } from '../sfx.js';
 import { RACE_MODES, questionSource, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS, COUNT_LABEL, quizThemes, themeChoice, themesOf } from '../race-core.js';
 import VF from '../data/vraifaux.js';
@@ -195,7 +195,7 @@ function makeRace(mode) {
         update(room, v) {
           if (v.phase === 'end') {
             tm.set(0); bar.replaceChildren(); cardSlot.replaceChildren(); optSlot.replaceChildren(); whoSlot.classList.add('hidden');
-            if (lastKey !== 'end') { after.replaceChildren(...tvEnd(room)); sfx.fanfare(); }
+            if (lastKey !== 'end') { after.replaceChildren(...tvEnd(room)); }
             lastKey = 'end';
             return;
           }
@@ -312,8 +312,7 @@ function makeRace(mode) {
           if (v.phase === 'end') {
             head.replaceChildren(); cardSlot.replaceChildren(); status.textContent = ''; hostSlot.replaceChildren();
             answerSlot.replaceChildren(h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
-              podium(r.players.map((p) => ({ name: p.name, score: p.score }))), g.hostBar());
-            if (lastKey !== key) sfx.fanfare();
+              podium(ranking(r, g)), g.hostBar());
             lastKey = key;
             return;
           }

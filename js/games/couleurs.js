@@ -140,7 +140,7 @@ export function start(ctx) {
 
   function results(list, scores) {
     clear();
-    sfx.fanfare();
+    if (list.length < 2) sfx.fanfare(); // sinon : la fête du podium
     const rows = list.map((p) => ({ name: p, score: scores[p] || 0 }));
     const last = rows.slice().sort((a, b) => a.score - b.score)[0];
     root.replaceChildren(topbar(ctx, { onBack: setup }),

@@ -15,6 +15,7 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 | `js/*-core.js` | Logique sans interface, partagée entre jeu local et en ligne : `bonmot-core.js`, `plateau-core.js`, `race-core.js`, `bingo-core.js`, `foule-core.js` (Dans la foule : place, passants, poussées, fontaines) |
 | `js/foule-art.js` | Dans la foule : dessin animé des bonshommes (formes `SHAPE_D` / `EYE_D`), de la place et des fontaines (`createScene`, `drawGuy`, `drawAvatar`) |
 | `js/icons.js`, `js/icons-data.js` | **Icônes de l'interface à la place des emojis** (voir « Icônes, pas d'emojis ») ; `icons-data.js` est **généré** par `scripts/gen-icons.mjs` |
+| `js/podium.js` | **Podium de fin de partie** (spectacle, confettis, sons de fête) : voir « Podium et fête de fin de partie » |
 | `js/sortable.js`, `js/morpion-vue.js` | Composants animés partagés local + en ligne : liste à classer en glissant (`sortList`), plateaux du Morpion et du 4 en ligne (`tttView`, `c4View`) |
 | `js/games/` | Jeux sur un seul téléphone + **catalogue `js/games/index.js`** (les 62 jeux) |
 | `js/online/` | Jeu en ligne : `room.js` (salon, hôte, connexions), `save.js` (partie enregistrée chez l'hôte, place du joueur), `tv.js` (écran télé), `relay.js` (relais MQTT chiffré), `games.js` (**catalogue en ligne**), `kit.js` (outils communs), un fichier par famille de jeux (`soiree.js`, `plateau.js`, `tour.js`, `mots.js`, `live.js`, `equipes.js`, `vote.js`, `cartes.js` (Et si, Confidences, Cap, Action ou vérité), `paquet.js` (Roi, Plus ou moins, Bus), `hasard.js` (Bouteille, Roue, Qui commence, Outils), `oral.js` (Sur le front, Ni oui ni non, Histoire folle), `foule.js` (Dans la foule, TV Mode seulement)…) |
@@ -164,13 +165,14 @@ export const monJeuOnline = {
 - `api` = `{ now, relay, sendTo, toastAll }`. Les scores sont dans `room.players[].score` (`addScore`).
 - Objet `g` passé à `mount` : `me` (pid du joueur), `isHost`, `send(action)`, `now()`, `nameOf(pid)`, `hostBar()` (boutons de l'hôte en fin de partie),
   `hotseat` (vrai quand on se passe un seul téléphone : afficher le prénom au lieu de « Toi »).
-- `js/online/kit.js` : `activePids`, `playerOf`, `addScore`, `isOn`, `nextOn` (joueur suivant connecté), `card`, `endScreen` (classement final),
+- `js/online/kit.js` : `activePids`, `playerOf`, `addScore`, `isOn`, `nextOn` (joueur suivant connecté), `card`, `endScreen` (podium final, avec ses sons),
+  `ranking(room, g)` (scores pour `podium`),
   `timerPill` (minuteur), `actBtn`, `waitHost`, **`drawNew(s, clé, éléments)`** : pioche une carte sans répétition d'une partie à l'autre
   (mémoire dans le téléphone de l'hôte). Toujours l'utiliser pour tirer du contenu en ligne, avec la même clé et la même forme d'éléments
   que la version locale (`makeDeck`) quand c'est possible : la mémoire est alors partagée (ex. `'jamais:soft'`, `'front:animaux'`, `'cinq'`).
 - `js/online/soiree.js` exporte aussi `ORDRE_EDGES` (étiquettes de Dans l'ordre !), `scaleEl` + `scaleRange` + `cursorPoints` (échelle du Curseur,
   le curseur se glisse directement sur l'échelle), `CHI` / `beats` / `chiArena` (poings « Chi… Fou… Mi ! » puis les deux choix).
-- Fin de partie : `phase: 'end'` + `endScreen(room, g)`. Ajouter le jeu dans `tests/online/` (simulateur `mp.cjs`).
+- Fin de partie : `phase: 'end'` + `endScreen(room, g)` (le podium joue sa fête : pas de `sfx.fanfare()` en plus). Ajouter le jeu dans `tests/online/` (simulateur `mp.cjs`).
 
 ## Ajouter un jeu sur un seul téléphone
 - Ajouter une entrée dans `GAMES` de `js/games/index.js` : `id`, `name`, `emoji`, `colors`, `desc`, `tags` (`'cartes'`, `'equipes'`, `'rapide'`…),
@@ -224,9 +226,30 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - **Bataille navale** : `bnGrid(..., { fx: { i, res } })` anime le dernier tir (gerbe d'eau, explosion, bateau coulé).
 - Divers : `.reveal-in` (carte secrète qu'on retourne : rôle, mot), `stamp` du Bingo, `drawing(n, true)` du Pendu (trait qui se trace),
   sons `sfx.clack`, `card`, `rattle`, `splash`, `scribble`.
+- **Podium de fin** : `podium` / `celebrate` (`js/podium.js`, voir plus bas).
 - **Règle d'or en ligne** : `update` est appelé à chaque changement (un autre joueur qui valide…). Un élément animé ou qu'on manipule
   (liste, plateau, cartes) doit **rester le même** d'un `update` à l'autre : ne remplacer que les textes autour, et n'animer que ce qui est
   nouveau (comparer avec l'état affiché, ex. `shown` du 4 en ligne, `lastKey`). Sinon l'animation repart ou le glissement en cours est coupé.
+
+## Podium et fête de fin de partie (`js/podium.js`)
+- `podium(liste, { live })` (réexporté par `js/common.js`) : liste `[{ name, score, me }]`. C'est un **spectacle** : la marche du 3e
+  sort du sol (clochette + petite gerbe de confettis bronze), puis le 2e, puis **roulement de tambour** pendant que la marche du
+  gagnant monte (avatar « ? » qui tremble, score « ? »), puis le gagnant est dévoilé : cymbale, couronne, rayons qui tournent,
+  flash, ruban « Bravo Alice ! » (« Bravo, tu as gagné ! », « Égalité : Léa et toi ! »), canons à confettis (canvas `.confetti`
+  par-dessus tout l'écran), fanfare, clameur, applaudissements et sifflets. Les scores défilent de 0 à leur valeur, le reste du
+  classement arrive ligne par ligne. Égalités : même rang (`1 + nombre de scores plus grands`), tous les premiers dévoilés ensemble.
+- **Le podium joue lui-même les sons** : ne plus appeler `sfx.fanfare()` à côté d'un `endScreen`, `tvEnd` ou `podium`.
+  Fin sans podium mais avec un gagnant (jeux par équipes) : `celebrate()` (confettis + fanfare + applaudissements).
+- `me` : `ranking(room, g)` de `kit.js` (jamais en mode « on se passe le téléphone ») → « (toi) », avatar entouré.
+- `{ live: true }` : tableau des scores qui change pendant la partie (compteur de points de la Boîte à outils) : pas de spectacle.
+- **Règle d'or** : beaucoup d'écrans de fin refont le podium à chaque `update`. Le spectacle est tenu par le module (`show`) : un
+  podium identique (mêmes 3 premiers, mêmes scores) créé pendant que l'ancien est affiché **reprend où en est le spectacle**
+  (ce qui est passé arrive sans animation, classes `still`), sans rejouer sons ni confettis. Quand plus aucun podium n'est
+  affiché (on quitte l'écran), le son est coupé en fondu et les confettis retirés.
+- Animations réduites (`prefers-reduced-motion`) : tout de suite à sa place, pas de confettis, la fanfare quand même.
+- Sons (`js/sfx.js`, tout est synthétisé, aucun fichier) : `sfx.party(plan)` → fonction pour couper ; `partySounds(c, sortie, t0, plan)`
+  programme tout dans n'importe quel contexte audio (aussi un `OfflineAudioContext` : on peut enregistrer la fête pour l'écouter
+  ou mesurer qu'elle ne sature pas) ; `partyBus(c)` = compresseur commun. Tests : `local/podium.test.cjs`.
 
 ## Mode télé (`js/online/tv.js`)
 - Un ordinateur ou une télé affiche la partie en grand, les téléphones servent de manettes. Deux façons :
@@ -355,6 +378,8 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - `tests/lib/pw-helper.cjs` : ouvre l'appli dans un iPhone simulé, en servant le dépôt sur `http://app.test/` (pas de serveur web).
 - `tests/lib/mp.cjs` : simulateur multijoueur, n joueurs côte à côte branchés sur la logique de l'hôte. C'est l'outil pour tester un jeu en ligne.
   `mp.cjs` et `tv-sim.cjs` appellent aussi `frame()` à chaque image (jeux en temps réel).
+- `tests/local/podium.test.cjs` : podium de fin (déroulé du spectacle, podium refait par une mise à jour, sortie de l'écran,
+  égalités, « toi », tableau en direct, animations réduites).
 - `tests/online/foule.test.cjs` : Dans la foule (logique de la place, partie complète sur la télé simulée, manette des téléphones :
   joystick à la souris, clavier, bouton « Pousser »). `relay/tvmode.test.cjs` lance aussi Dans la foule par le réseau (joystick → télé).
 - `tests/lib/tv-sim.cjs` : **écran télé simulé** (1280 × 720) branché sur la logique de l'hôte (`load(module, export, réglages, n)`,

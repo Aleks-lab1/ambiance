@@ -41,11 +41,16 @@ export function card(colors, kicker, big, ...extra) {
     ...extra);
 }
 
-/** Écran de fin standard : podium des scores + boutons de l'hôte. */
+/** Scores pour le podium ; me = le joueur de ce téléphone (pas quand on se passe un seul téléphone). */
+export function ranking(r, g = null) {
+  return r.players.map((p) => ({ name: p.name, score: p.score, me: !!g && !g.hotseat && p.pid === g.me }));
+}
+
+/** Écran de fin standard : podium des scores (spectacle, sons, confettis : js/podium.js) + boutons de l'hôte. */
 export function endScreen(r, g, title = 'Fin de la partie !', extra = null) {
   return [
     h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, title)),
-    podium(r.players.map((p) => ({ name: p.name, score: p.score }))),
+    podium(ranking(r, g)),
     extra,
     g.hostBar(),
   ];
@@ -79,7 +84,7 @@ export const TV_PID = '__tv';
 /** Fin de partie à la télé : podium en grand. */
 export function tvEnd(room) {
   return [h('div', { class: 'tv-hero' }, '🏆'), h('h1', null, 'Fin de la partie !'),
-    h('div', { class: 'tv-podium' }, podium(room.players.map((p) => ({ name: p.name, score: p.score }))))];
+    h('div', { class: 'tv-podium' }, podium(ranking(room)))];
 }
 
 /** Compte à rebours de la télé : { el, set(deadline) } (tic-tac les 5 dernières secondes). */
@@ -168,7 +173,7 @@ export function tvStage(root, ...parts) {
   return {
     main,
     end(room, isEnd) {
-      if (isEnd) { if (!ended) { ended = true; main.replaceChildren(...tvEnd(room)); sfx.fanfare(); } return true; }
+      if (isEnd) { if (!ended) { ended = true; main.replaceChildren(...tvEnd(room)); } return true; }
       if (ended) { ended = false; main.replaceChildren(...parts); }
       return false;
     },

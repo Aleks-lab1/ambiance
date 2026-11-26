@@ -1,7 +1,7 @@
 // Jeux d'écriture en ligne : Punchlines (réponse la plus drôle) et Dico bluff (fausses définitions).
 // Déroulé d'une manche : écrire → voter (anonyme) → révélation des auteurs et des points.
 import { h, uid, shuffle, seg, norm, setText } from '../ui.js';
-import { drawNew, TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
+import { drawNew, TV_PID, tvTimer, tvEnd, tvWho, ranking } from './kit.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
 import PUNCH from '../data/punchlines.js';
@@ -168,7 +168,7 @@ function makeWrite(mode) {
         update(room, v) {
           if (v.phase === 'end') {
             tm.set(0); bar.replaceChildren(); promptSlot.replaceChildren(); status.textContent = '';
-            if (lastKey !== 'end') { body.replaceChildren(...tvEnd(room)); sfx.fanfare(); }
+            if (lastKey !== 'end') { body.replaceChildren(...tvEnd(room)); }
             lastKey = 'end';
             return;
           }
@@ -278,8 +278,7 @@ function makeWrite(mode) {
           if (v.phase === 'end') {
             head.replaceChildren(); promptSlot.replaceChildren(); status.textContent = ''; hostSlot.replaceChildren();
             body.replaceChildren(h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
-              podium(room.players.map((p) => ({ name: p.name, score: p.score }))), g.hostBar());
-            if (lastKey !== 'end') sfx.fanfare();
+              podium(ranking(room, g)), g.hostBar());
             lastKey = 'end';
             return;
           }

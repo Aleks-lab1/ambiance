@@ -214,7 +214,7 @@ export const debatsOnline = {
     let lastKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         tp.set(v.phase === 'pour' || v.phase === 'contre' ? v.deadline : 0);
         const speaker = v.phase === 'pour' ? v.pour : v.phase === 'contre' ? v.contre : null;
@@ -345,7 +345,7 @@ export const cinqOnline = {
     return {
       update(r, v) {
         clearInterval(iv);
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         const me = v.player === g.me;
         const parts = [h('div', { class: 'row' }, h('span', { class: 'pill' }, `⏱️ ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `🎯 ${name(g, v.player)}`)),

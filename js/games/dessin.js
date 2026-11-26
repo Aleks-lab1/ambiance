@@ -67,7 +67,6 @@ export function start(ctx) {
       }
     }
     ctx.setGuard(null);
-    sfx.fanfare();
     root.replaceChildren(topbar(ctx),
       h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
       podium(Object.entries(scores).map(([name, score]) => ({ name, score }))),

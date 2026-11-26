@@ -111,7 +111,7 @@ export const patateOnline = {
     return {
       update(room, view) {
         v = view; r = room;
-        if (v.phase === 'end') { clearTimeout(timer); main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, 'Un point par bombe évitée.'))); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { clearTimeout(timer); main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, 'Un point par bombe évitée.'))); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         const me = v.holder === g.me;
         const parts = [h('div', { class: 'row' }, h('span', { class: 'pill' }, `💣 ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, `🔁 ${v.passes} passe${v.passes > 1 ? 's' : ''}`)),
@@ -183,7 +183,7 @@ export const reflexesOnline = {
     let lastKey = null, t = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { clearTimeout(t); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { clearTimeout(t); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         const head = h('div', { class: 'row' }, h('span', { class: 'pill' }, `⚡ Manche ${v.round}/${v.rounds}`), h('div', { class: 'grow' }), h('span', { class: 'pill' }, '🏆 ' + ((r.players.find((p) => p.pid === g.me) || {}).score || 0)));
         if (v.phase === 'wait') {
@@ -313,7 +313,7 @@ export const couleursOnline = {
     }
     return {
       update(r, v) {
-        if (v.phase === 'end') { clear(); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { clear(); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         if (key === lastKey) return;
         lastKey = key;
@@ -501,7 +501,6 @@ export const sequenceOnline = {
           clear(); tp.set(0); play.classList.add('hidden');
           endWrap.replaceChildren(...endScreen(r, g, v.alive.length === 1 && !v.solo ? `${v.alive[0] === g.me ? 'Tu gagnes' : g.nameOf(v.alive[0]) + ' gagne'} !` : 'Fin de la partie !',
             h('p', { class: 'center muted' }, `Dernière suite : ${v.seq.length} couleurs. +1 point par manche réussie.`)));
-          if (lastKey !== 'end') sfx.fanfare();
           lastKey = 'end';
           return;
         }

@@ -129,7 +129,7 @@ function raceLocal(mode, load, onlineId) {
         }
 
         function end() {
-          sfx.fanfare();
+          if (!players.length) sfx.fanfare(); // sinon : la fête du podium
           root.replaceChildren(topbar(ctx, { onBack: setup }),
             h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
             players.length ? podium(players.map((p) => ({ name: p, score: scores[p] }))) : h('p', { class: 'center muted' }, `${list.length} question${list.length > 1 ? 's' : ''} jouée${list.length > 1 ? 's' : ''}.`),

@@ -95,7 +95,7 @@ export const petitbacOnline = {
     const save = () => g.send({ type: 'save', list: inputs.map((x) => x.value) });
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         if (key === lastKey && v.phase === 'write') return;
         if (key === lastKey && v.phase === 'review') { /* on redessine (validations de l'hôte) */ }
@@ -283,7 +283,7 @@ export const motmystereOnline = {
       update(r, view) {
         const prev = v;
         v = view;
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         if (v.phase === 'loading') { main.replaceChildren(h('div', { class: 'big-center' }, h('h2', null, '⏳ Chargement du dictionnaire chez l\'hôte…'))); return; }
         const key = `${v.gid}:${v.round}`;
         if (key !== lastKey) {
@@ -592,7 +592,7 @@ export const penduOnline = {
     return {
       update(r, view) {
         v = view;
-        if (v.phase === 'end') { unbind(); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { unbind(); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         if (v.phase === 'loading') { main.replaceChildren(h('div', { class: 'big-center' }, h('h2', null, '⏳ Chargement des mots chez l\'hôte…'))); return; }
         const key = `${v.gid}:${v.round}:${v.phase}:${(v.tried || []).length}`;
         const head = h('div', { class: 'row' }, h('span', { class: 'pill' }, `🪢 Mot ${v.round}/${v.rounds}`), h('div', { class: 'grow' }),

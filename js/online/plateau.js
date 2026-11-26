@@ -313,7 +313,7 @@ export const memoryOnline = {
           // On laisse le temps de voir la dernière paire se retourner avant le classement.
           if (board && gid === v.gid) board.update(v, false);
           sfx.ok();
-          endT = setTimeout(() => { main.replaceChildren(...endScreen(r, g, 'Toutes les paires sont trouvées !')); sfx.fanfare(); board = null; gid = null; }, board ? 1100 : 0);
+          endT = setTimeout(() => { main.replaceChildren(...endScreen(r, g, 'Toutes les paires sont trouvées !')); board = null; gid = null; }, board ? 1100 : 0);
           return;
         }
         clearTimeout(endT);
@@ -402,7 +402,7 @@ export const yamsOnline = {
         const players = v.order.map((p) => playerOf(r, p) || { pid: p, name: g.nameOf(p) });
         if (v.phase === 'end') {
           main.replaceChildren(...endScreen(r, g, 'Fin de la partie de Yam\'s !'), yamsSheet(players, v.sheets, { meLabel: g.hotseat ? null : g.me }));
-          if (lastCur !== 'end') sfx.fanfare(); lastCur = 'end'; return;
+          lastCur = 'end'; return;
         }
         const myTurn = v.cur === g.me;
         const parts = [

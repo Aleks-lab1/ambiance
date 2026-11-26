@@ -89,7 +89,7 @@ export const quiaecritOnline = {
     let lastKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { tm.set(0); if (lastKey !== 'end') { main.replaceChildren(...tvEnd(r)); sfx.fanfare(); } lastKey = 'end'; return; }
+        if (v.phase === 'end') { tm.set(0); if (lastKey !== 'end') { main.replaceChildren(...tvEnd(r)); } lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}:${v.idx}`;
         tm.set(v.phase === 'write' || v.phase === 'guess' ? v.deadline : 0);
         const n = r.players.filter((p) => p.on).length;
@@ -129,7 +129,7 @@ export const quiaecritOnline = {
     let lastKey = null, input = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}:${v.idx}`;
         tp.set(v.phase === 'write' || v.phase === 'guess' ? v.deadline : 0);
         if (v.phase === 'write' && key === lastKey && !v.mine && input) { setText(main.querySelector('.status-line'), `✍️ ${v.nAns} réponse${v.nAns > 1 ? 's' : ''}`); return; }
@@ -284,7 +284,7 @@ export const curseurOnline = {
     let lastKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         const me = v.giver === g.me;
         if (key === lastKey && v.phase === 'guess' && !me) { const st = main.querySelector('.status-line'); if (st) setText(st, `🎚️ ${v.nG} curseur${v.nG > 1 ? 's' : ''} posé${v.nG > 1 ? 's' : ''}`); if (v.mine == null) return; }
@@ -413,7 +413,7 @@ export const danssateteOnline = {
     let lastKey = null, list = null, listKey = null, shownKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; list = null; listKey = null; return; }
+        if (v.phase === 'end') { main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; list = null; listKey = null; return; }
         if (head.parentNode !== main) main.replaceChildren(head, slot, foot);
         const key = `${v.gid}:${v.round}:${v.phase}`, qk = `${v.gid}:${v.round}`;
         if (key !== lastKey) { if (v.phase === 'reveal') sfx.end(); else sfx.go(); }
@@ -565,7 +565,7 @@ export const ordreOnline = {
     const send = () => { if (!list || sent === listKey) return; sent = listKey; list.lock(); g.send({ type: 'order', o: list.order() }); sfx.pop(); };
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; list = null; listKey = null; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; list = null; listKey = null; return; }
         if (head.parentNode !== main) main.replaceChildren(head, slot, foot);
         const key = `${v.gid}:${v.round}:${v.phase}`, qk = `${v.gid}:${v.round}`;
         if (key !== lastKey) { v.phase === 'q' ? sfx.go() : (v.mine && v.mine.ok === 4 ? sfx.ok() : sfx.end()); }
@@ -844,7 +844,7 @@ export const chifoumiOnline = {
     };
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g)); lastKey = 'end'; return; }
         const key = `${v.gid}:${v.round}:${v.phase}`;
         tp.set(v.phase === 'pick' ? v.deadline : 0);
         if (key !== lastKey && v.phase === 'pick') sfx.go();

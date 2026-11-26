@@ -87,18 +87,8 @@ export function levelBadge(level) {
 
 export const TEAM_COLORS = ['#ff4d8d', '#2ec5ff', '#ffc93c', '#22d39a', '#b07cff', '#ff7a45'];
 
-/** Podium + classement à partir de [{name, score}] */
-export function podium(list) {
-  const sorted = list.slice().sort((a, b) => b.score - a.score);
-  const top = sorted.slice(0, 3);
-  const heights = [120, 90, 70];
-  const order = top.length >= 3 ? [1, 0, 2] : top.length === 2 ? [1, 0] : [0];
-  const pod = h('div', { class: 'podium' }, order.map((i) => top[i] && h('div', { class: 'st' },
-    h('div', { class: 'nm' }, ['🥇', '🥈', '🥉'][i] + ' ' + top[i].name),
-    h('div', { class: 'blk', style: { height: heights[i] + 'px' } }, String(top[i].score)))));
-  const rest = sorted.slice(3).map((p, i) => h('div', { class: 'score-row' }, h('span', null, `${i + 4}.`), h('span', { class: 'n' }, p.name), h('span', { class: 's' }, String(p.score))));
-  return h('div', { class: 'col' }, pod, rest.length ? h('div', { class: 'scoreboard' }, rest) : null);
-}
+// Podium de fin de partie (spectacle, sons et confettis) : js/podium.js.
+export { podium, celebrate } from './podium.js';
 
 // Points d'un dé (grille 3×3) pour chaque face.
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };

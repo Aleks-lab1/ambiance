@@ -100,7 +100,7 @@ export function createTvUi(root, g) {
     const k = mod.id + ':' + ended;
     if (generic.dataset.k === k) return;
     generic.dataset.k = k;
-    if (ended) { generic.replaceChildren(...tvEnd(room)); sfx.fanfare(); return; }
+    if (ended) { generic.replaceChildren(...tvEnd(room)); return; }
     generic.replaceChildren(
       h('div', { class: 'tv-hero' }, mod.emoji),
       h('h1', null, mod.name),

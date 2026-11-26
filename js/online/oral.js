@@ -116,7 +116,7 @@ export const frontOnline = {
     let lastKey = null, lastFound = 0;
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, '1 point par mot deviné.'))); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, '1 point par mot deviné.'))); lastKey = 'end'; return; }
         const me = v.guesser === g.me;
         const N = g.nameOf(v.guesser);
         tp.set(v.phase === 'play' ? v.deadline : 0);
@@ -252,7 +252,7 @@ export const niouiOnline = {
     let lastKey = null;
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, '1 point à chaque fois qu\'on tient jusqu\'au bout.'))); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g, 'Fin de la partie !', h('p', { class: 'center muted' }, '1 point à chaque fois qu\'on tient jusqu\'au bout.'))); lastKey = 'end'; return; }
         const isV = v.victim === g.me, isA = v.asker === g.me;
         const V = g.nameOf(v.victim), A = g.nameOf(v.asker);
         tp.set(v.phase === 'play' ? v.deadline : 0);
@@ -389,7 +389,7 @@ export const histoireOnline = {
         h('div', { class: 'chips' }, v.chain.map((c) => h('span', { class: 'chip' + (c.ok ? ' on' : '') }, `${c.ok ? '✅' : '❌'} ${c.w} · ${c.p === g.me ? 'toi' : g.nameOf(c.p)}`)))] : null);
     return {
       update(r, v) {
-        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g, 'Fin de l\'histoire !', story(v))); if (lastKey !== 'end') sfx.fanfare(); lastKey = 'end'; return; }
+        if (v.phase === 'end') { tp.set(0); main.replaceChildren(...endScreen(r, g, 'Fin de l\'histoire !', story(v))); lastKey = 'end'; return; }
         const me = v.who === g.me;
         const N = g.nameOf(v.who);
         const can = me || g.isHost;

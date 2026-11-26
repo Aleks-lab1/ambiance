@@ -1,6 +1,6 @@
 // « Je dessine, tu devines » en ligne.
 import { h, pick, norm, levenshtein, seg, toggleRow, setText } from '../ui.js';
-import { drawNew, TV_PID, tvTimer, tvEnd } from './kit.js';
+import { drawNew, TV_PID, tvTimer, tvEnd, ranking } from './kit.js';
 import { createBoard, createTools, applyToLog, validOp } from '../canvas.js';
 import { podium } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -226,7 +226,7 @@ export default {
       update(room, v) {
         if (v.phase === 'end') {
           tm.set(0); bar.classList.add('hidden'); word.classList.add('hidden'); play.classList.add('hidden'); endWrap.classList.remove('hidden');
-          if (lastKey !== 'end') { endWrap.replaceChildren(...tvEnd(room)); sfx.fanfare(); }
+          if (lastKey !== 'end') { endWrap.replaceChildren(...tvEnd(room)); }
           lastKey = 'end';
           return;
         }
@@ -370,9 +370,8 @@ export default {
           endWrap.classList.remove('hidden');
           endWrap.replaceChildren(
             h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
-            podium(room.players.map((p) => ({ name: p.name, score: p.score }))),
+            podium(ranking(room, g)),
             g.hostBar());
-          if (lastPhase !== 'end') sfx.fanfare();
           lastPhase = v.phase;
           return;
         }

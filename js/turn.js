@@ -160,7 +160,6 @@ export function scoresScreen(root, { top, teams, scores, info, next, button = 'C
 }
 
 export function finalScreen(root, { top, teams, scores, onReplay }) {
-  sfx.fanfare();
   root.replaceChildren(top,
     h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
     podium(teams.map((t, i) => ({ name: t.name, score: scores[i] }))),

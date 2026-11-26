@@ -1,7 +1,7 @@
 // À l'unisson (en ligne) : un thème s'affiche, chacun écrit UNE réponse en secret.
 // On marque autant de points que de joueurs qui ont écrit la même chose. Les « moutons noirs » sont seuls.
 import { h, uid, seg, levenshtein, setText } from '../ui.js';
-import { drawNew, TV_PID, tvWho, tvTimer, tvStage, tvSay } from './kit.js';
+import { drawNew, TV_PID, tvWho, tvTimer, tvStage, tvSay, ranking } from './kit.js';
 import { gameColors } from '../themes.js';
 import { podium, levelPicker } from '../common.js';
 import { sfx, buzz } from '../sfx.js';
@@ -161,8 +161,7 @@ const unisson = {
         if (v.phase === 'end') {
           head.replaceChildren(); cardSlot.replaceChildren(); status.textContent = ''; hostSlot.replaceChildren();
           body.replaceChildren(h('div', { class: 'center' }, h('div', { class: 'hero-emo' }, '🏆'), h('h2', null, 'Fin de la partie !')),
-            podium(r.players.map((p) => ({ name: p.name, score: p.score }))), g.hostBar());
-          if (lastKey !== k) sfx.fanfare();
+            podium(ranking(r, g)), g.hostBar());
           lastKey = k;
           return;
         }

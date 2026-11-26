@@ -682,7 +682,7 @@ export const outilsOnline = {
           h('span', { class: 's', style: { minWidth: '2.5ch', textAlign: 'center' } }, String(p.score)),
           g.isHost ? h('button', { class: 'icon-btn', 'aria-label': 'Plus', onclick: () => { g.send({ type: 'score', pid: p.pid, d: 1 }); sfx.tick(); } }, '+') : null))),
         g.isHost ? h('button', { class: 'btn btn-soft btn-block', onclick: () => g.send({ type: 'zero' }) }, '↺ Remettre à zéro') : h('p', { class: 'status-line' }, 'L\'hôte compte les points'),
-        r.players.some((p) => p.score) ? podium(r.players.map((p) => ({ name: p.name, score: p.score }))) : null,
+        r.players.some((p) => p.score) ? podium(r.players.map((p) => ({ name: p.name, score: p.score })), { live: true }) : null,
       ];
     }
 
