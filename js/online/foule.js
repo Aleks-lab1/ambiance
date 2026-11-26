@@ -100,11 +100,18 @@ export const fouleOnline = {
     }
     if (a.type === 'push') {
       const w = s.world, cd = s.cd[pid];
-      if (s.phase !== 'play' || s.out[pid] || (cd && w.t < cd.until)) return false;
+      if (s.phase !== 'play' || s.out[pid]) return false;
+      if (cd && w.t < cd.until) {
+        // Encore en recharge (la télé peut avancer un peu moins vite que l'horloge du téléphone) :
+        // on renvoie au téléphone le temps qu'il reste, pour que le bouton ne semble pas prêt pour rien.
+        s.cd[pid] = { n: cd.n + 1, dur: Math.round((cd.until - w.t) * 100) / 100, until: cd.until };
+        return true;
+      }
       const j = tryPush(w, s.who[pid]);
       if (j === -2) return false;
       const dur = j >= 0 ? CD : CD_AIR;
       s.cd[pid] = { n: (cd ? cd.n : 0) + 1, dur, until: w.t + dur };
+      if (j < 0) tell(s, pid, '✋ Dans le vide ! Colle-toi à quelqu\'un pour le pousser.', '');
       return true;
     }
     return false;
@@ -199,7 +206,7 @@ export const fouleOnline = {
     const endBox = h('div', { class: 'col hidden' });
     root.append(pad, endBox);
 
-    let view = null, color = -1, lastMsg = 0, lastCd = 0, msgT = null, ended = false;
+    let view = null, color = -1, lastMsg = 0, lastCd = '', msgT = null, coolT = null, ended = false;
     let dir = -1, active = null, center = null, keys = new Set();
     const canMove = () => view && view.me && !view.me.outBy && (view.phase === 'play' || view.phase === 'ready');
     const sendDir = (d) => { if (d === dir) return; dir = d; g.send({ type: 'mv', d }); };
@@ -318,17 +325,21 @@ export const fouleOnline = {
             el.classList.toggle('next', j === me.done && playing);
           });
           setText(next, playing && me.done < 4 ? `🎯 Va toucher la fontaine ${fname(me.order[me.done])}` : '');
-          if (me.cd && me.cd.n !== lastCd) {
-            lastCd = me.cd.n;
+          const cdKey = me.cd ? v.round + ':' + me.cd.n : '';
+          if (me.cd && cdKey !== lastCd) {
+            // Le bouton se recharge (barre qui descend) puis redevient utilisable.
+            lastCd = cdKey;
             cdBar.style.animationDuration = me.cd.dur + 's';
             pushBtn.classList.remove('cool'); void pushBtn.offsetWidth; pushBtn.classList.add('cool');
+            clearTimeout(coolT);
+            coolT = setTimeout(() => pushBtn.classList.remove('cool'), me.cd.dur * 1000);
           }
         } else setText(next, '');
         next.classList.toggle('hidden', !playing);
         if (v.msg && v.msg.n !== lastMsg) { const first = !lastMsg; lastMsg = v.msg.n; if (!first || v.phase === 'play') showMsg(v.msg); }
       },
       destroy() {
-        clearInterval(keep); clearTimeout(msgT);
+        clearInterval(keep); clearTimeout(msgT); clearTimeout(coolT);
         document.removeEventListener('keydown', onKey);
         document.removeEventListener('keyup', onKey);
         if (dir >= 0) g.send({ type: 'mv', d: -1 });

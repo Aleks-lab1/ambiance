@@ -137,7 +137,18 @@ run(async () => {
   await see('passant', /Un passant est tombé/);
   await W(3200);
   check(await S(([b]) => window.__tv.s.world.chars[b].m, [bot]) === 'up', 'le passant se relève');
-  check(!(await t.act('A', { type: 'push' })), 'Alice ne peut pas repousser tout de suite');
+  const r2b = await S(async () => {
+    const T = window.__tv, c = T.s.world.chars[T.s.who.A], before = c.push, cd = T.s.cd.A.n;
+    T.act('A', { type: 'push' });
+    return { pushed: c.push !== before, newCd: T.s.cd.A.n > cd, dur: T.G.view(T.room, T.s, 'A').me.cd.dur };
+  });
+  check(!r2b.pushed && r2b.newCd && r2b.dur > 0 && r2b.dur < 4.5, 'Alice ne peut pas repousser tout de suite : son téléphone reçoit le temps de recharge restant', r2b);
+  // Poussée dans le vide : prévenue, recharge courte.
+  await place(['A', 980, 800]);
+  await S(() => { const T = window.__tv, a = T.s.world.chars[T.s.who.A]; T.s.cd.A.until = 0; T.s.world.chars.forEach((o) => { if (o !== a && Math.hypot(o.x - a.x, o.y - a.y) < 200) { o.x = 1350; o.y = 300; } }); });
+  await t.act('A', { type: 'push' });
+  const r2c = await S(() => window.__tv.G.view(window.__tv.room, window.__tv.s, 'A'));
+  check(/Dans le vide/.test(r2c.msg.text) && r2c.me.cd.dur < 2, 'poussée dans le vide : Alice est prévenue, recharge courte', r2c);
 
   // Bob touche ses 4 fontaines : il gagne la manche, la télé révèle qui était qui.
   for (let k = 1; k < 4; k++) {
@@ -211,6 +222,17 @@ run(async () => {
   check(await m.at('B').locator('.fp-push.cool').count() === 1, 'bouton « Pousser » : il se recharge après la poussée');
   check(/Tu as fait tomber Chloé/.test(await m.txt('B')), 'Bob : « Tu as fait tomber Chloé ! +1 »', await m.txt('B'));
   check(/Tu es tombé ! Bob t'a poussé/.test(await m.txt('C')) && !(await m.at('C').locator('.fp-ctrl:not(.hidden)').count()), 'Chloé : éliminée, plus de manette', await m.txt('C'));
+  await W(2300);
+  check(await m.at('B').locator('.fp-push.cool').count() === 0, 'bouton « Pousser » : utilisable de nouveau après la recharge');
+  // Une 2e poussée (dans le vide) marche bien avec le même bouton.
+  const n0 = await M(() => {
+    const s = window.__h.s, b = s.world.chars[s.who.B];
+    s.world.chars.forEach((o) => { if (o !== b && o.m === 'up' && Math.hypot(o.x - b.x, o.y - b.y) < 220) { o.x = 1350; o.y = 300; } });
+    return s.cd.B.n;
+  });
+  await m.at('B').locator('.fp-push').dispatchEvent('pointerdown');
+  await W(400);
+  check(await M(() => window.__h.s.cd.B.n) === n0 + 1 && /Dans le vide/.test(await m.txt('B')), 'bouton « Pousser » : la 2e poussée part aussi', await m.txt('B'));
   // Dernier debout ? Non : il reste Alice et Bob. Fin de la manche par le temps.
   await M(() => { window.__h.s.until = window.__h.s.world.t; });
   await W(500);

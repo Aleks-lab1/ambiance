@@ -206,6 +206,9 @@ export const monJeuOnline = {
   joueur (+1, éliminé de la manche), dernier debout (+2), temps écoulé (+1 au plus avancé s'il est seul). Révélation des noms à chaque fin
   de manche, une couleur par manche. Manette : joystick qui se place sous le doigt (16 directions, redite chaque seconde ; sans nouvelles
   depuis 2,6 s le bonhomme s'arrête), bouton « Pousser » qui se recharge, clavier (flèches/ZQSD, Espace).
+  Poussée : portée `REACH_X` × `REACH_Y` de `foule-core.js` (le plus proche, de préférence devant). Recharge (`s.cd`, en temps du
+  monde) : 2,5 s, 4,5 s si on a fait tomber un passant, 1,2 s dans le vide (le téléphone dit « Dans le vide ! »). Une poussée
+  encore en recharge renvoie au téléphone le temps qui reste (la télé peut avancer moins vite que l'horloge du téléphone).
 - Les bonshommes viennent des dessins fournis par l'utilisateur (faits avec Gemini) : tête, corps, bras, jambe, yeux (ouverts, contents,
   en colère, sonnés) dans `SHAPE_D` / `EYE_D`. Ne pas les redessiner : animer les morceaux (ressorts = effet gélatine). Style voulu :
   bonshommes mous et dodus « genre Gang Beasts », **sans copier** les personnages de ce jeu.
@@ -347,6 +350,8 @@ et ce qui bouge en vrai bouge à l'écran (jeton qui tombe, carte qui se retourn
 - Ne pas supprimer des clés d'un objet pendant qu'on le parcourt (bug du Petit bac).
 - Jeu en temps réel : renvoyer la vue à chaque image saturerait le réseau (et le relais). `frame` ne renvoie `true` que sur un événement ;
   ce qui bouge en continu (positions) n'est lu que par la télé, dans `s.world`, sans passer par le réseau.
+- Bouton qui se recharge (classe `cool`, ex. « Pousser » de Dans la foule) : **retirer la classe à la fin de la recharge**
+  (minuteur), sinon le bouton ne marche qu'une fois par partie. Le test `online/foule.test.cjs` pousse deux fois.
 - Dans la foule : rien ne doit trahir un joueur (vitesse, expressions, sons de la télé quand il touche une fontaine). Tout ce que font les
   joueurs, les passants le font aussi, sauf pousser.
 - Chez l'hôte, `g.send()` met l'écran à jour **tout de suite** (sans réseau) : modifier le texte affiché **avant** `g.send()`, sinon il écrase

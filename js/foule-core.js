@@ -18,7 +18,7 @@ export const SPEED = 52;        // vitesse de marche : la même pour tous (sinon
 export const DOWN_TIME = 2.6;   // un passant poussé se relève au bout de 2,6 s
 export const PUSH_TIME = 0.45;  // durée du geste « pousser »
 const HIT_DELAY = 0.15;         // le coup part un peu après le début du geste
-const REACH_X = 66, REACH_Y = 28;
+const REACH_X = 76, REACH_Y = 38;   // portée d'une poussée (assez large : un voisin qui touche se fait pousser)
 const SEP = 40;                 // deux bonshommes ne se marchent pas dessus
 const FX = 92, FY = 48;         // bord des fontaines : on ne marche pas dedans
 const TX = 106, TY = 58;        // on « touche » une fontaine quand on est contre son bord
