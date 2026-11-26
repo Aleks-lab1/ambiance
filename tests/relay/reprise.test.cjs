@@ -62,6 +62,7 @@ run(async () => {
   // ---- Quiz : 1re question, Alice et Bob trouvent, Chloé se trompe ; puis la 2e question commence ----
   await host.locator('.game-pick button', { hasText: 'Le Quiz' }).click(); await W(host, 200);
   await host.locator('.game-pick button', { hasText: 'Le Quiz' }).click();
+  await host.locator('.modal .theme-tile', { hasText: 'Tout mélanger' }).click(); // choix du thème
   await bob.waitForSelector('.quiz-opt', { timeout: 15000 });
   await W(host, 1200);
   const s1 = await hostState(host);

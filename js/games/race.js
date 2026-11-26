@@ -2,10 +2,10 @@
 import { h, topbar, seg, setText } from '../ui.js';
 import { gameColors } from '../themes.js';
 import { get, set, getPlayers } from '../store.js';
-import { levelPicker, onlineBanner, podium } from '../common.js';
+import { themeGrid, onlineBanner, podium } from '../common.js';
 import { playersPanel } from '../players.js';
 import { sfx, buzz } from '../sfx.js';
-import { RACE_MODES, questionSource, isQcm, CALC_LEVELS, COUNT_LABEL } from '../race-core.js';
+import { RACE_MODES, questionSource, isQcm, CALC_LEVELS, COUNT_LABEL, quizThemes, themeChoice, themesOf } from '../race-core.js';
 
 export function cardFor(mode, q) {
   const M = RACE_MODES[mode];
@@ -31,15 +31,15 @@ function raceLocal(mode, load, onlineId) {
         if (!alive) return;
         let themes = null;
         if (mode === 'quiz') {
-          const sel = new Set(opts.themes && opts.themes.length ? opts.themes : data.themes.map((t) => t.id));
-          themes = [h('div', { class: 'section-title' }, 'Thèmes'), levelPicker(data.themes.map((t) => ({ ...t, desc: '' })), sel, (s) => { opts.themes = [...s]; save(); })];
+          themes = [h('div', { class: 'section-title' }, 'Choisis le thème'),
+            themeGrid(quizThemes(data), themeChoice(opts.themes), (v) => { opts.themes = themesOf(v); save(); })];
         }
         root.replaceChildren(
           topbar(ctx),
           onlineBanner(ctx, onlineId),
           h('div', { class: 'section-title' }, 'Ou sur un seul téléphone'),
-          h('div', { class: 'panel rules' }, h('p', { html: meta.rules.find((r) => r.includes('seul téléphone')) || meta.rules[0] })),
           themes,
+          h('div', { class: 'panel rules' }, h('p', { html: meta.rules.find((r) => r.includes('seul téléphone')) || meta.rules[0] })),
           mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, opts.level, (v) => { opts.level = v; save(); })) : null,
           h('label', { class: 'field' }, 'Nombre de questions', seg([10, 15, 20, 30, 0].map((v) => ({ value: v, label: COUNT_LABEL(v) })), opts.count, (v) => { opts.count = v; save(); })),
           h('p', { class: 'muted small' }, '∞ = sans limite : les questions s\'enchaînent jusqu\'à ce que tu touches « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.'),

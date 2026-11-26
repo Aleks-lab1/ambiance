@@ -48,7 +48,14 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
   (déjà vues mémorisées dans le téléphone, clé `seen:race:<mode>` via `makeDeck` de `store.js`, effacées par « Revoir toutes les cartes »).
   Quand tout a été vu, on recommence un tour complet. En ligne, c'est le téléphone de l'hôte qui mémorise.
 - Réglage `count` : 0 = **∞ sans limite** (questions tirées au fur et à mesure, bouton « 🏁 Terminer la partie »).
+- **Quiz : choix du thème avant de lancer** : une seule case parmi « 🔀 Tout mélanger » et les 9 thèmes, avec leur nombre de questions
+  (`themeGrid` de `js/common.js` ; `quizThemes`, `themeChoice`, `themesOf` de `race-core.js` ; réglage `themes` : `[]` = tout, `[id]` = un thème).
+  Sur un téléphone : en haut de l'écran du Quiz. En ligne : `choose(st, set)` du module (fenêtre « Quel thème ? » chez le chef quand il
+  lance, toucher un thème = lancer) ; `launch()` de `room.js` l'appelle pour tout jeu qui a `choose` (pas depuis la fenêtre ⚙️ des réglages).
 - Contenu dans `js/data/quiz.js`, `estimations.js`, `vraifaux.js`, `emojis.js`, `anagrammes.js` (« Lot 2 » = ajouts de novembre 2026).
+  Quiz : environ 200 questions par thème (« Lot 3 », fin novembre 2026, 1 835 au total). En ajouter : vérifier qu'une question proche
+  n'existe pas déjà dans un autre thème (même bonne réponse, mêmes mots), réponses courtes (≤ 48 caractères), faits stables (pas de
+  record ou de champion du moment).
   Après un ajout, `unit/race-core.test.mjs` vérifie le format et l'absence de doublons. Anagrammes : éviter les mots qui forment un autre
   mot courant (« voilier/olivier », « serpent/présent ») : le script de vérification compare avec `COMMUNS` de `js/data/mots.js`.
 

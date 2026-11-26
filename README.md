@@ -27,7 +27,7 @@ Dans les jeux où un seul joueur agit à la fois (Et si…, La Bouteille, Le Roi
 |---|---|---|
 | 🎨 | **Je dessine, tu devines** | Un joueur dessine, les autres tapent leurs réponses ; points selon la vitesse, indices progressifs. Aussi jouable sur un seul écran. |
 | 🕵️ | **L'Imposteur** | Tout le monde a le même mot sauf l'imposteur ; vote pour le démasquer. Aussi en se passant le téléphone. |
-| 🧠 | **Le Quiz** | Plus de 600 questions (QCM) dans 9 thèmes ; le plus rapide marque le plus. Mode ∞ sans limite. Aussi sur un seul téléphone. |
+| 🧠 | **Le Quiz** | Plus de 1 800 questions (QCM), environ 200 dans chacun des 9 thèmes : avant de lancer, on choisit son thème ou « Tout mélanger ». Le plus rapide marque le plus. Mode ∞ sans limite. Aussi sur un seul téléphone. |
 | ✍️ | **Punchlines** | Complète la phrase de la façon la plus drôle, votes anonymes. Niveaux Fun, Trash, Hot++. |
 | 📞 | **Téléphone dessiné** | Écrire → dessiner → deviner → dessiner… puis révélation des chaînes. |
 | 📖 | **Dico bluff** | Invente une fausse définition pour un mot rare et piège les autres (100 mots). |

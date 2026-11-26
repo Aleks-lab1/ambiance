@@ -47,7 +47,9 @@ run(async () => {
       await host.locator('.modal .btn', { hasText: /Retour au salon/ }).click(); await W(host, 600);
     }
     await host.locator('.game-pick button', { hasText: name }).first().click(); await W(host, 200);
-    await host.locator('.game-pick button', { hasText: name }).first().click(); await W(host, 1200);
+    await host.locator('.game-pick button', { hasText: name }).first().click(); await W(host, 500);
+    // Le Quiz demande d'abord le thème au chef.
+    if (await host.locator('.modal .theme-tile').count()) { await host.locator('.modal .theme-tile', { hasText: 'Tout mélanger' }).click(); await W(host, 700); }
   };
 
   // ---- Le Quiz ----

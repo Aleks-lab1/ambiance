@@ -11,6 +11,16 @@ run(async () => {
   const big = () => page.locator('.btn-big').last();
   const scr = async () => (await page.locator('.screen').innerText()).replace(/\n+/g, ' | ');
 
+  // Quiz : on choisit son thème (ou « Tout mélanger ») avant de lancer.
+  await go('quiz');
+  const tilesQ = await page.locator('.theme-tile').allInnerTexts();
+  check(tilesQ.length === 10 && /Tout mélanger/.test(tilesQ[0]) && tilesQ.every((t) => /\d+ questions/.test(t)), 'Quiz : choix du thème, « Tout mélanger » + 9 thèmes avec leur nombre de questions', tilesQ);
+  check(tilesQ.slice(1).every((t) => Number((t.match(/(\d+) questions/) || [])[1]) >= 195), 'Quiz : environ 200 questions dans chaque thème', tilesQ);
+  await page.locator('.theme-tile', { hasText: 'Sport' }).click(); await W(150);
+  check(await page.locator('.theme-tile.on').count() === 1 && /Sport/.test(await page.locator('.theme-tile.on').innerText()), 'Quiz : un seul thème choisi à la fois');
+  await big().click(); await W(300);
+  check(/Sport/.test(await page.locator('.qcard .badge').first().innerText()), 'Quiz : la question vient du thème choisi (Sport)');
+  await page.evaluate(() => localStorage.setItem('ambiance:race:quiz', JSON.stringify({ count: 15, themes: [] })));
   await go('quiz'); await big().click(); await W(300);
   check(!(await page.getByRole('button', { name: /Révéler/ }).count()), 'Quiz : plus de bouton « Révéler la réponse »');
   check(await page.locator('button.quiz-opt').count() === 4 && /Au tour de Alice/.test(await scr()), 'Quiz : 4 réponses à toucher, au tour d\'Alice');

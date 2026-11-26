@@ -1595,3 +1595,17 @@ body.tv-mode #toasts { top: auto; bottom: 24px; font-size: clamp(15px, 1.2vw, 26
   .fp-stick { height: 52vh; min-height: 150px; }
   .fp-push { width: 116px; height: 116px; }
 }
+
+/* ---------- Choix du thème (Quiz) : themeGrid de js/common.js ---------- */
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.theme-tile { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px; text-align: left; min-height: 58px;
+  background: var(--card); border: 2px solid var(--line); color: var(--text); font: inherit; font-weight: 800; cursor: pointer; box-shadow: var(--shadow); transition: transform .15s; }
+.theme-tile:active { transform: scale(.97); }
+.theme-tile .th-emo { font-size: 24px; line-height: 1; flex: none; }
+.theme-tile .th-txt { display: flex; flex-direction: column; min-width: 0; }
+.theme-tile b { font-size: 15px; line-height: 1.2; }
+.theme-tile small { color: var(--muted); font-weight: 700; font-size: 12px; }
+.theme-tile.all { grid-column: 1 / -1; }
+.theme-tile.on { background: linear-gradient(135deg, var(--g1), var(--g2)); border-color: transparent; color: #fff; }
+.theme-tile.on small { color: rgba(255, 255, 255, .85); }
+.modal .theme-grid { max-height: 62vh; overflow: auto; padding: 2px; }

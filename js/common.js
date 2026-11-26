@@ -37,6 +37,22 @@ export async function ensureExplicit() {
  * Sélecteur de niveaux (multi-sélection).
  * levels: [{id, name, emoji, desc, adult}]
  */
+/**
+ * Choix d'un thème en grandes cases : « Tout mélanger » (toute la largeur) puis un thème par case, avec le nombre
+ * de questions. themes = [{ id, emoji, name, n }], value = 'all' ou l'id du thème ; onPick(valeur) à chaque choix.
+ */
+export function themeGrid(themes, value, onPick) {
+  const total = themes.reduce((a, t) => a + (t.n || 0), 0);
+  const items = [{ id: 'all', emoji: '🔀', name: 'Tout mélanger', n: total }, ...themes];
+  const wrap = h('div', { class: 'theme-grid', role: 'radiogroup', 'aria-label': 'Thème' });
+  const render = () => wrap.replaceChildren(...items.map((t) => h('button', {
+    class: 'theme-tile' + (t.id === 'all' ? ' all' : '') + (t.id === value ? ' on' : ''), role: 'radio', 'aria-checked': t.id === value ? 'true' : 'false',
+    onclick: () => { value = t.id; render(); onPick(t.id); },
+  }, h('span', { class: 'th-emo' }, t.emoji), h('span', { class: 'th-txt' }, h('b', null, t.name), t.n ? h('small', null, `${t.n.toLocaleString('fr-FR')} questions`) : null))));
+  render();
+  return wrap;
+}
+
 export function levelPicker(levels, selected, onChange) {
   const wrap = h('div', { class: 'col' });
   const desc = h('p', { class: 'muted small' });

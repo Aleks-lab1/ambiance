@@ -1119,11 +1119,15 @@ export function start(ctx) {
     updatePicker();
   }
 
-  function launch() {
-    const mod = onlineGame(lobbyPick);
+  // skipChoose : lancé depuis la fenêtre des réglages (le choix y est déjà). Un jeu avec choose(st, set) (ex. le Quiz :
+  // choix du thème) demande d'abord au chef ; annulé = pas de lancement.
+  async function launch(skipChoose = false) {
+    const id = lobbyPick;
+    const mod = onlineGame(id);
     if (!mod) return;
-    const st = lobbySettings[lobbyPick] || (lobbySettings[lobbyPick] = { ...mod.defaults });
-    send({ type: 'lobby:start', game: lobbyPick, settings: st });
+    const st = lobbySettings[id] || (lobbySettings[id] = { ...mod.defaults });
+    if (mod.choose && !skipChoose && !(await mod.choose(st, (ns) => Object.assign(st, ns)))) return;
+    send({ type: 'lobby:start', game: id, settings: st });
   }
 
   async function openSettings() {
@@ -1136,7 +1140,7 @@ export function start(ctx) {
         h('p', { class: 'muted small' }, `Minimum ${mod.minPlayers} joueurs connectés.`)),
       actions: [{ label: 'Fermer', value: false }, { label: `▶ Lancer`, value: true, primary: true }],
     });
-    if (ok) launch();
+    if (ok) launch(true);
   }
 
   function updatePicker() {

@@ -82,6 +82,13 @@ export function formatNumber(n) {
   return Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 3 });
 }
 
+/** Thèmes du Quiz avec leur nombre de questions (pour le choix du thème). */
+export const quizThemes = (data) => data.themes.map((t) => ({ ...t, n: data.q.filter((q) => q[0] === t.id).length }));
+/** Réglage des thèmes → choix affiché : un seul thème = son id, sinon 'all' (« Tout mélanger »). */
+export const themeChoice = (themes) => (themes && themes.length === 1 ? themes[0] : 'all');
+/** Choix → réglage : 'all' = [] (tous les thèmes). */
+export const themesOf = (choice) => (choice && choice !== 'all' ? [choice] : []);
+
 /** Entrées brutes du jeu (filtrées par thème pour le Quiz). */
 function rawPool(mode, data, opts) {
   if (mode === 'quiz') {

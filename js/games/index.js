@@ -142,9 +142,9 @@ export const GAMES = [
   },
   {
     id: 'quiz', name: 'Le Quiz', emoji: '🧠', colors: ['#5f2c82', '#49a09d'],
-    desc: 'Plus de 600 questions dans 9 thèmes, sans répétition d\'une partie à l\'autre. Mode sans limite !',
+    desc: 'Plus de 1 800 questions dans 9 thèmes : choisis ton thème ou mélange tout ! Sans répétition d\'une partie à l\'autre.',
     tags: ['rapide'], players: '2-16', rules: [
-      '<b>En ligne :</b> la question s\'affiche sur tous les téléphones avec 4 réponses. Plus tu réponds vite (et juste), plus tu gagnes de points. Choisis les thèmes : culture G, géo, histoire, sciences, cinéma, musique, sport, gastronomie, insolite.',
+      '<b>En ligne :</b> la question s\'affiche sur tous les téléphones avec 4 réponses. Plus tu réponds vite (et juste), plus tu gagnes de points. Au lancement, le chef choisit le thème (culture G, géo, histoire, sciences, cinéma & séries, musique, sport, gastronomie, insolite : environ 200 questions chacun) ou « Tout mélanger ».',
       '<b>Sur un seul téléphone :</b> chacun son tour, le joueur désigné touche directement sa réponse. La bonne réponse s\'affiche en vert (en rouge si c\'est raté) et le point est compté automatiquement.',
       'Nombre de questions au choix, ou <b>∞ sans limite</b> : on joue jusqu\'à toucher « Terminer ». Les questions déjà posées ne reviennent pas d\'une partie à l\'autre.',
     ],

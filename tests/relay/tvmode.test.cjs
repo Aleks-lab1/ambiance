@@ -55,8 +55,12 @@ run(async () => {
   // ---- Le chef lance (double appui) ----
   await bob.locator('.pick-tile', { hasText: 'Le Quiz' }).click(); await W(bob, 200);
   check(/Touche encore pour lancer/.test(await bob.locator('.pick-tile.on').innerText()), 'chef : 1er appui = jeu choisi');
-  await bob.locator('.pick-tile', { hasText: 'Le Quiz' }).click();
+  await bob.locator('.pick-tile', { hasText: 'Le Quiz' }).click(); await W(bob, 300);
+  // Le chef choisit le thème (ou « Tout mélanger ») avant que le Quiz ne commence.
+  check(/Quel thème/.test(await bob.locator('.modal').innerText().catch(() => '')) && await bob.locator('.modal .theme-tile').count() === 10, 'Quiz : le chef choisit le thème (Tout mélanger + 9 thèmes)');
+  await bob.locator('.modal .theme-tile', { hasText: 'Histoire' }).click();
   await chloe.waitForSelector('.quiz-opt', { timeout: 15000 });
+  check(/Histoire/.test(await chloe.locator('.qcard .badge').first().innerText()), 'Quiz : la question est bien du thème choisi (Histoire)');
   await tv.waitForSelector('.tv-opt', { timeout: 15000 });
   check(true, 'Le Quiz lancé : sur les téléphones et en grand sur la télé');
   check(await bob.getByRole('button', { name: /Révéler maintenant/ }).count() === 1 && !(await chloe.getByRole('button', { name: /Révéler maintenant/ }).count()), 'seul le chef a les boutons de l\'hôte');

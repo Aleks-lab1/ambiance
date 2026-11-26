@@ -1,10 +1,10 @@
 // Jeux de rapidité en ligne : Quiz (QCM), Émojis mystères & Anagrammes (réponse libre), À vue de nez (estimation).
-import { h, uid, seg, setText } from '../ui.js';
+import { h, uid, seg, setText, modal } from '../ui.js';
 import { gameColors } from '../themes.js';
-import { podium, levelPicker } from '../common.js';
+import { podium, themeGrid } from '../common.js';
 import { TV_PID, tvTimer, tvEnd, tvWho } from './kit.js';
 import { sfx, buzz } from '../sfx.js';
-import { RACE_MODES, questionSource, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS, COUNT_LABEL } from '../race-core.js';
+import { RACE_MODES, questionSource, matches, estimPoints, formatNumber, isQcm, isText, CALC_LEVELS, COUNT_LABEL, quizThemes, themeChoice, themesOf } from '../race-core.js';
 import VF from '../data/vraifaux.js';
 import QUIZ from '../data/quiz.js';
 import EMOJIS from '../data/emojis.js';
@@ -58,7 +58,7 @@ function makeRace(mode) {
     short: M.short,
     emoji: M.emoji,
     minPlayers: 2,
-    defaults: { count: 10, time: mode === 'quiz' ? 20 : mode === 'vf' ? 15 : mode === 'calc' ? 20 : mode === 'estim' ? 25 : 40, themes: mode === 'quiz' ? QUIZ.themes.map((t) => t.id) : undefined, level: mode === 'calc' ? 'moyen' : undefined },
+    defaults: { count: 10, time: mode === 'quiz' ? 20 : mode === 'vf' ? 15 : mode === 'calc' ? 20 : mode === 'estim' ? 25 : 40, themes: mode === 'quiz' ? [] : undefined, level: mode === 'calc' ? 'moyen' : undefined },
 
     settingsForm(st, set) {
       const parts = [
@@ -68,12 +68,22 @@ function makeRace(mode) {
         mode === 'calc' ? h('label', { class: 'field' }, 'Difficulté', seg(CALC_LEVELS, st.level || 'moyen', (v) => set({ level: v }))) : null,
       ];
       if (mode === 'quiz') {
-        const sel = new Set(st.themes && st.themes.length ? st.themes : QUIZ.themes.map((t) => t.id));
-        parts.push(h('div', { class: 'col' }, h('p', { class: 'muted small' }, 'Thèmes'),
-          levelPicker(QUIZ.themes.map((t) => ({ ...t, desc: '' })), sel, (s) => set({ themes: [...s] }))));
+        parts.push(h('div', { class: 'col' }, h('p', { class: 'muted small' }, 'Thème'),
+          themeGrid(quizThemes(QUIZ), themeChoice(st.themes), (v) => set({ themes: themesOf(v) }))));
       }
       return h('div', { class: 'col' }, parts);
     },
+    // Quiz : au lancement, le chef choisit le thème (ou « Tout mélanger ») dans une fenêtre. true = lancer.
+    choose: mode === 'quiz' ? (st, set) => {
+      let close = null;
+      return modal({
+        title: '🧠 Quel thème ?',
+        content: h('div', { class: 'col' }, h('p', { class: 'muted small' }, 'Touche un thème pour lancer le Quiz.'),
+          themeGrid(quizThemes(QUIZ), themeChoice(st.themes), (v) => { set({ themes: themesOf(v) }); if (close) close(true); })),
+        actions: [{ label: 'Annuler', value: false }],
+        onOpen: (c) => { close = c; },
+      }).then((v) => v === true);
+    } : undefined,
 
     init(room, st) {
       const s = { gid: uid(), st, list: [], i: -1 };
