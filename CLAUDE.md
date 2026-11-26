@@ -89,19 +89,22 @@ Le nom reste « Ambiance » : ne pas renommer l'appli.
 - En haut de l'accueil, bandeau de reprise (voir « Partie coupée »). Le champ `players` de chaque jeu doit rester lisible
   (`2-16`, `3+`, `2`) : `unit/accueil.test.mjs` le vérifie.
 
-## Accueil : images des jeux (style « boîte de jeu »)
-- L'utilisateur **n'aime pas les emojis** (« ça fait trop IA ») : plus d'emojis 3D sur les cases, ni dans l'interface.
-- Chaque case (`.tile`, `renderGrid` dans `js/app.js`) : l'image `img/jeux/<id>.webp` (fond transparent, 540 × 360) = **silhouettes
-  blanches avec une ombre franche** posées sur le dégradé du jeu (`gameColors`, donc le thème). En CSS : lumière douce en haut à
-  droite, **trame de points** qui s'efface vers la gauche et liseré clair (`::before`), voile sombre en bas, **nom incrusté en bas
-  à gauche**. **Pas de description.** Case 3:2, pastilles en haut à gauche, étoile en haut à droite. Mêmes styles pour les favoris
-  (`.mini-tile`) et le salon en ligne (`.pick-tile`).
-- Composition de chaque image dans `scripts/images/scenes.mjs` (repère 300 × 200, élément principal `M(…)` vers (206, 90) en grand,
-  un petit élément `L(…)` à gauche et `R(…)` à droite, un peu transparents ; garder dégagés le bas à gauche et les coins du haut) :
-  silhouettes de **game-icons.net** (CC BY 3.0, copiées dans `scripts/images/icons/<nom>.svg`, crédits dans `CREDITS.md`, dans
-  les réglages et le README), tuiles de lettres, cartes à jouer et boules de bingo blanches avec le texte **découpé** (on voit le
-  dégradé au travers), mots en Fredoka, roue, potence, touches de la Séquence. Puis `node scripts/gen-images.mjs <id>` : dessin
-  dans Chromium (Playwright), compression WebP par Pillow (~17 Ko par image).
+## Accueil : images des jeux (style « autocollant »)
+- L'utilisateur **n'aime pas les emojis** (« ça fait trop IA ») : plus d'emojis 3D sur les cases, ni dans l'interface. Il veut
+  des dessins **colorés et stylés** (les silhouettes toutes blanches étaient trop fades, certaines « ridicules » : éviter les
+  visages et les dessins qu'on ne reconnaît pas en petit).
+- Chaque case (`.tile`, `renderGrid` dans `js/app.js`) : l'image `img/jeux/<id>.webp` (fond transparent, 540 × 360) = des
+  **autocollants** : chaque dessin est coloré (dégradé clair → couleur), entouré d'un **épais liseré blanc** et posé avec une ombre
+  douce, sur le dégradé du jeu (`gameColors`, donc le thème). En CSS : lumière douce en haut à droite, **trame de points** qui
+  s'efface vers la gauche et liseré clair (`::before`), voile sombre en bas, **nom incrusté en bas à gauche**. **Pas de description.**
+  Case 3:2, pastilles en haut à gauche, étoile en haut à droite. Mêmes styles pour les favoris (`.mini-tile`) et le salon (`.pick-tile`).
+- Composition de chaque image dans `scripts/images/scenes.mjs` (repère 300 × 200, élément principal `M(nom, couleur)` vers (206, 90)
+  en grand, un petit élément `L(…)` à gauche et `Rt(…)` à droite ; garder dégagés le bas à gauche et les coins du haut) : silhouettes
+  de **game-icons.net** (CC BY 3.0, copiées dans `scripts/images/icons/<nom>.svg`, crédits dans `CREDITS.md`, dans les réglages et
+  le README), tuiles de lettres, cartes à jouer, boules de bingo, mots en Fredoka, roue colorée, potence, touches de la Séquence.
+  **Couleurs** (constantes en tête de `scenes.mjs`) : choisir une couleur qui ressort sur la case, et **jamais blanc pour un dessin
+  qui a des détails** (dés, carte, livre…) : ses trous sont remplis de blanc par le liseré, les détails disparaîtraient. Puis
+  `node scripts/gen-images.mjs <id>` : dessin dans Chromium (Playwright), compression WebP par Pillow (~20 Ko par image).
 - Silhouette pas encore copiée : récupérer le paquet `@iconify-json/game-icons` (commande en tête de `gen-images.mjs`) et relancer
   avec `ICONS_JSON=…` : le dessin manquant est copié dans `scripts/images/icons/`.
 - **Regarder le résultat** (capture d'écran de l'écran Local) avant de publier. `unit/images.test.mjs` vérifie une image par jeu.

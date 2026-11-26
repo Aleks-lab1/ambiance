@@ -4,8 +4,8 @@
 //   node scripts/gen-images.mjs quiz roi     → seulement ces jeux
 //   node scripts/gen-images.mjs modes        → illustrations des 3 cases de l'accueil, découpées dans la maquette
 //                                              (scripts/images/maquette-accueil.webp, MODE_CROPS) → img/ui/mode-<id>.webp
-// Style « boîte de jeu » : des silhouettes blanches avec une ombre franche, posées sur le dégradé de la case
-// (le dégradé, la trame de points et la lumière sont faits en CSS : .tile-art dans css/style.css).
+// Style « autocollant » : des dessins colorés (dégradé), entourés d'un épais liseré blanc, avec une ombre douce,
+// posés sur le dégradé de la case (le dégradé, la trame de points et la lumière sont faits en CSS : .tile dans css/style.css).
 // Les silhouettes viennent de game-icons.net (licence CC BY 3.0, voir scripts/images/icons/CREDITS.md),
 // copiées dans scripts/images/icons/<nom>.svg. Pour en ajouter une : récupérer le paquet (images seulement,
 // aucun code exécuté) puis relancer avec ICONS_JSON : le dessin manquant est copié dans scripts/images/icons/.
@@ -121,111 +121,134 @@ const total = todo.reduce((n, id) => n + statSync(join(OUT, id + '.webp')).size,
 console.log(`${todo.length} image(s) (${Math.round(total / 1024)} Ko au total).`);
 
 // ---------------------------------------------------------------------------------------------------
-// Dessin d'une image (exécuté dans le navigateur). Chaque élément est d'abord dessiné en blanc sur un
-// calque à part (avec ses lettres ou ses chiffres découpés dans le blanc : on voit le dégradé de la case
-// au travers), puis posé sur l'image avec son ombre franche, sa rotation et son opacité.
+// Dessin d'une image (exécuté dans le navigateur), style « autocollant » : chaque élément est une forme
+// colorée (dégradé clair → couleur), entourée d'un épais liseré blanc, avec ses détails par-dessus
+// (lettre d'une tuile, valeur d'une carte…) et une ombre douce.
 function draw({ items, W, H }) {
   const U = W / 300; // une unité du repère 300 × 200
   const cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
 
-  function layer(s, paint, k = 2) {
-    const n = Math.ceil(s * U * k);
-    const c = document.createElement('canvas');
-    c.width = c.height = n;
-    const x = c.getContext('2d');
-    x.translate(n / 2, n / 2);
-    x.fillStyle = '#fff'; x.strokeStyle = '#fff';
-    paint(x, s * U);
-    return c;
-  }
-  const knock = (x, paint) => { x.save(); x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000'; x.strokeStyle = '#000'; paint(); x.restore(); };
-  const text = (x, t, size, dy = 0) => { x.font = `700 ${size}px Fredoka`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 0, dy); };
+  const canvas = (n) => { const c = document.createElement('canvas'); c.width = c.height = n; return c; };
+  const shade = (hex, k) => { // éclaircit (k > 0) ou assombrit (k < 0) une couleur #rrggbb
+    const n = parseInt(hex.slice(1), 16);
+    const f = (c) => Math.round(k > 0 ? c + (255 - c) * k : c * (1 + k));
+    return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`;
+  };
+  const text = (x, t, size, dy = 0, font = 'Fredoka') => { x.font = `700 ${size}px ${font}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, 0, dy); };
   const rr = (x, a, b, w, h, r) => { x.beginPath(); x.roundRect(a, b, w, h, r); };
+  const INK = '#2b1f45';
 
-  const PAINT = {
-    // Silhouette de game-icons.net.
-    i: (x, S, it) => { x.drawImage(window.IMGS[it.n], -S / 2, -S / 2, S, S); },
-    // Lettre de jeu de lettres : tuile blanche, lettre découpée.
-    tile: (x, S, it) => {
-      rr(x, -S / 2, -S / 2, S, S, S * 0.2); x.fill();
-      knock(x, () => text(x, it.t, S * 0.66, S * 0.04));
+  // shape : la silhouette (dessinée d'une seule couleur) ; detail : ce qui se dessine par-dessus la couleur.
+  const KINDS = {
+    i: { shape: (x, S, it) => x.drawImage(window.IMGS[it.n], -S / 2, -S / 2, S, S) },
+    tile: {
+      shape: (x, S) => { rr(x, -S / 2, -S / 2, S, S, S * 0.2); x.fill(); },
+      detail: (x, S, it) => { x.fillStyle = it.ink || INK; text(x, it.t, S * 0.66, S * 0.04); },
     },
-    // Carte à jouer : blanche, valeur et couleur découpées.
-    card: (x, S, it) => {
-      const w = S * 0.72, h = S;
-      rr(x, -w / 2, -h / 2, w, h, S * 0.09); x.fill();
-      knock(x, () => {
-        x.font = `700 ${S * 0.16}px Fredoka`; x.textAlign = 'center'; x.textBaseline = 'middle';
-        x.fillText(it.rank, -w / 2 + S * 0.12, -h / 2 + S * 0.13); x.fillText(it.suit, -w / 2 + S * 0.12, -h / 2 + S * 0.28);
-        x.font = `700 ${S * 0.5}px Fredoka`; x.fillText(it.suit, 0, S * 0.05);
-      });
+    card: {
+      shape: (x, S) => { rr(x, -S * 0.36, -S / 2, S * 0.72, S, S * 0.09); x.fill(); },
+      detail: (x, S, it) => {
+        x.fillStyle = it.suit === '♥' || it.suit === '♦' ? '#e0283f' : INK;
+        x.font = `700 ${S * 0.17}px Fredoka`; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText(it.rank, -S * 0.24, -S * 0.37); x.fillText(it.suit, -S * 0.24, -S * 0.22);
+        x.font = `700 ${S * 0.48}px Fredoka`; x.fillText(it.suit, 0, S * 0.07);
+      },
     },
-    // Boule de bingo : disque blanc, numéro découpé dans un rond.
-    ball: (x, S, it) => {
-      x.beginPath(); x.arc(0, 0, S / 2, 0, Math.PI * 2); x.fill();
-      knock(x, () => { x.lineWidth = S * 0.05; x.beginPath(); x.arc(0, 0, S * 0.3, 0, Math.PI * 2); x.stroke(); text(x, String(it.t), S * 0.32, S * 0.02); });
+    ball: {
+      shape: (x, S) => { x.beginPath(); x.arc(0, 0, S / 2, 0, Math.PI * 2); x.fill(); },
+      detail: (x, S, it) => {
+        x.fillStyle = '#fff'; x.beginPath(); x.arc(0, 0, S * 0.29, 0, Math.PI * 2); x.fill();
+        x.fillStyle = INK; text(x, String(it.t), S * 0.3, S * 0.02);
+        const g = x.createRadialGradient(-S * 0.18, -S * 0.2, 0, -S * 0.18, -S * 0.2, S * 0.3);
+        g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.beginPath(); x.arc(0, 0, S / 2, 0, Math.PI * 2); x.fill();
+      },
     },
-    // Mot en grosses lettres blanches.
-    word: (x, S, it) => { text(x, it.t, S); },
-    // Anneau (le « O » du morpion).
-    ring: (x, S) => { x.lineWidth = S * 0.2; x.beginPath(); x.arc(0, 0, S * 0.38, 0, Math.PI * 2); x.stroke(); },
-    // Roue des gages : disque, rayons découpés, moyeu et pointeur.
-    wheel: (x, S) => {
-      x.beginPath(); x.arc(0, 0, S / 2, 0, Math.PI * 2); x.fill();
-      knock(x, () => {
-        x.lineWidth = S * 0.035;
-        for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; x.beginPath(); x.moveTo(Math.cos(a) * S * 0.12, Math.sin(a) * S * 0.12); x.lineTo(Math.cos(a) * S * 0.44, Math.sin(a) * S * 0.44); x.stroke(); }
-        x.beginPath(); x.arc(0, 0, S * 0.44, 0, Math.PI * 2); x.stroke();
-        x.beginPath(); x.arc(0, 0, S * 0.07, 0, Math.PI * 2); x.fill();
-      });
+    word: { shape: (x, S, it) => text(x, it.t, S) },
+    ring: { shape: (x, S) => { x.lineWidth = S * 0.2; x.beginPath(); x.arc(0, 0, S * 0.38, 0, Math.PI * 2); x.stroke(); } },
+    wheel: {
+      shape: (x, S) => { x.beginPath(); x.arc(0, 0, S / 2, 0, Math.PI * 2); x.fill(); },
+      detail: (x, S) => {
+        const cols = ['#ff4d6d', '#ffd23f', '#3a86ff', '#2ec27e', '#ff9f1c', '#9b5de5', '#4cc9f0', '#ff5d8f'];
+        for (let k = 0; k < 8; k++) {
+          x.fillStyle = cols[k]; x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, S * 0.44, (k / 8) * Math.PI * 2, ((k + 1) / 8) * Math.PI * 2); x.closePath(); x.fill();
+        }
+        x.strokeStyle = '#fff'; x.lineWidth = S * 0.02;
+        for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a) * S * 0.44, Math.sin(a) * S * 0.44); x.stroke(); }
+        x.fillStyle = '#fff'; x.beginPath(); x.arc(0, 0, S * 0.1, 0, Math.PI * 2); x.fill();
+        x.fillStyle = INK; x.beginPath(); x.arc(0, 0, S * 0.05, 0, Math.PI * 2); x.fill();
+      },
     },
-    // Potence du pendu, au trait.
-    gallows: (x, S) => {
-      x.lineWidth = S * 0.075; x.lineCap = 'round'; x.lineJoin = 'round';
-      x.beginPath(); x.moveTo(-S * 0.42, S * 0.45); x.lineTo(S * 0.05, S * 0.45);
-      x.moveTo(-S * 0.25, S * 0.45); x.lineTo(-S * 0.25, -S * 0.45); x.lineTo(S * 0.22, -S * 0.45); x.lineTo(S * 0.22, -S * 0.3);
-      x.moveTo(-S * 0.25, -S * 0.22); x.lineTo(-S * 0.05, -S * 0.45); x.stroke();
-      x.beginPath(); x.arc(S * 0.22, -S * 0.17, S * 0.12, 0, Math.PI * 2); x.stroke();
-      x.lineWidth = S * 0.06;
-      x.beginPath(); x.moveTo(S * 0.22, -S * 0.05); x.lineTo(S * 0.22, S * 0.17); x.moveTo(S * 0.22, S * 0.02); x.lineTo(S * 0.1, S * 0.1); x.moveTo(S * 0.22, S * 0.02); x.lineTo(S * 0.34, S * 0.1); x.stroke();
+    gallows: {
+      shape: (x, S) => {
+        x.lineWidth = S * 0.085; x.lineCap = 'round'; x.lineJoin = 'round';
+        x.beginPath(); x.moveTo(-S * 0.42, S * 0.45); x.lineTo(S * 0.05, S * 0.45);
+        x.moveTo(-S * 0.25, S * 0.45); x.lineTo(-S * 0.25, -S * 0.45); x.lineTo(S * 0.22, -S * 0.45); x.lineTo(S * 0.22, -S * 0.3);
+        x.moveTo(-S * 0.25, -S * 0.22); x.lineTo(-S * 0.05, -S * 0.45); x.stroke();
+      },
+      detail: (x, S) => {
+        x.strokeStyle = INK; x.lineWidth = S * 0.05; x.lineCap = 'round';
+        x.beginPath(); x.arc(S * 0.22, -S * 0.17, S * 0.11, 0, Math.PI * 2); x.stroke();
+        x.beginPath(); x.moveTo(S * 0.22, -S * 0.06); x.lineTo(S * 0.22, S * 0.17); x.moveTo(S * 0.22, S * 0.02); x.lineTo(S * 0.1, S * 0.1); x.moveTo(S * 0.22, S * 0.02); x.lineTo(S * 0.34, S * 0.1);
+        x.moveTo(S * 0.22, S * 0.17); x.lineTo(S * 0.12, S * 0.3); x.moveTo(S * 0.22, S * 0.17); x.lineTo(S * 0.32, S * 0.3); x.stroke();
+      },
     },
-    // Les 4 touches de La Séquence.
-    pads: (x, S) => {
-      const g = S * 0.06, w = (S - g) / 2;
-      [[-1, -1, 1], [1, -1, 0.55], [-1, 1, 0.55], [1, 1, 0.8]].forEach(([a, b, o]) => {
-        x.globalAlpha = o; rr(x, a < 0 ? -S / 2 : g / 2, b < 0 ? -S / 2 : g / 2, w, w, S * 0.12); x.fill();
-      });
-      x.globalAlpha = 1;
+    pads: {
+      shape: (x, S) => { const g = S * 0.07, w = (S - g) / 2; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { rr(x, a < 0 ? -S / 2 : g / 2, b < 0 ? -S / 2 : g / 2, w, w, S * 0.12); x.fill(); }); },
+      detail: (x, S) => {
+        const g = S * 0.07, w = (S - g) / 2;
+        [[-1, -1, '#ff4d6d'], [1, -1, '#2ec27e'], [-1, 1, '#3a86ff'], [1, 1, '#ffd23f']].forEach(([a, b, c]) => {
+          const gr = x.createLinearGradient(0, b < 0 ? -S / 2 : g / 2, 0, (b < 0 ? -S / 2 : g / 2) + w);
+          gr.addColorStop(0, shade(c, 0.3)); gr.addColorStop(1, c);
+          x.fillStyle = gr; rr(x, a < 0 ? -S / 2 : g / 2, b < 0 ? -S / 2 : g / 2, w, w, S * 0.12); x.fill();
+        });
+      },
     },
-    // Flèche (triangle arrondi) vers le haut ; rotation 180 pour le bas.
-    arrow: (x, S) => {
-      x.lineJoin = 'round'; x.lineWidth = S * 0.16;
-      x.beginPath(); x.moveTo(0, -S * 0.38); x.lineTo(S * 0.4, S * 0.3); x.lineTo(-S * 0.4, S * 0.3); x.closePath(); x.fill(); x.stroke();
-    },
-    // Traits de mouvement autour d'un point (bouteille qui tourne).
-    arcs: (x, S) => {
-      x.lineWidth = S * 0.05; x.lineCap = 'round';
-      for (const [a0, a1, r] of [[-2.6, -1.7, 0.46], [0.5, 1.4, 0.46], [-2.4, -1.95, 0.56], [0.7, 1.15, 0.56]]) { x.beginPath(); x.arc(0, 0, S * r, a0, a1); x.stroke(); }
+    arrow: { shape: (x, S) => { x.lineJoin = 'round'; x.lineWidth = S * 0.16; x.beginPath(); x.moveTo(0, -S * 0.38); x.lineTo(S * 0.4, S * 0.3); x.lineTo(-S * 0.4, S * 0.3); x.closePath(); x.fill(); x.stroke(); } },
+    arcs: {
+      shape: (x, S) => {
+        x.lineWidth = S * 0.05; x.lineCap = 'round';
+        for (const [a0, a1, r] of [[-2.6, -1.7, 0.46], [0.5, 1.4, 0.46], [-2.4, -1.95, 0.56], [0.7, 1.15, 0.56]]) { x.beginPath(); x.arc(0, 0, S * r, a0, a1); x.stroke(); }
+      },
     },
   };
+  const DEF = { tile: '#fff1d6', card: '#ffffff', wheel: '#ffffff', gallows: '#b07a45', arcs: '#ffffff' };
 
   for (const it of items) {
-    // Calque assez grand pour l'élément (un mot est plus large que haut).
-    const L = layer(it.s, (x, S) => PAINT[it.k](x, S, it), it.k === 'word' ? Math.max(2, String(it.t).length * 0.75 + 0.6) : 2);
+    const K = KINDS[it.k];
+    const S = it.s * U;
+    const n = Math.ceil(S * (it.k === 'word' ? Math.max(2.2, String(it.t).length * 0.8 + 0.8) : 2.2));
+    const half = (c) => { const x = c.getContext('2d'); x.translate(n / 2, n / 2); return x; };
+    // 1. Silhouette (masque).
+    const mask = canvas(n); const mx = half(mask); mx.fillStyle = mx.strokeStyle = '#000'; K.shape(mx, S, it);
+    // 2. Liseré blanc : la silhouette élargie dans toutes les directions.
+    const out = canvas(n); const ox = out.getContext('2d');
+    const r = it.edge === 0 ? 0 : Math.max(2, S * (it.edge || 0.045));
+    for (let k = 0; k < 28 && r; k++) { const a = (k / 28) * Math.PI * 2; ox.drawImage(mask, Math.cos(a) * r, Math.sin(a) * r); }
+    ox.globalCompositeOperation = 'source-in'; ox.fillStyle = '#fff'; ox.fillRect(0, 0, n, n);
+    // 3. Couleur : dégradé de la couleur éclaircie (en haut à gauche) à la couleur, un peu assombrie en bas.
+    const col = it.c || DEF[it.k] || '#ffffff';
+    const fill = canvas(n); const fx = fill.getContext('2d');
+    fx.drawImage(mask, 0, 0); fx.globalCompositeOperation = 'source-in';
+    const gr = fx.createLinearGradient(n / 2 - S / 2, n / 2 - S / 2, n / 2 + S / 2, n / 2 + S / 2);
+    gr.addColorStop(0, shade(col, 0.38)); gr.addColorStop(0.55, col); gr.addColorStop(1, shade(col, -0.14));
+    fx.fillStyle = gr; fx.fillRect(0, 0, n, n);
+    // 4. Assemblage + détails.
+    const L = canvas(n); const lx = L.getContext('2d');
+    lx.drawImage(out, 0, 0); lx.drawImage(fill, 0, 0);
+    if (K.detail) { const dx = half(L); K.detail(dx, S, it); }
+    // 5. Pose sur l'image, avec rotation et ombre douce.
     ctx.save();
     ctx.translate(it.x * U, it.y * U);
     ctx.rotate((it.r * Math.PI) / 180);
     if (it.f) ctx.scale(-1, 1);
     ctx.globalAlpha = it.o ?? 1;
-    // Ombre franche vers le bas à droite (l'ombre d'un canevas ne tourne pas avec l'élément).
-    const off = it.s * U * 0.055;
-    ctx.shadowColor = 'rgba(35, 10, 80, .24)';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = off * 0.7;
-    ctx.shadowOffsetY = off;
-    ctx.drawImage(L, -L.width / 2, -L.height / 2);
+    ctx.shadowColor = 'rgba(30, 8, 70, .32)';
+    ctx.shadowBlur = S * 0.09;
+    ctx.shadowOffsetY = S * 0.045;
+    ctx.drawImage(L, -n / 2, -n / 2);
     ctx.restore();
   }
   return cv.toDataURL('image/png');
