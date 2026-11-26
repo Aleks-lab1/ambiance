@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SKIP = new Set(['scripts', 'sw.js', 'README.md', 'CLAUDE.md', '.git', 'node_modules', 'tests', '.github', '.nojekyll', 'netlify.toml', 'vercel.json']);
+const SKIP = new Set(['scripts', 'sw.js', 'README.md', 'CLAUDE.md', '.git', 'node_modules', 'tests', '.github', '.nojekyll', 'netlify.toml', 'vercel.json', 'CNAME']);
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir).sort()) {

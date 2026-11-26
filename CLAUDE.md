@@ -3,7 +3,8 @@
 ## Le projet
 **Ambiance** est une appli web installable (PWA) de jeux de soirée en français : 62 jeux, **tous jouables en
 ligne** (chacun sur son téléphone) et aussi sur un seul téléphone. Elle est écrite en JavaScript simple (modules ES), **sans compilation ni dépendance
-npm**. Il suffit d'ouvrir `index.html`. Elle est publiée sur **GitHub Pages depuis la branche `gh-pages`**.
+npm**. Il suffit d'ouvrir `index.html`. Elle est publiée sur **GitHub Pages depuis la branche `gh-pages`**, à l'adresse **https://ambiance.cheff.ch** (fichier `CNAME` à la racine,
+DNS chez Infomaniak : enregistrement CNAME `ambiance` → `aleks-lab1.github.io`). Ne pas supprimer `CNAME`.
 Le nom reste « Ambiance » : ne pas renommer l'appli.
 
 ## Organisation
