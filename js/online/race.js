@@ -232,7 +232,7 @@ function makeRace(mode) {
       const cardSlot = h('div');
       const answerSlot = h('div', { class: 'col' });
       const status = h('p', { class: 'status-line' });
-      const hostSlot = h('div', { class: 'col' });
+      const hostSlot = h('div', { class: 'col host-dock' });
       root.append(head, cardSlot, answerSlot, status, hostSlot);
       const timer = h('span', { class: 'pill timer-num', style: { fontSize: '15px' } });
       let v = null, room = null, lastKey = null, lastTick = null;
